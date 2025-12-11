@@ -15,6 +15,10 @@ This app will provide a native mobile experience for the AIn't Real game, connec
 - **Release Priority:** Android first, develop both simultaneously
 - **Web:** Stays as separate HTML/JS (not Flutter web)
 
+### App Store Status
+- **Google Play:** Developer account active
+- **Apple App Store:** Developer account pending
+
 ### Feature Scope
 - Full parity with web version
 - All 3 game modes: Party, Classic Solo, Marathon
