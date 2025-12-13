@@ -6,8 +6,8 @@
 
 - **Platform:** Flutter 3.38.4 (stable)
 - **Package:** `com.aintreal`
-- **Branch:** `main`
-- **Phase:** Ready for implementation
+- **Branch:** `feature/1.1-project-foundation`
+- **Phase:** M1 Implementation - Epics 1.1, 1.2, 2.1 complete
 
 ---
 
@@ -39,15 +39,15 @@
 
 **Goal:** Set up project architecture and dependencies
 **Priority:** P0 - Critical
-**Status:** Planned
+**Status:** Complete
 
 | Task | Description | Effort | Status |
 |------|-------------|--------|--------|
-| 1.1.1 | Add all dependencies to pubspec.yaml | 1h | [ ] |
-| 1.1.2 | Create folder structure per architecture | 1h | [ ] |
-| 1.1.3 | Set up Riverpod providers structure | 1h | [ ] |
-| 1.1.4 | Create env.dart with API configuration | 30m | [ ] |
-| 1.1.5 | Run build_runner for code generation | 15m | [ ] |
+| 1.1.1 | Add all dependencies to pubspec.yaml | 1h | [x] |
+| 1.1.2 | Create folder structure per architecture | 1h | [x] |
+| 1.1.3 | Set up Riverpod providers structure | 1h | [x] |
+| 1.1.4 | Create env.dart with API configuration | 30m | [x] |
+| 1.1.5 | Run build_runner for code generation | 15m | [x] |
 
 ---
 
@@ -55,14 +55,14 @@
 
 **Goal:** Create app foundation with navigation and theming
 **Priority:** P0 - Critical
-**Status:** Planned
+**Status:** Complete
 
 | Task | Description | Effort | Status |
 |------|-------------|--------|--------|
-| 1.2.1 | Create dark theme matching web (theme.dart) | 2h | [ ] |
-| 1.2.2 | Set up app.dart with MaterialApp + GoRouter | 1h | [ ] |
-| 1.2.3 | Configure routes.dart with all navigation paths | 1h | [ ] |
-| 1.2.4 | Create basic scaffold structure | 30m | [ ] |
+| 1.2.1 | Create dark theme matching web (theme.dart) | 2h | [x] |
+| 1.2.2 | Set up app.dart with MaterialApp + GoRouter | 1h | [x] |
+| 1.2.3 | Configure routes.dart with all navigation paths | 1h | [x] |
+| 1.2.4 | Create basic scaffold structure | 30m | [x] |
 
 ---
 
@@ -70,14 +70,14 @@
 
 **Goal:** Main entry point with game mode selection
 **Priority:** P0 - Critical
-**Status:** Planned
+**Status:** Complete
 
 | Task | Description | Effort | Status |
 |------|-------------|--------|--------|
-| 2.1.1 | Create home_screen.dart layout | 2h | [ ] |
-| 2.1.2 | Build mode_card.dart component (Party, Classic, Marathon) | 2h | [ ] |
-| 2.1.3 | Add "AIn't Real" branding/logo | 1h | [ ] |
-| 2.1.4 | Implement mode selection navigation | 1h | [ ] |
+| 2.1.1 | Create home_screen.dart layout | 2h | [x] |
+| 2.1.2 | Build mode_card.dart component (Party, Classic, Marathon) | 2h | [x] |
+| 2.1.3 | Add "AIn't Real" branding/logo | 1h | [x] |
+| 2.1.4 | Implement mode selection navigation | 1h | [x] |
 
 ---
 
