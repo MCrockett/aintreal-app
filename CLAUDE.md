@@ -77,15 +77,39 @@ flutter build apk --release
 flutter build ios --release
 ```
 
+## Theme-Epic-Task System
+
+Work is organized using Theme.Epic.Task numbering:
+
+**Format:** `Theme.Epic.Task (SHORT-CODE)`
+- **Theme (1-8):** Major area (e.g., 1 = Core Gameplay)
+- **Epic (X.1-X.N):** Group of related tasks
+- **Task (X.X.1-X.X.N):** Individual unit of work
+
+**8 Themes:**
+1. Core Gameplay (CG) | 2. User Interface (UI) | 3. Networking (NW)
+4. Authentication (AU) | 5. Monetization (MO) | 6. Mobile Features (MF)
+7. Polish (PO) | 8. Release (RE)
+
+**Priority Levels:**
+- P0 = Critical (MVP)
+- P1 = High (good UX)
+- P2 = Medium (nice to have)
+- P3 = Low (future)
+
+See [TODO.md](TODO.md) for full Epic/Task breakdown.
+
+---
+
 ## Git Workflow
 
-**Branch Naming**: `<type>/<milestone>.<task>-description`
+**Branch Naming**: `<type>/<theme>.<epic>.<task>-description`
 
 ```bash
 # Examples
-feature/m1.setup-dependencies
-feature/m1.home-screen
-fix/m1.websocket-reconnect
+feature/1.1.1-add-dependencies
+feature/2.1.1-home-screen-layout
+fix/3.2.4-websocket-reconnect
 ```
 
 **Types**: `feature`, `fix`, `refactor`, `test`, `docs`, `chore`
@@ -100,21 +124,21 @@ fix/m1.websocket-reconnect
 # Start new feature
 git checkout main
 git pull origin main
-git checkout -b feature/m1.1-project-setup
+git checkout -b feature/1.1.1-add-dependencies
 
 # Complete and push
-git add -A && git commit -m "feat(m1.1): description"
-git push origin feature/m1.1-project-setup
+git add -A && git commit -m "feat(1.1.1): add project dependencies"
+git push origin feature/1.1.1-add-dependencies
 # STOP - let user review and create PR
 ```
 
 ## Commit Format
 
 ```
-<type>(<milestone.task>): <short summary>
+<type>(<theme>.<epic>.<task>): <short summary>
 
-[Context]
-- M<N>.<T> (SHORT-CODE): Task description
+[Theme-Epic-Task Context]
+- <Theme>.<Epic>.<Task> (<SHORT-CODE>): Task description
 
 <detailed description>
 
@@ -126,15 +150,22 @@ git push origin feature/m1.1-project-setup
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
+**Examples:**
+```
+feat(1.1.1): add project dependencies
+feat(2.1.2): create mode selection cards
+fix(3.2.4): handle WebSocket reconnection
+```
+
 ## When Implementing Features
 
-1. **Check TODO.md** - Find the milestone/task ID
-2. **Create branch** from updated main
-3. **Update TODO.md** - Mark task as in-progress
+1. **Check TODO.md** - Find the Theme.Epic.Task ID
+2. **Create branch** from updated main: `feature/<theme>.<epic>.<task>-desc`
+3. **Update TODO.md** - Mark task as `[x]` when starting
 4. **Implement** following architecture patterns
 5. **Test** on device/emulator
-6. **Update TODO.md** - Mark task complete
-7. **Commit and push** - Let user create PR
+6. **Commit** with Theme.Epic.Task ID in message
+7. **Push and stop** - Let user review and create PR
 
 ## Key Files
 
@@ -168,7 +199,7 @@ See [aintreal-game/GAMEFLOW.md](../aintreal-game/GAMEFLOW.md) for WebSocket mess
 - Dependencies identified
 - TODO.md backlog created
 
-**Next**: M1.1 - Project Setup (add dependencies, create folder structure)
+**Next**: Epic 1.1 (UI-FOUNDATION) - Project Setup
 
 ## Questions?
 

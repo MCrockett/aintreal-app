@@ -7,318 +7,435 @@
 - **Platform:** Flutter 3.38.4 (stable)
 - **Package:** `com.aintreal`
 - **Branch:** `main`
-- **Architecture:** Design complete, ready for M1 implementation
+- **Phase:** Ready for implementation
 
 ---
 
-## Milestones Overview
+## Theme Overview
 
-| Milestone | Description | Status |
-|-----------|-------------|--------|
-| M1 | Core Game Loop | Planned |
-| M2 | Polish & Parity | Planned |
-| M3 | Authentication | Planned |
-| M4 | Mobile Features | Planned |
-| M5 | Monetization | Planned |
-| M6 | Release | Planned |
+| # | Theme | Code | Description |
+|---|-------|------|-------------|
+| 1 | Core Gameplay | CG | Game screens, WebSocket, real-time play |
+| 2 | User Interface | UI | Screens, navigation, theming |
+| 3 | Networking | NW | API client, WebSocket, connectivity |
+| 4 | Authentication | AU | Firebase Auth, user profiles |
+| 5 | Monetization | MO | AdMob integration |
+| 6 | Mobile Features | MF | Haptics, push, sharing, deep links |
+| 7 | Polish | PO | Animations, sounds, celebrations |
+| 8 | Release | RE | Store assets, beta, production |
 
 ---
 
-## M1: Core Game Loop
+## Priority Levels
 
-**Goal:** Playable game connecting to existing backend
-**Priority:** P0 - Current Focus
+- **P0** - Critical: Must have for MVP
+- **P1** - High: Important for good UX
+- **P2** - Medium: Nice to have
+- **P3** - Low: Future enhancement
+
+---
+
+## Epic 1.1: Project Foundation (UI-FOUNDATION)
+
+**Goal:** Set up project architecture and dependencies
+**Priority:** P0 - Critical
 **Status:** Planned
 
-### 1.1: Project Setup (APP-SETUP)
-**Effort:** 2-3 hours
-
-- [ ] 1.1.1: Add all dependencies to pubspec.yaml
-- [ ] 1.1.2: Create folder structure per CLAUDE.md architecture
-- [ ] 1.1.3: Set up Riverpod providers
-- [ ] 1.1.4: Create env.dart with API configuration
-- [ ] 1.1.5: Run build_runner for code generation
-
-### 1.2: Theme & App Shell (APP-THEME)
-**Effort:** 2 hours
-
-- [ ] 1.2.1: Create dark theme matching web (theme.dart)
-- [ ] 1.2.2: Set up app.dart with MaterialApp + GoRouter
-- [ ] 1.2.3: Configure routes.dart with all navigation paths
-- [ ] 1.2.4: Create basic scaffold with bottom nav placeholder
-
-### 1.3: Home Screen (APP-HOME)
-**Effort:** 3-4 hours
-
-- [ ] 1.3.1: Create home_screen.dart layout
-- [ ] 1.3.2: Build mode_card.dart component (Party, Classic, Marathon)
-- [ ] 1.3.3: Add "AIn't Real" branding/logo
-- [ ] 1.3.4: Implement mode selection navigation
-
-### 1.4: Create/Join Flow (APP-LOBBY)
-**Effort:** 4-5 hours
-
-- [ ] 1.4.1: Create create_game_screen.dart with config options
-- [ ] 1.4.2: Create join_game_screen.dart with code input
-- [ ] 1.4.3: Implement API client (dio) for game creation/joining
-- [ ] 1.4.4: Create game_code_display.dart widget
-- [ ] 1.4.5: Add QR code generation for game sharing
-
-### 1.5: Lobby Screen (APP-LOBBY-UI)
-**Effort:** 3-4 hours
-
-- [ ] 1.5.1: Create lobby_screen.dart layout
-- [ ] 1.5.2: Build player_list.dart component
-- [ ] 1.5.3: Add game config display (rounds, time, bonuses)
-- [ ] 1.5.4: Implement host controls (Start button)
-- [ ] 1.5.5: Connect WebSocket for real-time player updates
-
-### 1.6: WebSocket Integration (APP-WS)
-**Effort:** 4-5 hours
-
-- [ ] 1.6.1: Create ws_client.dart with web_socket_channel
-- [ ] 1.6.2: Create ws_provider.dart Riverpod provider
-- [ ] 1.6.3: Implement message parsing for all server message types
-- [ ] 1.6.4: Handle reconnection with exponential backoff
-- [ ] 1.6.5: Create game_provider.dart for game state management
-
-### 1.7: Game Screen (APP-GAME)
-**Effort:** 5-6 hours
-
-- [ ] 1.7.1: Create game_screen.dart layout
-- [ ] 1.7.2: Build image_pair.dart widget with cached_network_image
-- [ ] 1.7.3: Create timer_bar.dart countdown component
-- [ ] 1.7.4: Implement tap-to-answer with WebSocket submission
-- [ ] 1.7.5: Create answer_feedback.dart for immediate response
-- [ ] 1.7.6: Add "Get Ready" countdown between rounds
-
-### 1.8: Results Screen (APP-RESULTS)
-**Effort:** 3-4 hours
-
-- [ ] 1.8.1: Create game_over_screen.dart layout
-- [ ] 1.8.2: Build ranking_list.dart component
-- [ ] 1.8.3: Display final scores and winner
-- [ ] 1.8.4: Add Play Again / New Game buttons
-- [ ] 1.8.5: Show photographer credits
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 1.1.1 | Add all dependencies to pubspec.yaml | 1h | [ ] |
+| 1.1.2 | Create folder structure per architecture | 1h | [ ] |
+| 1.1.3 | Set up Riverpod providers structure | 1h | [ ] |
+| 1.1.4 | Create env.dart with API configuration | 30m | [ ] |
+| 1.1.5 | Run build_runner for code generation | 15m | [ ] |
 
 ---
 
-## M2: Polish & Parity
+## Epic 1.2: App Shell & Theme (UI-SHELL)
 
-**Goal:** Match web experience with animations and all features
-**Priority:** P1
+**Goal:** Create app foundation with navigation and theming
+**Priority:** P0 - Critical
 **Status:** Planned
 
-### 2.1: Reveal Sequence (APP-REVEAL)
-**Effort:** 4-5 hours
-
-- [ ] 2.1.1: Create reveal_screen.dart for round-by-round reveals
-- [ ] 2.1.2: Implement AI image highlight animation
-- [ ] 2.1.3: Add score update animations with flutter_animate
-- [ ] 2.1.4: Display bonus awards with animations
-- [ ] 2.1.5: Show running leaderboard updates
-
-### 2.2: Sound Effects (APP-SOUND)
-**Effort:** 2-3 hours
-
-- [ ] 2.2.1: Add correct/wrong answer sounds
-- [ ] 2.2.2: Add countdown tick sound
-- [ ] 2.2.3: Add bonus award sound
-- [ ] 2.2.4: Add game win/lose sounds
-
-### 2.3: Bonus Display (APP-BONUS)
-**Effort:** 2 hours
-
-- [ ] 2.3.1: Display Speed Bonus (+50) for fastest
-- [ ] 2.3.2: Display all random bonus types
-- [ ] 2.3.3: Add bonus-specific animations
-
-### 2.4: Marathon Mode Polish (APP-MARATHON)
-**Effort:** 2-3 hours
-
-- [ ] 2.4.1: Create marathon end screen showing streak
-- [ ] 2.4.2: Show which image ended the run
-- [ ] 2.4.3: Add "Perfect Marathon" celebration (all 26 correct)
-
-### 2.5: Celebrations (APP-CELEBRATE)
-**Effort:** 2 hours
-
-- [ ] 2.5.1: Add confetti animation for winner
-- [ ] 2.5.2: Add victory sound/animation
-- [ ] 2.5.3: Add achievement unlock animations
-
-### 2.6: Image Preloading (APP-PRELOAD)
-**Effort:** 2 hours
-
-- [ ] 2.6.1: Preload next round images during current round
-- [ ] 2.6.2: Cache strategy for image management
-- [ ] 2.6.3: Loading placeholders
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 1.2.1 | Create dark theme matching web (theme.dart) | 2h | [ ] |
+| 1.2.2 | Set up app.dart with MaterialApp + GoRouter | 1h | [ ] |
+| 1.2.3 | Configure routes.dart with all navigation paths | 1h | [ ] |
+| 1.2.4 | Create basic scaffold structure | 30m | [ ] |
 
 ---
 
-## M3: Authentication
+## Epic 2.1: Home Screen (UI-HOME)
 
-**Goal:** Firebase Auth with Google and Apple sign-in
-**Priority:** P1
+**Goal:** Main entry point with game mode selection
+**Priority:** P0 - Critical
 **Status:** Planned
 
-### 3.1: Firebase Setup (APP-FIREBASE)
-**Effort:** 2-3 hours
-
-- [ ] 3.1.1: Create Firebase project "aintreal"
-- [ ] 3.1.2: Add Android app to Firebase
-- [ ] 3.1.3: Add iOS app to Firebase
-- [ ] 3.1.4: Download and add config files
-- [ ] 3.1.5: Initialize Firebase in main.dart
-
-### 3.2: Auth Integration (APP-AUTH)
-**Effort:** 4-5 hours
-
-- [ ] 3.2.1: Create firebase_auth.dart service
-- [ ] 3.2.2: Create auth_provider.dart Riverpod provider
-- [ ] 3.2.3: Implement Google Sign-In
-- [ ] 3.2.4: Implement Sign in with Apple
-- [ ] 3.2.5: Create sign-in screen with platform buttons
-
-### 3.3: Backend Integration (APP-AUTH-API)
-**Effort:** 3-4 hours
-
-- [ ] 3.3.1: Implement POST /api/auth/firebase endpoint (backend)
-- [ ] 3.3.2: Create user table in D1 (backend)
-- [ ] 3.3.3: Link Firebase UID to user profile
-- [ ] 3.3.4: Add auth token to API requests
-
-### 3.4: Profile Screen (APP-PROFILE)
-**Effort:** 3-4 hours
-
-- [ ] 3.4.1: Create profile_screen.dart layout
-- [ ] 3.4.2: Build stats_card.dart component
-- [ ] 3.4.3: Display user stats (games, wins, streaks)
-- [ ] 3.4.4: Add editable display name
-- [ ] 3.4.5: Add sign out button
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 2.1.1 | Create home_screen.dart layout | 2h | [ ] |
+| 2.1.2 | Build mode_card.dart component (Party, Classic, Marathon) | 2h | [ ] |
+| 2.1.3 | Add "AIn't Real" branding/logo | 1h | [ ] |
+| 2.1.4 | Implement mode selection navigation | 1h | [ ] |
 
 ---
 
-## M4: Mobile Features
+## Epic 2.2: Lobby Screens (UI-LOBBY)
 
-**Goal:** Native mobile experience
-**Priority:** P2
+**Goal:** Create and join game flows
+**Priority:** P0 - Critical
 **Status:** Planned
 
-### 4.1: Haptic Feedback (APP-HAPTICS)
-**Effort:** 1-2 hours
-
-- [ ] 4.1.1: Create haptics.dart utility
-- [ ] 4.1.2: Add haptic on answer selection
-- [ ] 4.1.3: Add haptic on timer expiry
-- [ ] 4.1.4: Add haptic on bonus/win
-
-### 4.2: Push Notifications (APP-PUSH)
-**Effort:** 4-5 hours
-
-- [ ] 4.2.1: Set up FCM in Firebase
-- [ ] 4.2.2: Request notification permissions
-- [ ] 4.2.3: Register FCM token with backend
-- [ ] 4.2.4: Implement POST /api/user/fcm-token (backend)
-- [ ] 4.2.5: Handle notification taps (deep linking)
-
-### 4.3: Native Sharing (APP-SHARE)
-**Effort:** 2-3 hours
-
-- [ ] 4.3.1: Add share button to game over screen
-- [ ] 4.3.2: Generate shareable game invite link
-- [ ] 4.3.3: Share results with score summary
-
-### 4.4: Deep Links (APP-DEEPLINKS)
-**Effort:** 2-3 hours
-
-- [ ] 4.4.1: Configure Android deep links (aintreal://join/CODE)
-- [ ] 4.4.2: Configure iOS universal links
-- [ ] 4.4.3: Handle deep link navigation in GoRouter
-
-### 4.5: App Assets (APP-ASSETS)
-**Effort:** 2-3 hours
-
-- [ ] 4.5.1: Create app icon (all sizes)
-- [ ] 4.5.2: Create splash screen
-- [ ] 4.5.3: Configure native splash package
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 2.2.1 | Create create_game_screen.dart with config options | 2h | [ ] |
+| 2.2.2 | Create join_game_screen.dart with code input | 2h | [ ] |
+| 2.2.3 | Create lobby_screen.dart layout | 2h | [ ] |
+| 2.2.4 | Build player_list.dart component | 1h | [ ] |
+| 2.2.5 | Create game_code_display.dart widget | 1h | [ ] |
+| 2.2.6 | Add QR code generation for sharing | 1h | [ ] |
+| 2.2.7 | Implement host controls (Start button) | 1h | [ ] |
 
 ---
 
-## M5: Monetization
+## Epic 3.1: API Client (NW-API)
 
-**Goal:** AdMob integration
-**Priority:** P2
+**Goal:** HTTP client for game creation and joining
+**Priority:** P0 - Critical
 **Status:** Planned
 
-### 5.1: AdMob Setup (APP-ADMOB)
-**Effort:** 2-3 hours
-
-- [ ] 5.1.1: Create AdMob account/app
-- [ ] 5.1.2: Add google_mobile_ads package
-- [ ] 5.1.3: Configure Android AdMob App ID
-- [ ] 5.1.4: Configure iOS AdMob App ID
-
-### 5.2: Banner Ads (APP-ADS-BANNER)
-**Effort:** 2 hours
-
-- [ ] 5.2.1: Create ad_banner.dart widget
-- [ ] 5.2.2: Add banner to home screen bottom
-- [ ] 5.2.3: Add banner to lobby screen bottom
-- [ ] 5.2.4: Hide banner during gameplay
-
-### 5.3: Interstitial Ads (APP-ADS-INTER)
-**Effort:** 2 hours
-
-- [ ] 5.3.1: Create interstitial ad manager
-- [ ] 5.3.2: Show after every 3 completed games
-- [ ] 5.3.3: Track game count in preferences
-
-### 5.4: Rewarded Ads (APP-ADS-REWARD)
-**Effort:** 2-3 hours
-
-- [ ] 5.4.1: Create rewarded ad manager
-- [ ] 5.4.2: Add "Continue" option in Marathon mode
-- [ ] 5.4.3: Grant extra life after watching ad
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 3.1.1 | Create api_client.dart with dio | 2h | [ ] |
+| 3.1.2 | Define endpoints.dart constants | 30m | [ ] |
+| 3.1.3 | Implement game creation endpoint | 1h | [ ] |
+| 3.1.4 | Implement game join endpoint | 1h | [ ] |
+| 3.1.5 | Add error handling and retry logic | 1h | [ ] |
 
 ---
 
-## M6: Release
+## Epic 3.2: WebSocket Integration (NW-WS)
+
+**Goal:** Real-time game state synchronization
+**Priority:** P0 - Critical
+**Status:** Planned
+
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 3.2.1 | Create ws_client.dart with web_socket_channel | 2h | [ ] |
+| 3.2.2 | Create ws_provider.dart Riverpod provider | 2h | [ ] |
+| 3.2.3 | Implement message parsing for all server types | 2h | [ ] |
+| 3.2.4 | Handle reconnection with exponential backoff | 2h | [ ] |
+| 3.2.5 | Create game_provider.dart for game state | 2h | [ ] |
+
+---
+
+## Epic 1.3: Game Screen (CG-GAME)
+
+**Goal:** Active gameplay with image selection
+**Priority:** P0 - Critical
+**Status:** Planned
+
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 1.3.1 | Create game_screen.dart layout | 2h | [ ] |
+| 1.3.2 | Build image_pair.dart with cached_network_image | 2h | [ ] |
+| 1.3.3 | Create timer_bar.dart countdown component | 1h | [ ] |
+| 1.3.4 | Implement tap-to-answer with WebSocket submission | 2h | [ ] |
+| 1.3.5 | Create answer_feedback.dart for immediate response | 1h | [ ] |
+| 1.3.6 | Add "Get Ready" countdown between rounds | 1h | [ ] |
+
+---
+
+## Epic 1.4: Results Screen (CG-RESULTS)
+
+**Goal:** Game over display with rankings
+**Priority:** P0 - Critical
+**Status:** Planned
+
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 1.4.1 | Create game_over_screen.dart layout | 2h | [ ] |
+| 1.4.2 | Build ranking_list.dart component | 1h | [ ] |
+| 1.4.3 | Display final scores and winner | 1h | [ ] |
+| 1.4.4 | Add Play Again / New Game buttons | 1h | [ ] |
+| 1.4.5 | Show photographer credits | 30m | [ ] |
+
+---
+
+## Epic 7.1: Reveal Sequence (PO-REVEAL)
+
+**Goal:** Animated round-by-round results
+**Priority:** P1 - High
+**Status:** Planned
+
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 7.1.1 | Create reveal_screen.dart for round reveals | 2h | [ ] |
+| 7.1.2 | Implement AI image highlight animation | 2h | [ ] |
+| 7.1.3 | Add score update animations with flutter_animate | 2h | [ ] |
+| 7.1.4 | Display bonus awards with animations | 1h | [ ] |
+| 7.1.5 | Show running leaderboard updates | 1h | [ ] |
+
+---
+
+## Epic 7.2: Sound Effects (PO-SOUND)
+
+**Goal:** Audio feedback for game events
+**Priority:** P1 - High
+**Status:** Planned
+
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 7.2.1 | Add correct/wrong answer sounds | 1h | [ ] |
+| 7.2.2 | Add countdown tick sound | 30m | [ ] |
+| 7.2.3 | Add bonus award sound | 30m | [ ] |
+| 7.2.4 | Add game win/lose sounds | 30m | [ ] |
+
+---
+
+## Epic 7.3: Celebrations (PO-CELEBRATE)
+
+**Goal:** Victory animations and effects
+**Priority:** P1 - High
+**Status:** Planned
+
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 7.3.1 | Add confetti animation for winner | 2h | [ ] |
+| 7.3.2 | Add victory sound/animation | 1h | [ ] |
+| 7.3.3 | Marathon "Perfect" celebration (26/26) | 1h | [ ] |
+
+---
+
+## Epic 7.4: Image Preloading (PO-PRELOAD)
+
+**Goal:** Smooth image loading experience
+**Priority:** P1 - High
+**Status:** Planned
+
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 7.4.1 | Preload next round images during current round | 2h | [ ] |
+| 7.4.2 | Cache strategy for image management | 1h | [ ] |
+| 7.4.3 | Loading placeholders | 1h | [ ] |
+
+---
+
+## Epic 4.1: Firebase Setup (AU-FIREBASE)
+
+**Goal:** Firebase project and configuration
+**Priority:** P1 - High
+**Status:** Planned
+
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 4.1.1 | Create Firebase project "aintreal" | 1h | [ ] |
+| 4.1.2 | Add Android app to Firebase | 30m | [ ] |
+| 4.1.3 | Add iOS app to Firebase | 30m | [ ] |
+| 4.1.4 | Download and add config files | 30m | [ ] |
+| 4.1.5 | Initialize Firebase in main.dart | 30m | [ ] |
+
+---
+
+## Epic 4.2: Auth Integration (AU-AUTH)
+
+**Goal:** Sign-in with Google and Apple
+**Priority:** P1 - High
+**Status:** Planned
+
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 4.2.1 | Create firebase_auth.dart service | 2h | [ ] |
+| 4.2.2 | Create auth_provider.dart Riverpod provider | 2h | [ ] |
+| 4.2.3 | Implement Google Sign-In | 2h | [ ] |
+| 4.2.4 | Implement Sign in with Apple | 2h | [ ] |
+| 4.2.5 | Create sign-in screen with platform buttons | 2h | [ ] |
+
+---
+
+## Epic 4.3: User Profile (AU-PROFILE)
+
+**Goal:** User stats and profile management
+**Priority:** P1 - High
+**Status:** Planned
+
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 4.3.1 | Implement backend POST /api/auth/firebase | 2h | [ ] |
+| 4.3.2 | Create user table in D1 (backend) | 1h | [ ] |
+| 4.3.3 | Create profile_screen.dart layout | 2h | [ ] |
+| 4.3.4 | Build stats_card.dart component | 1h | [ ] |
+| 4.3.5 | Add editable display name | 1h | [ ] |
+| 4.3.6 | Add sign out button | 30m | [ ] |
+
+---
+
+## Epic 6.1: Haptic Feedback (MF-HAPTICS)
+
+**Goal:** Tactile feedback for interactions
+**Priority:** P2 - Medium
+**Status:** Planned
+
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 6.1.1 | Create haptics.dart utility | 1h | [ ] |
+| 6.1.2 | Add haptic on answer selection | 30m | [ ] |
+| 6.1.3 | Add haptic on timer expiry | 30m | [ ] |
+| 6.1.4 | Add haptic on bonus/win | 30m | [ ] |
+
+---
+
+## Epic 6.2: Push Notifications (MF-PUSH)
+
+**Goal:** Game invite notifications
+**Priority:** P2 - Medium
+**Status:** Planned
+
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 6.2.1 | Set up FCM in Firebase | 1h | [ ] |
+| 6.2.2 | Request notification permissions | 1h | [ ] |
+| 6.2.3 | Register FCM token with backend | 1h | [ ] |
+| 6.2.4 | Implement backend POST /api/user/fcm-token | 1h | [ ] |
+| 6.2.5 | Handle notification taps (deep linking) | 2h | [ ] |
+
+---
+
+## Epic 6.3: Native Sharing (MF-SHARE)
+
+**Goal:** Share game invites and results
+**Priority:** P2 - Medium
+**Status:** Planned
+
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 6.3.1 | Add share button to game over screen | 1h | [ ] |
+| 6.3.2 | Generate shareable game invite link | 1h | [ ] |
+| 6.3.3 | Share results with score summary | 1h | [ ] |
+
+---
+
+## Epic 6.4: Deep Links (MF-DEEPLINKS)
+
+**Goal:** Direct game join via links
+**Priority:** P2 - Medium
+**Status:** Planned
+
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 6.4.1 | Configure Android deep links (aintreal://join/CODE) | 1h | [ ] |
+| 6.4.2 | Configure iOS universal links | 1h | [ ] |
+| 6.4.3 | Handle deep link navigation in GoRouter | 1h | [ ] |
+
+---
+
+## Epic 5.1: AdMob Setup (MO-ADMOB)
+
+**Goal:** Ad platform configuration
+**Priority:** P2 - Medium
+**Status:** Planned
+
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 5.1.1 | Create AdMob account/app | 1h | [ ] |
+| 5.1.2 | Add google_mobile_ads package | 30m | [ ] |
+| 5.1.3 | Configure Android AdMob App ID | 30m | [ ] |
+| 5.1.4 | Configure iOS AdMob App ID | 30m | [ ] |
+
+---
+
+## Epic 5.2: Ad Implementation (MO-ADS)
+
+**Goal:** Banner, interstitial, and rewarded ads
+**Priority:** P2 - Medium
+**Status:** Planned
+
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 5.2.1 | Create ad_banner.dart widget | 1h | [ ] |
+| 5.2.2 | Add banner to home screen bottom | 30m | [ ] |
+| 5.2.3 | Add banner to lobby screen bottom | 30m | [ ] |
+| 5.2.4 | Create interstitial ad manager | 1h | [ ] |
+| 5.2.5 | Show interstitial after every 3 games | 1h | [ ] |
+| 5.2.6 | Create rewarded ad manager | 1h | [ ] |
+| 5.2.7 | Add Marathon "Continue" option with rewarded ad | 2h | [ ] |
+
+---
+
+## Epic 8.1: App Assets (RE-ASSETS)
+
+**Goal:** App icon, splash screen
+**Priority:** P2 - Medium
+**Status:** Planned
+
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 8.1.1 | Create app icon (all sizes) | 2h | [ ] |
+| 8.1.2 | Create splash screen | 1h | [ ] |
+| 8.1.3 | Configure native splash package | 1h | [ ] |
+
+---
+
+## Epic 8.2: Store Preparation (RE-STORE)
+
+**Goal:** App store submission materials
+**Priority:** P3 - Low
+**Status:** Planned
+
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 8.2.1 | Create app screenshots (phone + tablet) | 3h | [ ] |
+| 8.2.2 | Write app description | 1h | [ ] |
+| 8.2.3 | Create feature graphic | 1h | [ ] |
+| 8.2.4 | Create/update privacy policy | 2h | [ ] |
+| 8.2.5 | Create terms of service | 1h | [ ] |
+
+---
+
+## Epic 8.3: Beta Testing (RE-BETA)
+
+**Goal:** Pre-release testing
+**Priority:** P3 - Low
+**Status:** Planned
+
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 8.3.1 | Set up TestFlight (iOS) | 1h | [ ] |
+| 8.3.2 | Set up Play Console internal testing | 1h | [ ] |
+| 8.3.3 | Recruit beta testers | 1h | [ ] |
+| 8.3.4 | Collect and address feedback | 4h | [ ] |
+
+---
+
+## Epic 8.4: Production Release (RE-PROD)
 
 **Goal:** App store submission
-**Priority:** P3
+**Priority:** P3 - Low
 **Status:** Planned
 
-### 6.1: Store Assets (APP-STORE)
-**Effort:** 4-5 hours
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 8.4.1 | Submit to Google Play | 2h | [ ] |
+| 8.4.2 | Submit to App Store | 2h | [ ] |
+| 8.4.3 | Monitor initial reviews | 2h | [ ] |
+| 8.4.4 | Address any store feedback | 4h | [ ] |
 
-- [ ] 6.1.1: Create app screenshots (phone + tablet)
-- [ ] 6.1.2: Write app description
-- [ ] 6.1.3: Create feature graphic
-- [ ] 6.1.4: Prepare promotional video (optional)
+---
 
-### 6.2: Legal (APP-LEGAL)
-**Effort:** 2-3 hours
+## Milestone Summary
 
-- [ ] 6.2.1: Create/update privacy policy
-- [ ] 6.2.2: Create terms of service
-- [ ] 6.2.3: Set up support email
+Milestones are built from completed Epics:
 
-### 6.3: Beta Testing (APP-BETA)
-**Effort:** 2-3 hours
-
-- [ ] 6.3.1: Set up TestFlight (iOS)
-- [ ] 6.3.2: Set up Play Console internal testing
-- [ ] 6.3.3: Recruit beta testers
-- [ ] 6.3.4: Collect and address feedback
-
-### 6.4: Production Release (APP-PROD)
-**Effort:** 2-3 hours
-
-- [ ] 6.4.1: Submit to Google Play
-- [ ] 6.4.2: Submit to App Store
-- [ ] 6.4.3: Monitor initial reviews
-- [ ] 6.4.4: Address any store feedback
+| Milestone | Epics Required | Priority |
+|-----------|----------------|----------|
+| **M1: Playable Game** | 1.1, 1.2, 2.1, 2.2, 3.1, 3.2, 1.3, 1.4 | P0 |
+| **M2: Polish** | 7.1, 7.2, 7.3, 7.4 | P1 |
+| **M3: Authentication** | 4.1, 4.2, 4.3 | P1 |
+| **M4: Mobile Features** | 6.1, 6.2, 6.3, 6.4 | P2 |
+| **M5: Monetization** | 5.1, 5.2 | P2 |
+| **M6: Release** | 8.1, 8.2, 8.3, 8.4 | P3 |
 
 ---
 
