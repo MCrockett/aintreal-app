@@ -1,113 +1,50 @@
-# AIn't Real - Flutter Mobile App
+# CLAUDE.md
 
-Flutter mobile application for iOS and Android.
+This file provides guidance to Claude Code when working with code in this repository.
 
-## Project Status: Design Phase
+## Quick Reference
 
-This app will provide a native mobile experience for the AIn't Real game, connecting to the same backend API as the web version.
+- **Feature Tracking**: See [TODO.md](TODO.md) for backlog and milestones
+- **Completed Work**: See [DONE.md](DONE.md) for archived completed work
+- **Project Overview**: See parent [aintreal-game/CLAUDE.md](../aintreal-game/CLAUDE.md)
 
----
+## Project Context
 
-## Confirmed Decisions (from parent CLAUDE.md)
+AIn't Real mobile app - Flutter implementation for iOS and Android.
 
-### Platform Strategy
-- **Framework:** Flutter (single codebase for iOS + Android)
-- **Release Priority:** Android first, develop both simultaneously
-- **Web:** Stays as separate HTML/JS (not Flutter web)
+- **Type**: Flutter app connecting to existing Cloudflare Workers backend
+- **Package**: `com.aintreal`
+- **Flutter**: 3.38.4 (stable) at `~/Library/flutter`
+- **Backend**: `api.aint-real.com` (same as web)
 
-### App Store Status
-- **Google Play:** Developer account active
-- **Apple App Store:** Developer account pending
+## Tech Stack
 
-### Feature Scope
-- Full parity with web version
-- All 3 game modes: Party, Classic Solo, Marathon
-- All bonuses and scoring
-- Photographer credits
+| Category | Choice |
+|----------|--------|
+| State Management | Riverpod |
+| Navigation | GoRouter |
+| HTTP Client | dio |
+| WebSocket | web_socket_channel |
+| UI Framework | Material 3 (dark theme) |
+| Image Caching | cached_network_image |
+| Analytics | Firebase Analytics |
+| Ads | AdMob (banner + interstitial + rewarded) |
 
-### Authentication
-- **Provider:** Firebase Authentication
-- **Methods:** Google Sign-In, Sign in with Apple
-- **Anonymous Play:** Supported (like web)
-- **Account Linking:** Prompt to link when signing in (preserves anonymous stats)
-- **Cross-Platform Sync:** Stats sync via Firebase UID
-
-### User Data (stored in D1 via API)
-- Display name (editable)
-- Total games played
-- Win count / win rate
-- Best Marathon streak
-- Achievements earned
-- Friends list (for invites)
-- Game history
-
-### Monetization
-- **Ads:** AdMob integration (mobile only)
-- **Placements:** TBD - options include between games, rewarded ads
-- **Web:** No ads (keep clean for sharing/virality)
-
-### Mobile-Specific Features
-- Haptic feedback on answer selection
-- Push notifications for game invites
-- Native share sheet integration
-- Platform sign-in buttons
-
----
-
-## Open Design Questions
-
-### 1. App Architecture
-- [ ] State management: Provider, Riverpod, BLoC, or GetX?
-- [ ] Navigation: GoRouter, auto_route, or Navigator 2.0?
-- [ ] Dependency injection approach?
-
-### 2. Networking
-- [ ] HTTP client: dio or http package?
-- [ ] WebSocket handling: web_socket_channel or custom?
-- [ ] Offline handling / caching strategy?
-
-### 3. UI/UX
-- [ ] Design system: Material 3, Cupertino adaptive, or custom?
-- [ ] Animation library: built-in, rive, or lottie?
-- [ ] Dark mode support?
-
-### 4. Firebase Setup
-- [ ] Project structure (single project or separate dev/prod)?
-- [ ] Analytics events to track?
-- [ ] Crashlytics integration?
-
-### 5. Ad Implementation
-- [ ] Banner ads, interstitials, or rewarded only?
-- [ ] Frequency capping rules?
-- [ ] Premium ad-free tier?
-
-### 6. Push Notifications
-- [ ] FCM setup
-- [ ] Notification types (game invites, friend requests, etc.)
-- [ ] Deep linking from notifications
-
-### 7. App Store Requirements
-- [ ] Privacy policy updates needed?
-- [ ] Age rating considerations?
-- [ ] Required screenshots/metadata?
-
----
-
-## Proposed Architecture
+## Architecture
 
 ```
 lib/
-├── main.dart                 # App entry point
-├── app.dart                  # MaterialApp configuration
+├── main.dart                 # App entry, Firebase init
+├── app.dart                  # MaterialApp + GoRouter setup
 ├── config/
-│   ├── env.dart              # Environment configuration
-│   ├── routes.dart           # Route definitions
-│   └── theme.dart            # App theming
+│   ├── env.dart              # API URLs, environment flags
+│   ├── routes.dart           # GoRouter route definitions
+│   └── theme.dart            # Material 3 theme (dark mode)
 ├── core/
-│   ├── api/                  # API client, endpoints
-│   ├── auth/                 # Firebase auth service
-│   ├── websocket/            # WebSocket connection manager
-│   └── storage/              # Local storage (SharedPreferences, etc.)
+│   ├── api/                  # dio client, endpoints
+│   ├── auth/                 # Firebase auth
+│   ├── websocket/            # WebSocket client, Riverpod provider
+│   └── storage/              # SharedPreferences
 ├── features/
 │   ├── home/                 # Home screen, mode selection
 │   ├── lobby/                # Create/join game, player list
@@ -115,119 +52,127 @@ lib/
 │   ├── results/              # Game over, rankings
 │   ├── profile/              # User profile, stats
 │   └── settings/             # App settings
-├── models/                   # Data models (Game, Player, Round, etc.)
+├── models/                   # Data models
 ├── widgets/                  # Shared UI components
 └── utils/                    # Helpers, extensions
 ```
 
----
+## Development Commands
+
+```bash
+# Run app
+cd aintreal-app && flutter run
+
+# Run with local backend
+flutter run --dart-define=API_BASE=http://localhost:8789
+
+# Install dependencies
+flutter pub get
+
+# Code generation (Riverpod)
+dart run build_runner build
+
+# Build release
+flutter build apk --release
+flutter build ios --release
+```
+
+## Git Workflow
+
+**Branch Naming**: `<type>/<milestone>.<task>-description`
+
+```bash
+# Examples
+feature/m1.setup-dependencies
+feature/m1.home-screen
+fix/m1.websocket-reconnect
+```
+
+**Types**: `feature`, `fix`, `refactor`, `test`, `docs`, `chore`
+
+**Critical Rules**:
+- NEVER merge directly to main - use Pull Requests
+- ALWAYS push branches for user review
+- Branch from updated main for each new feature
+
+**Workflow**:
+```bash
+# Start new feature
+git checkout main
+git pull origin main
+git checkout -b feature/m1.1-project-setup
+
+# Complete and push
+git add -A && git commit -m "feat(m1.1): description"
+git push origin feature/m1.1-project-setup
+# STOP - let user review and create PR
+```
+
+## Commit Format
+
+```
+<type>(<milestone.task>): <short summary>
+
+[Context]
+- M<N>.<T> (SHORT-CODE): Task description
+
+<detailed description>
+
+**Changes:**
+- Bulleted list of changes
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+## When Implementing Features
+
+1. **Check TODO.md** - Find the milestone/task ID
+2. **Create branch** from updated main
+3. **Update TODO.md** - Mark task as in-progress
+4. **Implement** following architecture patterns
+5. **Test** on device/emulator
+6. **Update TODO.md** - Mark task complete
+7. **Commit and push** - Let user create PR
+
+## Key Files
+
+- `lib/main.dart` - App entry point
+- `lib/config/env.dart` - API configuration
+- `lib/config/routes.dart` - Navigation routes
+- `lib/core/websocket/ws_client.dart` - WebSocket connection
+- `pubspec.yaml` - Dependencies
 
 ## API Integration
 
-The app connects to `api.aint-real.com` - same endpoints as web:
+Connects to `api.aint-real.com`:
 
 ```
 POST /api/game/create        - Create new game
 POST /api/game/join/:code    - Join existing game
 GET  /api/game/:code         - Get game state
 WS   /api/game/:code/ws      - WebSocket connection
-
 GET  /api/images/:path       - Serve images from R2
-GET  /api/stats              - Game statistics
 ```
 
-### New Endpoints Needed (for mobile features)
-```
-POST /api/auth/firebase      - Verify Firebase token, link/create user
-GET  /api/user/profile       - Get user profile & stats
-PUT  /api/user/profile       - Update display name
-GET  /api/user/history       - Game history
-POST /api/user/fcm-token     - Register push notification token
-```
+See [aintreal-game/GAMEFLOW.md](../aintreal-game/GAMEFLOW.md) for WebSocket message format.
 
----
+## Current State (December 2025)
 
-## Development Setup
+**Status**: Design phase complete, ready for M1 implementation
 
-### Prerequisites
-1. Flutter SDK (latest stable)
-2. Android Studio or Xcode
-3. Firebase project with Auth enabled
+**Completed**:
+- Tech stack decisions finalized
+- Architecture designed
+- Dependencies identified
+- TODO.md backlog created
 
-### Getting Started
-```bash
-# Clone the repo
-git clone https://github.com/MCrockett/aintreal-app.git
-cd aintreal-app
+**Next**: M1.1 - Project Setup (add dependencies, create folder structure)
 
-# Install dependencies
-flutter pub get
+## Questions?
 
-# Run on device/emulator
-flutter run
-```
-
----
-
-## Branch Naming Convention
-
-Following project-wide convention: `Theme.Epic.Task`
-
-```
-feature.app.initial-setup
-feature.app.home-screen
-feature.app.game-screen
-feature.app.firebase-auth
-bugfix.app.websocket-reconnect
-```
-
----
-
-## Milestones
-
-### M1: Core Game Loop
-- [ ] Project setup with architecture
-- [ ] Home screen with mode selection
-- [ ] Create/join game flow
-- [ ] Game screen with image display
-- [ ] Answer submission via WebSocket
-- [ ] Results screen
-
-### M2: Polish & Parity
-- [ ] Reveal sequence animations
-- [ ] Sound effects
-- [ ] All bonus displays
-- [ ] Marathon mode end screen
-- [ ] Confetti/celebration animations
-
-### M3: Authentication
-- [ ] Firebase setup
-- [ ] Google Sign-In
-- [ ] Sign in with Apple
-- [ ] Anonymous-to-account migration
-- [ ] Profile screen
-
-### M4: Mobile Features
-- [ ] Haptic feedback
-- [ ] Push notifications
-- [ ] Native sharing
-- [ ] Deep links
-
-### M5: Monetization
-- [ ] AdMob integration
-- [ ] Ad placement implementation
-- [ ] (Optional) Premium tier
-
-### M6: Release
-- [ ] App store assets
-- [ ] Beta testing
-- [ ] Production release
-
----
-
-## Notes
-
-- Keep feature parity with web as source of truth
-- Test WebSocket reconnection thoroughly (mobile networks are flaky)
-- Image caching is critical for good UX
-- Consider battery/data usage for background connections
+- Feature backlog → [TODO.md](TODO.md)
+- Completed work → [DONE.md](DONE.md)
+- Game flow → [../aintreal-game/GAMEFLOW.md](../aintreal-game/GAMEFLOW.md)
+- Project overview → [../aintreal-game/CLAUDE.md](../aintreal-game/CLAUDE.md)
