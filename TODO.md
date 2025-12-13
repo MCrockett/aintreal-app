@@ -6,8 +6,8 @@
 
 - **Platform:** Flutter 3.38.4 (stable)
 - **Package:** `com.aintreal`
-- **Branch:** `feature/1.1-project-foundation`
-- **Phase:** M1 Implementation - Epics 1.1, 1.2, 2.1 complete
+- **Branch:** `feature/2.2-lobby-screens`
+- **Phase:** M1 Implementation - Epics 1.1, 1.2, 2.1, 2.2 complete
 
 ---
 
@@ -85,17 +85,17 @@
 
 **Goal:** Create and join game flows
 **Priority:** P0 - Critical
-**Status:** Planned
+**Status:** Complete
 
 | Task | Description | Effort | Status |
 |------|-------------|--------|--------|
-| 2.2.1 | Create create_game_screen.dart with config options | 2h | [ ] |
-| 2.2.2 | Create join_game_screen.dart with code input | 2h | [ ] |
-| 2.2.3 | Create lobby_screen.dart layout | 2h | [ ] |
-| 2.2.4 | Build player_list.dart component | 1h | [ ] |
-| 2.2.5 | Create game_code_display.dart widget | 1h | [ ] |
-| 2.2.6 | Add QR code generation for sharing | 1h | [ ] |
-| 2.2.7 | Implement host controls (Start button) | 1h | [ ] |
+| 2.2.1 | Create create_game_screen.dart with config options | 2h | [x] |
+| 2.2.2 | Create join_game_screen.dart with code input | 2h | [x] |
+| 2.2.3 | Create lobby_screen.dart layout | 2h | [x] |
+| 2.2.4 | Build player_list.dart component | 1h | [x] |
+| 2.2.5 | Create game_code_display.dart widget | 1h | [x] |
+| 2.2.6 | Add QR code generation for sharing | 1h | [x] |
+| 2.2.7 | Implement host controls (Start button) | 1h | [x] |
 
 ---
 

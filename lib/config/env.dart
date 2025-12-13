@@ -34,6 +34,9 @@ class Env {
     defaultValue: 'production',
   ) == 'development';
 
+  /// Base URL for the web frontend (for sharing links).
+  static const String webBase = 'https://aint-real.com';
+
   /// App version displayed in the UI.
   static const String appVersion = '1.0.0';
 }
