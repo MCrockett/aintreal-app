@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/theme.dart';
+import '../../core/api/api_exceptions.dart';
+import '../../core/api/game_api.dart';
 import '../../widgets/gradient_background.dart';
 
 /// Screen for joining an existing game with a code.
@@ -38,28 +40,60 @@ class _JoinGameScreenState extends State<JoinGameScreen> {
       _errorMessage = null;
     });
 
-    // TODO: Epic 3.1 - Call API to join game
-    // For now, simulate and navigate to lobby
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    if (!mounted) return;
-
     final code = _codeController.text.trim().toUpperCase();
 
-    // Simulate error for invalid codes (demo purposes)
-    if (code == 'XXXX') {
+    try {
+      final response = await GameApi.instance.joinGame(
+        code: code,
+        playerName: _nameController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      // Navigate to lobby with data from API
+      context.go('/lobby/$code', extra: {
+        'playerName': _nameController.text.trim(),
+        'playerId': response.playerId,
+        'isHost': false,
+        'config': response.gameState.config.toJson(),
+      });
+    } on GameNotFoundException {
+      if (!mounted) return;
       setState(() {
         _isJoining = false;
         _errorMessage = 'Game not found. Check the code and try again.';
       });
-      return;
+    } on GameFullException {
+      if (!mounted) return;
+      setState(() {
+        _isJoining = false;
+        _errorMessage = 'Game is full (max 8 players).';
+      });
+    } on GameAlreadyStartedException {
+      if (!mounted) return;
+      setState(() {
+        _isJoining = false;
+        _errorMessage = 'Game has already started.';
+      });
+    } on NameTakenException {
+      if (!mounted) return;
+      setState(() {
+        _isJoining = false;
+        _errorMessage = 'That name is already taken.';
+      });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isJoining = false;
+        _errorMessage = e.message;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isJoining = false;
+        _errorMessage = 'Failed to join. Please try again.';
+      });
     }
-
-    // Navigate to lobby
-    context.go('/lobby/$code', extra: {
-      'playerName': _nameController.text.trim(),
-      'isHost': false,
-    });
   }
 
   @override

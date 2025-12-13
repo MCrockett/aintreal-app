@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/theme.dart';
+import '../../core/api/api_exceptions.dart';
+import '../../core/api/game_api.dart';
+import '../../models/game.dart';
 import '../../widgets/gradient_background.dart';
 
 /// Screen for creating a new game with configuration options.
@@ -38,24 +41,42 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
 
     setState(() => _isCreating = true);
 
-    // TODO: Epic 3.1 - Call API to create game
-    // For now, simulate and navigate to lobby with mock code
-    await Future.delayed(const Duration(milliseconds: 500));
+    try {
+      final config = GameConfig(
+        rounds: _rounds,
+        timePerRound: _timePerRound,
+        speedBonus: _speedBonus,
+        randomBonuses: _randomBonuses,
+        mode: GameMode.party,
+      );
 
-    if (!mounted) return;
+      final response = await GameApi.instance.createGame(
+        playerName: _nameController.text.trim(),
+        config: config,
+      );
 
-    // Navigate to lobby with game code
-    // In real implementation, code comes from API response
-    context.go('/lobby/ABCD', extra: {
-      'playerName': _nameController.text.trim(),
-      'isHost': true,
-      'config': {
-        'rounds': _rounds,
-        'timePerRound': _timePerRound,
-        'speedBonus': _speedBonus,
-        'randomBonuses': _randomBonuses,
-      },
-    });
+      if (!mounted) return;
+
+      // Navigate to lobby with game code from API
+      context.go('/lobby/${response.code}', extra: {
+        'playerName': _nameController.text.trim(),
+        'playerId': response.playerId,
+        'isHost': true,
+        'config': config.toJson(),
+      });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() => _isCreating = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isCreating = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to create game. Please try again.')),
+      );
+    }
   }
 
   @override
