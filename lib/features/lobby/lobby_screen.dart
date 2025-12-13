@@ -1,27 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../config/env.dart';
 import '../../config/theme.dart';
+import '../../core/websocket/game_state_provider.dart';
+import '../../core/websocket/ws_client.dart';
+import '../../core/websocket/ws_messages.dart';
 import '../../widgets/gradient_background.dart';
 
-/// Player model for the lobby.
-class LobbyPlayer {
-  const LobbyPlayer({
-    required this.id,
-    required this.name,
-    required this.isHost,
-  });
-
-  final String id;
-  final String name;
-  final bool isHost;
-}
-
 /// Lobby screen showing players waiting for game to start.
-class LobbyScreen extends StatefulWidget {
+class LobbyScreen extends ConsumerStatefulWidget {
   const LobbyScreen({
     super.key,
     required this.gameCode,
@@ -30,54 +21,47 @@ class LobbyScreen extends StatefulWidget {
   final String gameCode;
 
   @override
-  State<LobbyScreen> createState() => _LobbyScreenState();
+  ConsumerState<LobbyScreen> createState() => _LobbyScreenState();
 }
 
-class _LobbyScreenState extends State<LobbyScreen> {
-  // Mock data - will be replaced with WebSocket state in Epic 3.2
-  late List<LobbyPlayer> _players;
-  late bool _isHost;
-  late String _playerName;
-
-  // Game config (for host display)
-  int _rounds = 6;
-  int _timePerRound = 5;
-
+class _LobbyScreenState extends ConsumerState<LobbyScreen> {
   bool _isStarting = false;
-
-  @override
-  void initState() {
-    super.initState();
-    // Get data passed from create/join screen
-    // In real implementation, this comes from WebSocket state
-    _isHost = true; // Default for demo
-    _playerName = 'Player';
-    _players = [
-      LobbyPlayer(id: '1', name: _playerName, isHost: _isHost),
-    ];
-  }
+  bool _initialized = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Extract extra data from route if available
+
+    if (_initialized) return;
+    _initialized = true;
+
+    // Extract extra data from route and connect WebSocket
     final extra = GoRouterState.of(context).extra;
     if (extra is Map<String, dynamic>) {
-      _playerName = extra['playerName'] as String? ?? 'Player';
-      _isHost = extra['isHost'] as bool? ?? false;
+      final playerName = extra['playerName'] as String? ?? 'Player';
+      final playerId = extra['playerId'] as String? ?? '';
+      final isHost = extra['isHost'] as bool? ?? false;
+      final configJson = extra['config'] as Map<String, dynamic>?;
 
-      final config = extra['config'] as Map<String, dynamic>?;
-      if (config != null) {
-        _rounds = config['rounds'] as int? ?? 6;
-        _timePerRound = config['timePerRound'] as int? ?? 5;
+      WsGameConfig? config;
+      if (configJson != null) {
+        config = WsGameConfig(
+          rounds: configJson['rounds'] as int? ?? 6,
+          timePerRound: configJson['timePerRound'] as int? ?? 5,
+          speedBonus: configJson['speedBonus'] as bool? ?? true,
+          randomBonuses: configJson['randomBonuses'] as bool? ?? true,
+          mode: configJson['mode'] as String? ?? 'party',
+        );
       }
 
-      // Update player list with actual name
-      _players = [
-        LobbyPlayer(id: '1', name: _playerName, isHost: _isHost),
-        // Add mock players for demo
-        if (!_isHost) const LobbyPlayer(id: '0', name: 'Host', isHost: true),
-      ];
+      // Connect to WebSocket
+      ref.read(gameStateProvider.notifier).connect(
+            code: widget.gameCode,
+            playerId: playerId,
+            playerName: playerName,
+            isHost: isHost,
+            config: config,
+          );
     }
   }
 
@@ -148,28 +132,40 @@ class _LobbyScreenState extends State<LobbyScreen> {
     );
   }
 
-  Future<void> _startGame() async {
-    if (!_isHost || _players.length < 2) return;
+  void _startGame() {
+    final gameState = ref.read(gameStateProvider);
+    if (!gameState.isHost || gameState.players.length < 2) return;
 
     setState(() => _isStarting = true);
-
-    // TODO: Epic 3.2 - Send start message via WebSocket
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    if (!mounted) return;
-
-    // Navigate to game screen
-    context.go('/game/${widget.gameCode}');
+    ref.read(gameStateProvider.notifier).startGame();
   }
 
   void _leaveGame() {
-    // TODO: Epic 3.2 - Send leave message via WebSocket
+    ref.read(gameStateProvider.notifier).leave();
     context.go('/');
   }
 
   @override
   Widget build(BuildContext context) {
-    final canStart = _isHost && _players.length >= 2;
+    final gameState = ref.watch(gameStateProvider);
+
+    // Navigate to game screen when game starts
+    ref.listen<GameState>(gameStateProvider, (previous, next) {
+      if (next.status == GameStatus.playing && next.roundData != null) {
+        context.go('/game/${widget.gameCode}');
+      }
+      if (next.error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(next.error!)),
+        );
+        ref.read(gameStateProvider.notifier).clearError();
+      }
+    });
+
+    final players = gameState.players;
+    final isHost = gameState.isHost;
+    final canStart = isHost && players.length >= 2;
+    final config = gameState.config;
 
     return GradientBackground(
       child: SafeArea(
@@ -185,21 +181,25 @@ class _LobbyScreenState extends State<LobbyScreen> {
                     onPressed: _leaveGame,
                   ),
                   const Spacer(),
+                  // Connection status indicator
+                  _ConnectionIndicator(state: gameState.connectionState),
+                  const SizedBox(width: 12),
                   // Settings/config display
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppTheme.backgroundLight,
-                      borderRadius: BorderRadius.circular(20),
+                  if (config != null)
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppTheme.backgroundLight,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '${config.rounds} rounds  ·  ${config.timePerRound}s',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppTheme.textSecondary,
+                            ),
+                      ),
                     ),
-                    child: Text(
-                      '$_rounds rounds  ·  ${_timePerRound}s',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppTheme.textSecondary,
-                          ),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -237,7 +237,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            '${_players.length}/8',
+                            '${players.length}/8',
                             style:
                                 Theme.of(context).textTheme.bodySmall?.copyWith(
                                       color: AppTheme.primary,
@@ -249,7 +249,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
                     ),
                     const SizedBox(height: 12),
                     Expanded(
-                      child: _PlayerList(players: _players),
+                      child: _PlayerList(players: players),
                     ),
                   ],
                 ),
@@ -261,7 +261,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
               padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
-                  if (_isHost) ...[
+                  if (isHost) ...[
                     // Start button (host only)
                     Container(
                       decoration: BoxDecoration(
@@ -343,6 +343,32 @@ class _LobbyScreenState extends State<LobbyScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Connection status indicator.
+class _ConnectionIndicator extends StatelessWidget {
+  const _ConnectionIndicator({required this.state});
+
+  final WsConnectionState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final (color, icon) = switch (state) {
+      WsConnectionState.connected => (Colors.green, Icons.wifi),
+      WsConnectionState.connecting => (Colors.orange, Icons.wifi),
+      WsConnectionState.reconnecting => (Colors.orange, Icons.wifi_off),
+      WsConnectionState.disconnected => (Colors.red, Icons.wifi_off),
+    };
+
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.2),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(icon, size: 16, color: color),
     );
   }
 }
@@ -467,7 +493,7 @@ class _ShareButton extends StatelessWidget {
 class _PlayerList extends StatelessWidget {
   const _PlayerList({required this.players});
 
-  final List<LobbyPlayer> players;
+  final List<WsPlayer> players;
 
   @override
   Widget build(BuildContext context) {
@@ -486,7 +512,7 @@ class _PlayerList extends StatelessWidget {
 class _PlayerTile extends StatelessWidget {
   const _PlayerTile({required this.player});
 
-  final LobbyPlayer player;
+  final WsPlayer player;
 
   @override
   Widget build(BuildContext context) {
