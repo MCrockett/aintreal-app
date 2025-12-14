@@ -52,6 +52,80 @@ This document archives all completed work for the aintreal-app project.
 
 ---
 
+## M1: Playable Game - December 2025
+
+**Duration:** December 12-14, 2025
+**Status:** Complete
+
+### Epic 1.1: Project Foundation (UI-FOUNDATION)
+- [x] Added all dependencies to pubspec.yaml
+- [x] Created folder structure per architecture
+- [x] Set up Riverpod providers structure
+- [x] Created env.dart with API configuration
+- [x] Ran build_runner for code generation
+
+### Epic 1.2: App Shell & Theme (UI-SHELL)
+- [x] Created dark theme matching web (theme.dart)
+- [x] Set up app.dart with MaterialApp + GoRouter
+- [x] Configured routes.dart with all navigation paths
+- [x] Created basic scaffold structure
+
+### Epic 2.1: Home Screen (UI-HOME)
+- [x] Created home_screen.dart layout
+- [x] Built mode_card.dart component (Party, Classic, Marathon)
+- [x] Added "AIn't Real" branding/logo
+- [x] Implemented mode selection navigation
+
+### Epic 2.2: Lobby Screens (UI-LOBBY)
+- [x] Created create_game_screen.dart with config options
+- [x] Created join_game_screen.dart with code input
+- [x] Created lobby_screen.dart layout
+- [x] Built player_list.dart component
+- [x] Created game_code_display.dart widget
+- [x] Added QR code generation for sharing
+- [x] Implemented host controls (Start button)
+
+### Epic 3.1: API Client (NW-API)
+- [x] Created api_client.dart with dio
+- [x] Defined endpoints.dart constants
+- [x] Implemented game creation endpoint
+- [x] Implemented game join endpoint
+- [x] Added error handling and retry logic
+
+### Epic 3.2: WebSocket Integration (NW-WS)
+- [x] Created ws_client.dart with web_socket_channel
+- [x] Created game_state_provider.dart Riverpod provider
+- [x] Implemented message parsing for all server types
+- [x] Handle reconnection with exponential backoff
+- [x] Created ws_messages.dart for game state
+
+### Epic 1.3: Game Screen (CG-GAME)
+- [x] Created game_screen.dart layout
+- [x] Built image display with cached_network_image
+- [x] Created timer_bar countdown component
+- [x] Implemented tap-to-answer with WebSocket submission
+- [x] Created answer feedback overlay (Correct!/Wrong!)
+- [x] Added "Get Ready" countdown between rounds
+
+### Epic 1.4: Results Screen (CG-RESULTS)
+- [x] Created results_screen.dart layout
+- [x] Built ranking list component
+- [x] Display final scores and winner
+- [x] Added Play Again / Leave buttons
+
+### Key Bug Fixes (December 14, 2025)
+- Fixed StartGameMessage type from 'start' to 'start_game'
+- Fixed game logic: players correct when picking AI image
+- Fixed FinalRanking JSON parsing (id/correct vs playerId/correctAnswers)
+- Added message type mappings for round_reveal and reveal_phase_start
+
+### Known Limitations
+- Reveal UI not implemented (app waits during reveal phase)
+- Play Again button needs testing/fixes
+- Photographer credits not shown
+
+---
+
 ## Document Last Updated
 
-December 12, 2025
+December 14, 2025
