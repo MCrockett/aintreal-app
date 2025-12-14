@@ -7,8 +7,8 @@
 - **Platform:** Flutter 3.38.4 (stable)
 - **Package:** `com.aintreal`
 - **Branch:** `feature/1.4-results-screen`
-- **Phase:** M1 Complete, Epic 7.1 in progress
-- **Next:** Complete 7.1.3 (score animations) or move to M2 polish tasks
+- **Phase:** M1 Complete, Epic 7.1 Complete
+- **Next:** M2 polish tasks (7.2 Sound Effects, 7.3 Celebrations)
 
 ---
 
@@ -169,13 +169,13 @@
 
 **Goal:** Animated round-by-round results
 **Priority:** P1 - High
-**Status:** In Progress
+**Status:** Complete
 
 | Task | Description | Effort | Status |
 |------|-------------|--------|--------|
 | 7.1.1 | Create reveal_screen.dart for round reveals | 2h | [x] |
 | 7.1.2 | Implement AI image highlight animation | 2h | [x] |
-| 7.1.3 | Add score update animations with flutter_animate | 2h | [ ] |
+| 7.1.3 | Add score update animations with flutter_animate | 2h | [x] |
 | 7.1.4 | Display bonus awards with animations | 1h | [x] |
 | 7.1.5 | Show running leaderboard updates | 1h | [x] |
 

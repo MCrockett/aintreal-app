@@ -281,7 +281,12 @@ class GameStateNotifier extends StateNotifier<GameState> {
 
   /// Send play again command (host only).
   void playAgain() {
-    if (!state.isHost) return;
+    debugPrint('playAgain() called: isHost=${state.isHost}, playerId=${state.playerId}, hostId=${state.hostId}');
+    if (!state.isHost) {
+      debugPrint('playAgain() blocked: not host');
+      return;
+    }
+    debugPrint('Sending play_again message...');
     _wsClient?.send(const PlayAgainMessage());
   }
 

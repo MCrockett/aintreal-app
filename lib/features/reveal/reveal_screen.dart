@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -204,7 +205,10 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
             if (myResult != null)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _YourResultCard(result: myResult),
+                child: _YourResultCard(result: myResult)
+                    .animate()
+                    .fadeIn(duration: 400.ms, delay: 500.ms)
+                    .slideY(begin: 0.3, end: 0, duration: 400.ms, delay: 500.ms),
               ),
 
             const SizedBox(height: 12),
@@ -213,7 +217,11 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
             if (bonus != null)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _BonusCard(bonus: bonus),
+                child: _BonusCard(bonus: bonus)
+                    .animate()
+                    .fadeIn(duration: 400.ms, delay: 700.ms)
+                    .slideX(begin: -0.3, end: 0, duration: 400.ms, delay: 700.ms)
+                    .shimmer(duration: 1200.ms, delay: 1100.ms),
               ),
 
             const SizedBox(height: 12),
@@ -464,7 +472,14 @@ class _YourResultCard extends StatelessWidget {
                       color: Colors.white,
                     ),
               ),
-            ),
+            )
+                .animate(onPlay: (c) => c.repeat(reverse: true, count: 2))
+                .scale(
+                  begin: const Offset(1.0, 1.0),
+                  end: const Offset(1.15, 1.15),
+                  duration: 300.ms,
+                  delay: 800.ms,
+                ),
         ],
       ),
     );
@@ -588,79 +603,173 @@ class _ScoresList extends StatelessWidget {
         final isMe = score.playerId == currentPlayerId;
         final rank = index + 1;
 
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: isMe
-                ? AppTheme.primary.withValues(alpha: 0.15)
-                : AppTheme.backgroundLight,
-            borderRadius: BorderRadius.circular(8),
-            border: isMe
-                ? Border.all(
-                    color: AppTheme.primary.withValues(alpha: 0.5), width: 1)
-                : null,
+        return _ScoreItem(
+          score: score,
+          rank: rank,
+          isMe: isMe,
+          index: index,
+        );
+      },
+    );
+  }
+}
+
+/// Animated score item in the leaderboard.
+class _ScoreItem extends StatelessWidget {
+  const _ScoreItem({
+    required this.score,
+    required this.rank,
+    required this.isMe,
+    required this.index,
+  });
+
+  final PlayerScore score;
+  final int rank;
+  final bool isMe;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: isMe
+            ? AppTheme.primary.withValues(alpha: 0.15)
+            : AppTheme.backgroundLight,
+        borderRadius: BorderRadius.circular(8),
+        border: isMe
+            ? Border.all(
+                color: AppTheme.primary.withValues(alpha: 0.5), width: 1)
+            : null,
+      ),
+      child: Row(
+        children: [
+          // Rank
+          SizedBox(
+            width: 24,
+            child: Text(
+              '#$rank',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: rank == 1
+                        ? AppTheme.bonusRank
+                        : AppTheme.textSecondary,
+                  ),
+            ),
           ),
-          child: Row(
-            children: [
-              // Rank
-              SizedBox(
-                width: 24,
-                child: Text(
-                  '#$rank',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: rank == 1
-                            ? AppTheme.bonusRank
-                            : AppTheme.textSecondary,
+          const SizedBox(width: 8),
+          // Name
+          Expanded(
+            child: Row(
+              children: [
+                Text(
+                  score.name,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: isMe ? FontWeight.bold : null,
                       ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              // Name
-              Expanded(
-                child: Row(
-                  children: [
-                    Text(
-                      score.name,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: isMe ? FontWeight.bold : null,
-                          ),
+                if (isMe) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 1,
                     ),
-                    if (isMe) ...[
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 4,
-                          vertical: 1,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.primary.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                        child: Text(
-                          'You',
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: AppTheme.primary,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 9,
-                                  ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              // Score
-              Text(
-                '${score.score}',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: rank == 1 ? AppTheme.bonusRank : null,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(3),
                     ),
-              ),
-            ],
+                    child: Text(
+                      'You',
+                      style:
+                          Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppTheme.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 9,
+                              ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
+          // Score with animation
+          _AnimatedScore(score: score.score, rank: rank),
+        ],
+      ),
+    )
+        .animate()
+        .fadeIn(
+          duration: 300.ms,
+          delay: Duration(milliseconds: 800 + (index * 100)),
+        )
+        .slideX(
+          begin: 0.2,
+          end: 0,
+          duration: 300.ms,
+          delay: Duration(milliseconds: 800 + (index * 100)),
+          curve: Curves.easeOutCubic,
+        );
+  }
+}
+
+/// Animated score counter that counts up.
+class _AnimatedScore extends StatefulWidget {
+  const _AnimatedScore({
+    required this.score,
+    required this.rank,
+  });
+
+  final int score;
+  final int rank;
+
+  @override
+  State<_AnimatedScore> createState() => _AnimatedScoreState();
+}
+
+class _AnimatedScoreState extends State<_AnimatedScore>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<int> _scoreAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _scoreAnimation = IntTween(begin: 0, end: widget.score).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOutCubic,
+      ),
+    );
+
+    // Start counting after a delay based on index
+    Future.delayed(const Duration(milliseconds: 1200), () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _scoreAnimation,
+      builder: (context, child) {
+        return Text(
+          '${_scoreAnimation.value}',
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: widget.rank == 1 ? AppTheme.bonusRank : null,
+              ),
         );
       },
     );

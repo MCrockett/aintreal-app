@@ -35,6 +35,13 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
     if (_initialized) return;
     _initialized = true;
 
+    // Check if already connected to this game (e.g., returning from Play Again)
+    final currentState = ref.read(gameStateProvider);
+    if (currentState.isConnected && currentState.code == widget.gameCode) {
+      // Already connected to this game, no need to reconnect
+      return;
+    }
+
     // Extract extra data from route and connect WebSocket
     final extra = GoRouterState.of(context).extra;
     if (extra is Map<String, dynamic>) {

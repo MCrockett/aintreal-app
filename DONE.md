@@ -120,7 +120,6 @@ This document archives all completed work for the aintreal-app project.
 - Added message type mappings for round_reveal and reveal_phase_start
 
 ### Known Limitations
-- Play Again button needs testing/fixes
 - Photographer credits not shown
 
 ---
@@ -128,11 +127,12 @@ This document archives all completed work for the aintreal-app project.
 ## Epic 7.1: Reveal Sequence (PO-REVEAL) - December 2025
 
 **Duration:** December 14, 2025
-**Status:** In Progress (4/5 tasks complete)
+**Status:** Complete
 
 ### Completed Tasks
 - [x] 7.1.1 Created reveal_screen.dart for round reveals
 - [x] 7.1.2 Implemented AI image highlight animation (scale + glow)
+- [x] 7.1.3 Added score update animations with flutter_animate
 - [x] 7.1.4 Display bonus awards with animations
 - [x] 7.1.5 Show running leaderboard updates
 
@@ -147,8 +147,15 @@ This document archives all completed work for the aintreal-app project.
   - Server sends `id` not `playerId` for PlayerScore
   - Added `topUrl`/`bottomUrl` to RevealMessage for image display
 
-### Remaining
-- [ ] 7.1.3 Add score update animations with flutter_animate
+### Score Animations (7.1.3)
+- Fade-in and slide animations for result card and bonus card
+- Staggered slide-in animations for each score item in leaderboard
+- Count-up animation for score numbers using IntTween
+- Pulse animation on points badge
+
+### Play Again Fix
+- Fixed lobby reconnection issue that broke Play Again flow
+- Lobby screen now checks if already connected before reconnecting
 
 ---
 
