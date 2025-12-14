@@ -339,7 +339,8 @@ class PlayerResult {
       playerId: json['playerId'] as String,
       name: json['name'] as String,
       choice: json['choice'] as String?,
-      correct: json['correct'] as bool? ?? false,
+      // Server sends 'isCorrect', not 'correct'
+      correct: (json['correct'] ?? json['isCorrect']) as bool? ?? false,
       responseTime: json['responseTime'] as int? ?? 0,
       points: json['points'] as int? ?? 0,
     );
@@ -363,7 +364,8 @@ class PlayerScore {
 
   factory PlayerScore.fromJson(Map<String, dynamic> json) {
     return PlayerScore(
-      playerId: json['playerId'] as String,
+      // Server sends 'id', not 'playerId'
+      playerId: (json['playerId'] ?? json['id']) as String,
       name: json['name'] as String,
       score: json['score'] as int,
     );
@@ -402,7 +404,10 @@ class RoundBonus {
 class RevealMessage extends WsMessage {
   const RevealMessage({
     required this.round,
+    required this.totalRounds,
     required this.aiPosition,
+    required this.topUrl,
+    required this.bottomUrl,
     required this.results,
     required this.scores,
     this.bonus,
@@ -412,7 +417,10 @@ class RevealMessage extends WsMessage {
   factory RevealMessage.fromJson(Map<String, dynamic> json) {
     return RevealMessage(
       round: json['round'] as int,
+      totalRounds: json['totalRounds'] as int? ?? 0,
       aiPosition: json['aiPosition'] as String,
+      topUrl: json['topUrl'] as String,
+      bottomUrl: json['bottomUrl'] as String,
       results: (json['results'] as List<dynamic>)
           .map((r) => PlayerResult.fromJson(r as Map<String, dynamic>))
           .toList(),
@@ -427,7 +435,10 @@ class RevealMessage extends WsMessage {
   }
 
   final int round;
+  final int totalRounds;
   final String aiPosition;
+  final String topUrl;
+  final String bottomUrl;
   final List<PlayerResult> results;
   final List<PlayerScore> scores;
   final RoundBonus? bonus;

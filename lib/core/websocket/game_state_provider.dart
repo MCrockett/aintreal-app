@@ -76,14 +76,20 @@ class RoundData {
 class RevealData {
   const RevealData({
     required this.round,
+    required this.totalRounds,
     required this.aiPosition,
+    required this.topUrl,
+    required this.bottomUrl,
     required this.results,
     required this.scores,
     this.bonus,
   });
 
   final int round;
+  final int totalRounds;
   final String aiPosition;
+  final String topUrl;
+  final String bottomUrl;
   final List<PlayerResult> results;
   final List<PlayerScore> scores;
   final RoundBonus? bonus;
@@ -376,7 +382,10 @@ class GameStateNotifier extends StateNotifier<GameState> {
 
       case RevealMessage(
           :final round,
+          :final totalRounds,
           :final aiPosition,
+          :final topUrl,
+          :final bottomUrl,
           :final results,
           :final scores,
           :final bonus
@@ -385,7 +394,10 @@ class GameStateNotifier extends StateNotifier<GameState> {
           status: GameStatus.revealing,
           revealData: RevealData(
             round: round,
+            totalRounds: totalRounds,
             aiPosition: aiPosition,
+            topUrl: topUrl,
+            bottomUrl: bottomUrl,
             results: results,
             scores: scores,
             bonus: bonus,

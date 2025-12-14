@@ -71,7 +71,6 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
     final gameState = ref.watch(gameStateProvider);
     final revealData = gameState.revealData;
     final playerId = gameState.playerId;
-    final roundData = gameState.roundData;
 
     // Listen for state changes
     ref.listen<GameState>(gameStateProvider, (previous, next) {
@@ -134,9 +133,9 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
           orElse: () => null,
         );
 
-    // Get image URLs from the round data if available
-    final topUrl = roundData?.topUrl;
-    final bottomUrl = roundData?.bottomUrl;
+    // Get image URLs directly from reveal data
+    final topUrl = revealData.topUrl;
+    final bottomUrl = revealData.bottomUrl;
 
     return GradientBackground(
       child: SafeArea(
@@ -169,87 +168,35 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
             const SizedBox(height: 16),
 
             // Images with AI reveal
-            if (topUrl != null && bottomUrl != null)
-              Expanded(
-                flex: 3,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    children: [
-                      // Top image
-                      Expanded(
-                        child: _RevealImage(
-                          imageUrl: _buildImageUrl(topUrl),
-                          isAi: aiPosition == 'top',
-                          scaleAnimation: _scaleAnimation,
-                          glowAnimation: _glowAnimation,
-                        ),
+            Expanded(
+              flex: 3,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: [
+                    // Top image
+                    Expanded(
+                      child: _RevealImage(
+                        imageUrl: _buildImageUrl(topUrl),
+                        isAi: aiPosition == 'top',
+                        scaleAnimation: _scaleAnimation,
+                        glowAnimation: _glowAnimation,
                       ),
-                      const SizedBox(height: 12),
-                      // Bottom image
-                      Expanded(
-                        child: _RevealImage(
-                          imageUrl: _buildImageUrl(bottomUrl),
-                          isAi: aiPosition == 'bottom',
-                          scaleAnimation: _scaleAnimation,
-                          glowAnimation: _glowAnimation,
-                        ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Bottom image
+                    Expanded(
+                      child: _RevealImage(
+                        imageUrl: _buildImageUrl(bottomUrl),
+                        isAi: aiPosition == 'bottom',
+                        scaleAnimation: _scaleAnimation,
+                        glowAnimation: _glowAnimation,
                       ),
-                    ],
-                  ),
-                ),
-              )
-            else
-              // Fallback when no images
-              Expanded(
-                flex: 3,
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      AnimatedBuilder(
-                        animation: _glowAnimation,
-                        builder: (context, child) {
-                          return Container(
-                            padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              color: AppTheme.wrongAnswer
-                                  .withValues(alpha: 0.2 * _glowAnimation.value),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: AppTheme.wrongAnswer.withValues(
-                                    alpha: 0.5 * _glowAnimation.value),
-                                width: 3,
-                              ),
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.smart_toy,
-                                  size: 64,
-                                  color: AppTheme.wrongAnswer,
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'The AI was ${aiPosition.toUpperCase()}',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headlineSmall
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: AppTheme.wrongAnswer,
-                                      ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
+            ),
 
             const SizedBox(height: 16),
 
