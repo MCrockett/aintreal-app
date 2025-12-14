@@ -7,8 +7,8 @@
 - **Platform:** Flutter 3.38.4 (stable)
 - **Package:** `com.aintreal`
 - **Branch:** `feature/1.4-results-screen`
-- **Phase:** M1 Complete, Epic 7.1 Complete
-- **Next:** M2 polish tasks (7.2 Sound Effects, 7.3 Celebrations)
+- **Phase:** M1 Complete, Epic 7.1-7.3 Complete
+- **Next:** M2 remaining polish (7.4 Image Preloading)
 
 ---
 
@@ -185,14 +185,14 @@
 
 **Goal:** Audio feedback for game events
 **Priority:** P1 - High
-**Status:** Planned
+**Status:** Complete
 
 | Task | Description | Effort | Status |
 |------|-------------|--------|--------|
-| 7.2.1 | Add correct/wrong answer sounds | 1h | [ ] |
-| 7.2.2 | Add countdown tick sound | 30m | [ ] |
-| 7.2.3 | Add bonus award sound | 30m | [ ] |
-| 7.2.4 | Add game win/lose sounds | 30m | [ ] |
+| 7.2.1 | Add correct/wrong answer sounds | 1h | [x] |
+| 7.2.2 | Add countdown tick sound | 30m | [x] |
+| 7.2.3 | Add bonus award sound | 30m | [x] |
+| 7.2.4 | Add game win/lose sounds | 30m | [x] |
 
 ---
 
@@ -200,12 +200,12 @@
 
 **Goal:** Victory animations and effects
 **Priority:** P1 - High
-**Status:** Planned
+**Status:** Complete
 
 | Task | Description | Effort | Status |
 |------|-------------|--------|--------|
-| 7.3.1 | Add confetti animation for winner | 2h | [ ] |
-| 7.3.2 | Add victory sound/animation | 1h | [ ] |
+| 7.3.1 | Add confetti animation for winner | 2h | [x] |
+| 7.3.2 | Add victory sound/animation | 1h | [x] |
 | 7.3.3 | Marathon "Perfect" celebration (26/26) | 1h | [ ] |
 
 ---

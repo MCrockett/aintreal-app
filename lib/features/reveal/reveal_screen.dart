@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../config/env.dart';
 import '../../config/theme.dart';
+import '../../core/audio/sound_service.dart';
 import '../../core/websocket/game_state_provider.dart';
 import '../../core/websocket/ws_messages.dart';
 import '../../widgets/gradient_background.dart';
@@ -28,6 +29,11 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
   late AnimationController _revealController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _glowAnimation;
+
+  // Track sounds to avoid duplicate plays
+  bool _revealSoundPlayed = false;
+  bool _resultSoundPlayed = false;
+  bool _bonusSoundPlayed = false;
 
   @override
   void initState() {
@@ -53,8 +59,52 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
 
     // Start the reveal animation after a short delay
     Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) _revealController.forward();
+      if (mounted) {
+        _revealController.forward();
+        _playRevealSound();
+      }
     });
+  }
+
+  void _playRevealSound() {
+    if (!_revealSoundPlayed) {
+      _revealSoundPlayed = true;
+      SoundService.instance.playReveal();
+    }
+  }
+
+  void _playResultSound(bool isCorrect) {
+    if (!_resultSoundPlayed) {
+      _resultSoundPlayed = true;
+      // Delay to sync with animation
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (isCorrect) {
+          SoundService.instance.playCorrect();
+        } else {
+          SoundService.instance.playWrong();
+        }
+      });
+    }
+  }
+
+  void _playBonusSound(String bonusType) {
+    if (!_bonusSoundPlayed) {
+      _bonusSoundPlayed = true;
+      // Delay to sync with bonus card animation
+      Future.delayed(const Duration(milliseconds: 700), () {
+        if (bonusType == 'streak') {
+          SoundService.instance.playStreak();
+        } else {
+          SoundService.instance.playBonus();
+        }
+      });
+    }
+  }
+
+  void _resetSounds() {
+    _revealSoundPlayed = false;
+    _resultSoundPlayed = false;
+    _bonusSoundPlayed = false;
   }
 
   @override
@@ -91,13 +141,17 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
         context.go('/game/${widget.gameCode}');
       }
 
-      // New reveal round - restart animation
+      // New reveal round - restart animation and sounds
       if (next.revealData != null &&
           previous?.revealData?.round != next.revealData?.round) {
         debugPrint('New reveal round: ${next.revealData?.round}');
+        _resetSounds();
         _revealController.reset();
         Future.delayed(const Duration(milliseconds: 300), () {
-          if (mounted) _revealController.forward();
+          if (mounted) {
+            _revealController.forward();
+            _playRevealSound();
+          }
         });
       }
     });
@@ -133,6 +187,16 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
           (r) => r?.playerId == playerId,
           orElse: () => null,
         );
+
+    // Play result sound for current player
+    if (myResult != null) {
+      _playResultSound(myResult.correct);
+    }
+
+    // Play bonus sound if there's a bonus
+    if (bonus != null) {
+      _playBonusSound(bonus.type);
+    }
 
     // Get image URLs directly from reveal data
     final topUrl = revealData.topUrl;

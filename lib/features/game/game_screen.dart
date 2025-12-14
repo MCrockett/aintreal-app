@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../config/env.dart';
 import '../../config/theme.dart';
+import '../../core/audio/sound_service.dart';
 import '../../core/websocket/game_state_provider.dart';
 import '../../widgets/gradient_background.dart';
 
@@ -56,12 +57,19 @@ class _GameScreenState extends ConsumerState<GameScreen>
     _getReadyCount = 3;
     _showGetReady = true;
 
+    // Play tick sound for initial count
+    SoundService.instance.playTick();
+
     _getReadyTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_getReadyCount > 1) {
         setState(() => _getReadyCount--);
+        // Play tick sound for each countdown
+        SoundService.instance.playTick();
       } else {
         timer.cancel();
         setState(() => _showGetReady = false);
+        // Play round start sound
+        SoundService.instance.playRoundStart();
         _startRoundTimer();
       }
     });
@@ -87,6 +95,14 @@ class _GameScreenState extends ConsumerState<GameScreen>
     _roundTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_remainingSeconds > 0) {
         setState(() => _remainingSeconds--);
+        // Play tick sound for last 3 seconds
+        if (_remainingSeconds <= 3 && _remainingSeconds > 0) {
+          SoundService.instance.playTick();
+        }
+        // Play time up warning at 0
+        if (_remainingSeconds == 0) {
+          SoundService.instance.playTimeUp();
+        }
       } else {
         timer.cancel();
       }
@@ -96,6 +112,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
   void _onImageTap(String choice) {
     final gameState = ref.read(gameStateProvider);
     if (gameState.roundData?.hasAnswered == true) return;
+
+    // Play selection haptic
+    SoundService.instance.haptic(HapticType.selection);
 
     // Calculate response time
     final responseTime = _roundStartTime != null

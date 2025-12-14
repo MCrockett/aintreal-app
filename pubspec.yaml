@@ -31,6 +31,9 @@ dependencies:
   flutter_animate: ^4.5.2
   confetti: ^0.7.0
 
+  # Audio
+  audioplayers: ^6.1.0
+
   # QR Code Generation
   qr_flutter: ^4.1.0
 
@@ -52,3 +55,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/sounds/

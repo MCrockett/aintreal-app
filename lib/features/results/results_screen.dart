@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/theme.dart';
+import '../../core/audio/sound_service.dart';
 import '../../core/websocket/game_state_provider.dart';
 import '../../core/websocket/ws_messages.dart';
 import '../../widgets/gradient_background.dart';
@@ -23,6 +24,7 @@ class ResultsScreen extends ConsumerStatefulWidget {
 
 class _ResultsScreenState extends ConsumerState<ResultsScreen> {
   late ConfettiController _confettiController;
+  bool _soundPlayed = false;
 
   @override
   void initState() {
@@ -33,6 +35,20 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
     Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) _confettiController.play();
     });
+  }
+
+  void _playGameEndSound(bool isWinner) {
+    if (!_soundPlayed) {
+      _soundPlayed = true;
+      // Delay slightly to sync with screen transition
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (isWinner) {
+          SoundService.instance.playVictory();
+        } else {
+          SoundService.instance.playGameOver();
+        }
+      });
+    }
   }
 
   @override
@@ -112,6 +128,9 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
           orElse: () => null,
         );
     final isWinner = myRanking?.rank == 1;
+
+    // Play victory or game over sound
+    _playGameEndSound(isWinner);
 
     return GradientBackground(
       child: Stack(
