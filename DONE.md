@@ -120,9 +120,35 @@ This document archives all completed work for the aintreal-app project.
 - Added message type mappings for round_reveal and reveal_phase_start
 
 ### Known Limitations
-- Reveal UI not implemented (app waits during reveal phase)
 - Play Again button needs testing/fixes
 - Photographer credits not shown
+
+---
+
+## Epic 7.1: Reveal Sequence (PO-REVEAL) - December 2025
+
+**Duration:** December 14, 2025
+**Status:** In Progress (4/5 tasks complete)
+
+### Completed Tasks
+- [x] 7.1.1 Created reveal_screen.dart for round reveals
+- [x] 7.1.2 Implemented AI image highlight animation (scale + glow)
+- [x] 7.1.4 Display bonus awards with animations
+- [x] 7.1.5 Show running leaderboard updates
+
+### Key Implementation Details
+- Created `/reveal/:code` route with animated reveal screen
+- Shows both images with AI/Real labels animating in
+- Player result card shows correct/wrong with response time
+- Bonus card displays speed/lucky/streak bonuses when awarded
+- Running leaderboard sorted by score with current player highlighted
+- Fixed round_reveal JSON parsing:
+  - Server sends `isCorrect` not `correct` for PlayerResult
+  - Server sends `id` not `playerId` for PlayerScore
+  - Added `topUrl`/`bottomUrl` to RevealMessage for image display
+
+### Remaining
+- [ ] 7.1.3 Add score update animations with flutter_animate
 
 ---
 
