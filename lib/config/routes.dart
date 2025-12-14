@@ -6,6 +6,7 @@ import '../features/lobby/create_game_screen.dart';
 import '../features/lobby/join_game_screen.dart';
 import '../features/lobby/lobby_screen.dart';
 import '../features/game/game_screen.dart';
+import '../features/reveal/reveal_screen.dart';
 import '../features/results/results_screen.dart';
 
 /// Route paths for the app.
@@ -17,6 +18,7 @@ class AppRoutes {
   static const String joinGame = '/join';
   static const String lobby = '/lobby/:code';
   static const String game = '/game/:code';
+  static const String reveal = '/reveal/:code';
   static const String results = '/results/:code';
 
   /// Constructs the lobby path with a game code.
@@ -24,6 +26,9 @@ class AppRoutes {
 
   /// Constructs the game path with a game code.
   static String gamePath(String code) => '/game/$code';
+
+  /// Constructs the reveal path with a game code.
+  static String revealPath(String code) => '/reveal/$code';
 
   /// Constructs the results path with a game code.
   static String resultsPath(String code) => '/results/$code';
@@ -63,6 +68,14 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) {
         final code = state.pathParameters['code']!;
         return GameScreen(gameCode: code);
+      },
+    ),
+    GoRoute(
+      path: AppRoutes.reveal,
+      name: 'reveal',
+      builder: (context, state) {
+        final code = state.pathParameters['code']!;
+        return RevealScreen(gameCode: code);
       },
     ),
     GoRoute(

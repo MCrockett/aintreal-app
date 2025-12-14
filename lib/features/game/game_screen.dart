@@ -138,11 +138,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
         context.go('/results/${widget.gameCode}');
       }
 
-      // Show reveal (in party mode, server sends reveal after all answered)
+      // Navigate to reveal screen when revealing starts
       if (next.status == GameStatus.revealing && next.revealData != null) {
-        debugPrint('Reveal received for round ${next.revealData?.round}');
-        // Could show reveal animation here
-        // For now, auto-advance to next round or results
+        debugPrint('Reveal received for round ${next.revealData?.round}, navigating to reveal screen');
+        context.go('/reveal/${widget.gameCode}');
       }
     });
 
