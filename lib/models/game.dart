@@ -189,39 +189,36 @@ class CreateGameResponse {
   const CreateGameResponse({
     required this.code,
     required this.playerId,
-    required this.wsUrl,
+    required this.gameState,
   });
 
   factory CreateGameResponse.fromJson(Map<String, dynamic> json) {
     return CreateGameResponse(
       code: json['code'] as String,
       playerId: json['playerId'] as String,
-      wsUrl: json['wsUrl'] as String,
+      gameState: GameState.fromJson(json['gameState'] as Map<String, dynamic>),
     );
   }
 
   final String code;
   final String playerId;
-  final String wsUrl;
+  final GameState gameState;
 }
 
 /// Response from joining a game.
 class JoinGameResponse {
   const JoinGameResponse({
     required this.playerId,
-    required this.wsUrl,
     required this.gameState,
   });
 
   factory JoinGameResponse.fromJson(Map<String, dynamic> json) {
     return JoinGameResponse(
       playerId: json['playerId'] as String,
-      wsUrl: json['wsUrl'] as String,
       gameState: GameState.fromJson(json['gameState'] as Map<String, dynamic>),
     );
   }
 
   final String playerId;
-  final String wsUrl;
   final GameState gameState;
 }

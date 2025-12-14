@@ -22,15 +22,19 @@ enum WsMessageType {
 /// Parse server message type string to enum.
 WsMessageType parseMessageType(String type) {
   return switch (type) {
-    'connection_established' => WsMessageType.connectionEstablished,
+    'connected' => WsMessageType.connectionEstablished,
     'player_joined' => WsMessageType.playerJoined,
+    'player_connected' => WsMessageType.playerJoined,
     'player_left' => WsMessageType.playerLeft,
+    'player_disconnected' => WsMessageType.playerLeft,
     'game_state' => WsMessageType.gameState,
     'config_updated' => WsMessageType.configUpdated,
     'game_starting' => WsMessageType.gameStarting,
     'round_start' => WsMessageType.roundStart,
     'player_answered' => WsMessageType.playerAnswered,
     'reveal' => WsMessageType.reveal,
+    'round_reveal' => WsMessageType.reveal,
+    'reveal_phase_start' => WsMessageType.unknown, // TODO: Implement reveal UI
     'marathon_ended' => WsMessageType.marathonEnded,
     'game_over' => WsMessageType.gameOver,
     'return_to_lobby' => WsMessageType.returnToLobby,
@@ -79,15 +83,22 @@ sealed class WsMessage {
 
 /// Server confirmed connection.
 class ConnectionEstablishedMessage extends WsMessage {
-  const ConnectionEstablishedMessage({required this.playerId});
+  const ConnectionEstablishedMessage({
+    required this.playerId,
+    this.gameState,
+  });
 
   factory ConnectionEstablishedMessage.fromJson(Map<String, dynamic> json) {
     return ConnectionEstablishedMessage(
       playerId: json['playerId'] as String,
+      gameState: json['gameState'] != null
+          ? WsGameState.fromJson(json['gameState'] as Map<String, dynamic>)
+          : null,
     );
   }
 
   final String playerId;
+  final WsGameState? gameState;
 }
 
 /// Player info in messages.
@@ -117,23 +128,29 @@ class WsPlayer {
   final bool hasAnswered;
 }
 
-/// Someone joined the lobby.
+/// Someone joined the lobby or connected via WebSocket.
 class PlayerJoinedMessage extends WsMessage {
   const PlayerJoinedMessage({
-    required this.player,
+    this.player,
+    this.playerId,
     required this.players,
   });
 
   factory PlayerJoinedMessage.fromJson(Map<String, dynamic> json) {
+    // Handle both 'player_joined' (has player object) and 'player_connected' (has playerId)
     return PlayerJoinedMessage(
-      player: WsPlayer.fromJson(json['player'] as Map<String, dynamic>),
+      player: json['player'] != null
+          ? WsPlayer.fromJson(json['player'] as Map<String, dynamic>)
+          : null,
+      playerId: json['playerId'] as String?,
       players: (json['players'] as List<dynamic>)
           .map((p) => WsPlayer.fromJson(p as Map<String, dynamic>))
           .toList(),
     );
   }
 
-  final WsPlayer player;
+  final WsPlayer? player;
+  final String? playerId;
   final List<WsPlayer> players;
 }
 
@@ -459,11 +476,13 @@ class FinalRanking {
 
   factory FinalRanking.fromJson(Map<String, dynamic> json) {
     return FinalRanking(
-      playerId: json['playerId'] as String,
+      // Server sends 'id', not 'playerId'
+      playerId: (json['playerId'] ?? json['id']) as String,
       name: json['name'] as String,
       score: json['score'] as int,
       rank: json['rank'] as int,
-      correctAnswers: json['correctAnswers'] as int? ?? 0,
+      // Server sends 'correct', not 'correctAnswers'
+      correctAnswers: (json['correctAnswers'] ?? json['correct']) as int? ?? 0,
     );
   }
 
@@ -583,7 +602,7 @@ class UpdateConfigMessage extends WsClientMessage {
 
 /// Start the game (host only).
 class StartGameMessage extends WsClientMessage {
-  const StartGameMessage() : super('start');
+  const StartGameMessage() : super('start_game');
 
   @override
   Map<String, dynamic> toJson() => {'type': type};

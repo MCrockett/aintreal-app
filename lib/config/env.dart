@@ -39,4 +39,11 @@ class Env {
 
   /// App version displayed in the UI.
   static const String appVersion = '1.0.0';
+
+  /// Mobile app secret for bypassing Turnstile verification.
+  /// This is passed in the X-Mobile-App header.
+  static const String mobileAppSecret = String.fromEnvironment(
+    'MOBILE_APP_SECRET',
+    defaultValue: 'aintreal-mobile-v1-2024',
+  );
 }

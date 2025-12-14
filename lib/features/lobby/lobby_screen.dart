@@ -54,14 +54,17 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
         );
       }
 
-      // Connect to WebSocket
-      ref.read(gameStateProvider.notifier).connect(
-            code: widget.gameCode,
-            playerId: playerId,
-            playerName: playerName,
-            isHost: isHost,
-            config: config,
-          );
+      // Connect to WebSocket after the build cycle completes
+      Future.microtask(() {
+        if (!mounted) return;
+        ref.read(gameStateProvider.notifier).connect(
+              code: widget.gameCode,
+              playerId: playerId,
+              playerName: playerName,
+              isHost: isHost,
+              config: config,
+            );
+      });
     }
   }
 
@@ -134,7 +137,11 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
 
   void _startGame() {
     final gameState = ref.read(gameStateProvider);
-    if (!gameState.isHost || gameState.players.length < 2) return;
+    debugPrint('_startGame called: isHost=${gameState.isHost}, playerId=${gameState.playerId}, hostId=${gameState.hostId}, players=${gameState.players.length}');
+    if (!gameState.isHost || gameState.players.length < 2) {
+      debugPrint('_startGame blocked: isHost=${gameState.isHost}, playerCount=${gameState.players.length}');
+      return;
+    }
 
     setState(() => _isStarting = true);
     ref.read(gameStateProvider.notifier).startGame();

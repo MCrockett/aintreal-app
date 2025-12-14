@@ -221,7 +221,7 @@ class GameStateNotifier extends StateNotifier<GameState> {
     );
 
     // Build WebSocket URL
-    final wsUrl = GameApi.instance.getWebSocketUrl(code);
+    final wsUrl = GameApi.instance.getWebSocketUrl(code, playerId);
     debugPrint('Connecting to WebSocket: $wsUrl');
 
     _wsClient = WsClient(
@@ -244,7 +244,12 @@ class GameStateNotifier extends StateNotifier<GameState> {
 
   /// Send start game command (host only).
   void startGame() {
-    if (!state.isHost) return;
+    debugPrint('startGame() called: isHost=${state.isHost}, playerId=${state.playerId}, hostId=${state.hostId}');
+    if (!state.isHost) {
+      debugPrint('startGame() blocked: not host');
+      return;
+    }
+    debugPrint('Sending start_game message...');
     _wsClient?.send(const StartGameMessage());
   }
 
@@ -290,8 +295,21 @@ class GameStateNotifier extends StateNotifier<GameState> {
     debugPrint('WS message: ${message.runtimeType}');
 
     switch (message) {
-      case ConnectionEstablishedMessage(:final playerId):
-        state = state.copyWith(playerId: playerId);
+      case ConnectionEstablishedMessage(:final playerId, :final gameState):
+        // Update state with full game state from server
+        if (gameState != null) {
+          state = state.copyWith(
+            playerId: playerId,
+            code: gameState.code,
+            status: _parseStatus(gameState.status),
+            config: gameState.config,
+            players: gameState.players,
+            currentRound: gameState.currentRound,
+            hostId: gameState.hostId,
+          );
+        } else {
+          state = state.copyWith(playerId: playerId);
+        }
 
       case PlayerJoinedMessage(:final players):
         state = state.copyWith(players: players);
@@ -375,6 +393,7 @@ class GameStateNotifier extends StateNotifier<GameState> {
         );
 
       case GameOverMessage(:final rankings, :final totalRounds):
+        debugPrint('GameOver received! Rankings: ${rankings.length}, totalRounds: $totalRounds');
         state = state.copyWith(
           status: GameStatus.finished,
           gameOverData: GameOverData(
@@ -384,6 +403,7 @@ class GameStateNotifier extends StateNotifier<GameState> {
           clearRoundData: true,
           clearRevealData: true,
         );
+        debugPrint('State updated: status=${state.status}, gameOverData=${state.gameOverData != null}');
 
       case ReturnToLobbyMessage(:final gameState):
         state = state.copyWith(

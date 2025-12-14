@@ -46,8 +46,11 @@ class WsClient {
 
   /// Connect to the WebSocket server.
   Future<void> connect() async {
+    debugPrint('WS connect() called, current state: $_state, url: $url');
+
     if (_state == WsConnectionState.connecting ||
         _state == WsConnectionState.connected) {
+      debugPrint('WS already connecting/connected, skipping');
       return;
     }
 
@@ -55,10 +58,13 @@ class WsClient {
     _setConnectionState(WsConnectionState.connecting);
 
     try {
+      debugPrint('WS creating channel...');
       _channel = WebSocketChannel.connect(Uri.parse(url));
 
       // Wait for connection to be ready
+      debugPrint('WS waiting for ready...');
       await _channel!.ready;
+      debugPrint('WS channel ready!');
 
       _setConnectionState(WsConnectionState.connected);
       _reconnectAttempts = 0;
@@ -70,6 +76,7 @@ class WsClient {
       );
 
       _startPingTimer();
+      debugPrint('WS fully connected and listening');
     } catch (e) {
       debugPrint('WebSocket connect error: $e');
       _setConnectionState(WsConnectionState.disconnected);
@@ -102,6 +109,8 @@ class WsClient {
 
   void _handleMessage(dynamic data) {
     if (data is! String) return;
+
+    debugPrint('WS raw message: $data');
 
     final message = WsMessage.tryParse(data);
     if (message != null) {

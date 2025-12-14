@@ -123,19 +123,24 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
     // Listen for state changes
     ref.listen<GameState>(gameStateProvider, (previous, next) {
+      debugPrint('GameScreen state change: status=${next.status}, round=${next.roundData?.round}, prevRound=${previous?.roundData?.round}');
+
       // New round started
       if (next.roundData != null &&
           previous?.roundData?.round != next.roundData?.round) {
+        debugPrint('New round detected, starting countdown');
         _startGetReadyCountdown();
       }
 
       // Game over - navigate to results
       if (next.status == GameStatus.finished && next.gameOverData != null) {
+        debugPrint('Game finished! Navigating to results...');
         context.go('/results/${widget.gameCode}');
       }
 
       // Show reveal (in party mode, server sends reveal after all answered)
       if (next.status == GameStatus.revealing && next.revealData != null) {
+        debugPrint('Reveal received for round ${next.revealData?.round}');
         // Could show reveal animation here
         // For now, auto-advance to next round or results
       }
@@ -165,8 +170,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
     final hasAnswered = roundData.hasAnswered;
     final playerChoice = roundData.playerChoice;
     final aiPosition = roundData.aiPosition;
+    // Player is correct if they picked the AI image (playerChoice == aiPosition)
     final isCorrect =
-        hasAnswered && playerChoice != null && playerChoice != aiPosition;
+        hasAnswered && playerChoice != null && playerChoice == aiPosition;
 
     return GradientBackground(
       child: SafeArea(

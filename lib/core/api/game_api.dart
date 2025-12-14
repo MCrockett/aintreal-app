@@ -24,7 +24,7 @@ class GameApi {
       final response = await _client.post<Map<String, dynamic>>(
         Endpoints.gameCreate,
         data: {
-          'name': playerName,
+          'hostName': playerName,
           'config': config.toJson(),
         },
       );
@@ -54,7 +54,7 @@ class GameApi {
       final response = await _client.post<Map<String, dynamic>>(
         Endpoints.gameJoin(code.toUpperCase()),
         data: {
-          'name': playerName,
+          'playerName': playerName,
         },
       );
 
@@ -102,11 +102,11 @@ class GameApi {
   }
 
   /// Build WebSocket URL for a game.
-  String getWebSocketUrl(String code) {
+  String getWebSocketUrl(String code, String playerId) {
     final baseUrl = _client.dio.options.baseUrl;
     final wsBase = baseUrl
         .replaceFirst('https://', 'wss://')
         .replaceFirst('http://', 'ws://');
-    return '$wsBase${Endpoints.gameWebSocket(code)}';
+    return '$wsBase${Endpoints.gameWebSocket(code, playerId)}';
   }
 }

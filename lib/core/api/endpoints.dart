@@ -9,7 +9,8 @@ abstract class Endpoints {
   static String gameState(String code) => '/api/game/$code';
 
   /// WebSocket endpoint for real-time game communication.
-  static String gameWebSocket(String code) => '/api/game/$code/ws';
+  static String gameWebSocket(String code, String playerId) =>
+      '/api/game/$code/ws?playerId=$playerId';
 
   /// Image serving endpoint.
   static String image(String path) => '/api/images/$path';
