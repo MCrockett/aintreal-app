@@ -8,6 +8,7 @@ import '../features/lobby/lobby_screen.dart';
 import '../features/game/game_screen.dart';
 import '../features/reveal/reveal_screen.dart';
 import '../features/results/results_screen.dart';
+import '../models/game.dart';
 
 /// Route paths for the app.
 class AppRoutes {
@@ -47,7 +48,23 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.createGame,
       name: 'create',
-      builder: (context, state) => const CreateGameScreen(),
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+        final mode = extra?['mode'] as GameMode? ?? GameMode.party;
+        final playerName = extra?['playerName'] as String?;
+        final rounds = extra?['rounds'] as int?;
+        final timePerRound = extra?['timePerRound'] as int?;
+        final speedBonus = extra?['speedBonus'] as bool?;
+        final randomBonuses = extra?['randomBonuses'] as bool?;
+        return CreateGameScreen(
+          mode: mode,
+          initialName: playerName,
+          initialRounds: rounds,
+          initialTimePerRound: timePerRound,
+          initialSpeedBonus: speedBonus,
+          initialRandomBonuses: randomBonuses,
+        );
+      },
     ),
     GoRoute(
       path: AppRoutes.joinGame,

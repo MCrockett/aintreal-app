@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../../config/env.dart';
 import '../../models/game.dart';
 import 'api_client.dart';
 import 'api_exceptions.dart';
@@ -103,7 +104,9 @@ class GameApi {
 
   /// Build WebSocket URL for a game.
   String getWebSocketUrl(String code, String playerId) {
-    final baseUrl = _client.dio.options.baseUrl;
+    // Use the static Env.apiBase instead of Dio's baseUrl to ensure consistency
+    // Dio's baseUrl can sometimes get corrupted in edge cases
+    final baseUrl = Env.apiBase;
     final wsBase = baseUrl
         .replaceFirst('https://', 'wss://')
         .replaceFirst('http://', 'ws://');

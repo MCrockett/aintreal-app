@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -10,6 +11,38 @@ import '../../config/theme.dart';
 import '../../core/audio/sound_service.dart';
 import '../../core/websocket/game_state_provider.dart';
 import '../../widgets/gradient_background.dart';
+
+/// Service for preloading game images.
+class ImagePreloader {
+  static final ImagePreloader instance = ImagePreloader._();
+  ImagePreloader._();
+
+  final Set<String> _preloadedUrls = {};
+
+  /// Preload images into the cache during Get Ready countdown.
+  Future<void> preloadImages(BuildContext context, List<String> urls) async {
+    for (final url in urls) {
+      if (_preloadedUrls.contains(url)) continue;
+
+      try {
+        // Use CachedNetworkImage's provider to cache the image
+        await precacheImage(
+          CachedNetworkImageProvider(url),
+          context,
+        );
+        _preloadedUrls.add(url);
+        debugPrint('Preloaded image: $url');
+      } catch (e) {
+        debugPrint('Failed to preload image: $url - $e');
+      }
+    }
+  }
+
+  /// Clear preloaded URLs tracking (call when game ends).
+  void clear() {
+    _preloadedUrls.clear();
+  }
+}
 
 /// Game screen for active gameplay with image selection.
 class GameScreen extends ConsumerStatefulWidget {
@@ -57,8 +90,15 @@ class _GameScreenState extends ConsumerState<GameScreen>
     _getReadyCount = 3;
     _showGetReady = true;
 
+    // Start tracking response time from round start (before Get Ready ends)
+    // This allows server to detect early clicks (responseTime < 3000ms)
+    _roundStartTime = DateTime.now();
+
     // Play tick sound for initial count
     SoundService.instance.playTick();
+
+    // Preload current round images during the countdown
+    _preloadCurrentRoundImages();
 
     _getReadyTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_getReadyCount > 1) {
@@ -75,13 +115,28 @@ class _GameScreenState extends ConsumerState<GameScreen>
     });
   }
 
+  /// Preload current round images during Get Ready countdown.
+  void _preloadCurrentRoundImages() {
+    final roundData = ref.read(gameStateProvider).roundData;
+    if (roundData == null) return;
+
+    final urls = [
+      _buildImageUrl(roundData.topUrl),
+      _buildImageUrl(roundData.bottomUrl),
+    ];
+
+    // Preload in background (don't await - let it run during countdown)
+    ImagePreloader.instance.preloadImages(context, urls);
+  }
+
   void _startRoundTimer() {
     final gameState = ref.read(gameStateProvider);
     final config = gameState.config;
     if (config == null) return;
 
     _remainingSeconds = config.timePerRound;
-    _roundStartTime = DateTime.now();
+    // Note: _roundStartTime is already set in _startGetReadyCountdown
+    // This allows early click detection (clicks during Get Ready countdown)
 
     // Setup animation controller for smooth timer bar
     _timerController?.dispose();
@@ -102,11 +157,34 @@ class _GameScreenState extends ConsumerState<GameScreen>
         // Play time up warning at 0
         if (_remainingSeconds == 0) {
           SoundService.instance.playTimeUp();
+          // Auto-submit timeout when timer expires (for solo games this is critical)
+          _onTimeExpired();
         }
       } else {
         timer.cancel();
       }
     });
+  }
+
+  /// Called when the timer expires without an answer
+  void _onTimeExpired() {
+    final gameState = ref.read(gameStateProvider);
+    if (gameState.roundData?.hasAnswered == true) return;
+
+    debugPrint('Timer expired! Auto-submitting timeout answer');
+
+    // Submit a "timeout" answer - pick a random wrong answer
+    // For timeout, we submit with the full time as response time
+    final config = gameState.config;
+    final responseTime = (config?.timePerRound ?? 5) * 1000;
+
+    // Submit answer indicating timeout (pick 'none' or empty string)
+    // The server should treat this as incorrect
+    ref.read(gameStateProvider.notifier).submitAnswer('timeout', responseTime);
+
+    // Stop timer
+    _roundTimer?.cancel();
+    _timerController?.stop();
   }
 
   void _onImageTap(String choice) {
@@ -132,6 +210,18 @@ class _GameScreenState extends ConsumerState<GameScreen>
   String _buildImageUrl(String relativePath) {
     // Build full URL from relative path
     return '${Env.apiBase}$relativePath';
+  }
+
+  /// Get the result text based on correctness and whether it was a timeout.
+  String _getResultText(bool isCorrect, String? playerChoice) {
+    if (isCorrect) {
+      return 'Correct!';
+    }
+    // Check if it was a timeout (playerChoice is 'timeout' or null)
+    if (playerChoice == 'timeout' || playerChoice == null) {
+      return 'Time Up!';
+    }
+    return 'Wrong!';
   }
 
   @override
@@ -211,7 +301,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
             Expanded(
               child: Stack(
                 children: [
-                  // Images
+                  // Images with result indicator between them
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
@@ -227,7 +317,46 @@ class _GameScreenState extends ConsumerState<GameScreen>
                             showLabel: hasAnswered,
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        // Result indicator between images (always reserve space)
+                        SizedBox(
+                          height: 56,
+                          child: Center(
+                            child: hasAnswered && !_showGetReady
+                                ? Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 32,
+                                      vertical: 12,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isCorrect
+                                          ? AppTheme.correctAnswer
+                                          : AppTheme.wrongAnswer,
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: (isCorrect
+                                                  ? AppTheme.correctAnswer
+                                                  : AppTheme.wrongAnswer)
+                                              .withValues(alpha: 0.5),
+                                          blurRadius: 16,
+                                          spreadRadius: 2,
+                                        ),
+                                      ],
+                                    ),
+                                    child: Text(
+                                      _getResultText(isCorrect, playerChoice),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleLarge
+                                          ?.copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
+                                  )
+                                : null,
+                          ),
+                        ),
                         // Bottom image
                         Expanded(
                           child: _GameImage(
@@ -244,87 +373,72 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     ),
                   ),
 
-                  // Get Ready overlay
+                  // Get Ready overlay - semi-transparent and allows taps through
+                  // This enables early click detection (clicks during countdown)
                   if (_showGetReady)
-                    Container(
-                      color: Colors.black.withValues(alpha: 0.8),
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Round ${roundData.round}',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineMedium
-                                  ?.copyWith(color: AppTheme.textSecondary),
-                            ),
-                            const SizedBox(height: 24),
-                            Text(
-                              _getReadyCount.toString(),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .displayLarge
-                                  ?.copyWith(
-                                    fontSize: 120,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppTheme.primary,
-                                  ),
-                            ),
-                            const SizedBox(height: 24),
-                            Text(
-                              'Get Ready!',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineLarge
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                          ],
+                    IgnorePointer(
+                      child: Container(
+                        color: Colors.black.withValues(alpha: 0.85),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Round ${roundData.round}',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineMedium
+                                    ?.copyWith(color: AppTheme.textSecondary),
+                              ),
+                              const SizedBox(height: 24),
+                              Text(
+                                _getReadyCount.toString(),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .displayLarge
+                                    ?.copyWith(
+                                      fontSize: 120,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.primary,
+                                    ),
+                              ),
+                              const SizedBox(height: 24),
+                              RichText(
+                                text: TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text: 'Which image ',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .headlineLarge
+                                          ?.copyWith(fontWeight: FontWeight.bold),
+                                    ),
+                                    TextSpan(
+                                      text: 'AI',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .headlineLarge
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: AppTheme.primary,
+                                          ),
+                                    ),
+                                    TextSpan(
+                                      text: "n't real?",
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .headlineLarge
+                                          ?.copyWith(fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
 
-                  // Result overlay after answering
-                  if (hasAnswered && !_showGetReady)
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 24,
-                      child: Center(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 32,
-                            vertical: 16,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isCorrect
-                                ? AppTheme.correctAnswer
-                                : AppTheme.wrongAnswer,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: (isCorrect
-                                        ? AppTheme.correctAnswer
-                                        : AppTheme.wrongAnswer)
-                                    .withValues(alpha: 0.5),
-                                blurRadius: 20,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                          ),
-                          child: Text(
-                            isCorrect ? 'Correct!' : 'Wrong!',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall
-                                ?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                        ),
-                      ),
-                    ),
                 ],
               ),
             ),
@@ -500,12 +614,7 @@ class _GameImage extends StatelessWidget {
               CachedNetworkImage(
                 imageUrl: imageUrl,
                 fit: BoxFit.cover,
-                placeholder: (context, url) => Container(
-                  color: AppTheme.backgroundLight,
-                  child: const Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                ),
+                placeholder: (context, url) => _ShimmerPlaceholder(),
                 errorWidget: (context, url, error) => Container(
                   color: AppTheme.backgroundLight,
                   child: const Center(
@@ -595,6 +704,50 @@ class _GameImage extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Shimmer loading placeholder for images.
+class _ShimmerPlaceholder extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppTheme.backgroundLight,
+      child: Stack(
+        children: [
+          // Shimmer gradient animation
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppTheme.backgroundLight,
+                    AppTheme.secondary.withValues(alpha: 0.3),
+                    AppTheme.backgroundLight,
+                  ],
+                  stops: const [0.0, 0.5, 1.0],
+                ),
+              ),
+            )
+                .animate(onPlay: (controller) => controller.repeat())
+                .shimmer(
+                  duration: const Duration(milliseconds: 1500),
+                  color: AppTheme.primary.withValues(alpha: 0.15),
+                ),
+          ),
+          // Loading icon
+          Center(
+            child: Icon(
+              Icons.image_outlined,
+              size: 48,
+              color: AppTheme.textMuted.withValues(alpha: 0.5),
+            ),
+          ),
+        ],
       ),
     );
   }

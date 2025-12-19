@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -10,6 +12,15 @@ import '../../core/audio/sound_service.dart';
 import '../../core/websocket/game_state_provider.dart';
 import '../../core/websocket/ws_messages.dart';
 import '../../widgets/gradient_background.dart';
+
+/// AI puns for wrong answers - each contains "AI" to be styled
+const _wrongAnswerPuns = [
+  'You fAIled this one!',
+  "Don't despAIr!",
+  'TrAIn your eyes!',
+  "Don't lose fAIth!",
+  'RemAIn calm, try agAIn!',
+];
 
 /// Reveal screen showing round-by-round results with the AI image revealed.
 class RevealScreen extends ConsumerStatefulWidget {
@@ -461,10 +472,111 @@ class _YourResultCard extends StatelessWidget {
 
   final PlayerResult result;
 
+  /// Build rich text with "AI" styled in primary color
+  Widget _buildStyledText(BuildContext context, String text, Color baseColor) {
+    final spans = <InlineSpan>[];
+    final regex = RegExp(r'AI', caseSensitive: true);
+    int lastEnd = 0;
+
+    for (final match in regex.allMatches(text)) {
+      // Add text before the match
+      if (match.start > lastEnd) {
+        spans.add(TextSpan(text: text.substring(lastEnd, match.start)));
+      }
+      // Add the styled "AI"
+      spans.add(TextSpan(
+        text: 'AI',
+        style: TextStyle(
+          color: AppTheme.primary,
+          fontWeight: FontWeight.w900,
+          fontStyle: FontStyle.italic,
+        ),
+      ));
+      lastEnd = match.end;
+    }
+
+    // Add remaining text
+    if (lastEnd < text.length) {
+      spans.add(TextSpan(text: text.substring(lastEnd)));
+    }
+
+    return RichText(
+      text: TextSpan(
+        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: baseColor,
+            ),
+        children: spans,
+      ),
+    );
+  }
+
+  /// Build bonus chips for display (including base +100 for correct answers)
+  List<Widget> _buildBonusChips(BuildContext context) {
+    final chips = <Widget>[];
+
+    void addChip(int? value, String label, Color color, IconData icon) {
+      if (value != null && value > 0) {
+        chips.add(
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: color.withValues(alpha: 0.5)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 14, color: color),
+                const SizedBox(width: 4),
+                Text(
+                  '+$value $label',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    }
+
+    // Add base +100 for correct answers first
+    if (result.correct) {
+      addChip(100, 'Correct', AppTheme.correctAnswer, Icons.check_circle);
+    }
+
+    // Add rank bonus with ordinal label
+    if (result.rankBonus != null && result.rank != null) {
+      final rankLabels = ['1st', '2nd', '3rd'];
+      final rankLabel = result.rank! <= 3 ? rankLabels[result.rank! - 1] : '';
+      addChip(result.rankBonus, rankLabel, AppTheme.bonusRank, Icons.emoji_events);
+    }
+
+    addChip(result.speedBonus, 'Speed', Colors.blue, Icons.bolt);
+    addChip(result.streakBonus, 'Streak', Colors.orange, Icons.local_fire_department);
+    addChip(result.luckyBonus, 'Lucky', Colors.purple, Icons.casino);
+    addChip(result.comebackBonus, 'Comeback', Colors.teal, Icons.trending_up);
+    addChip(result.underdogBonus, 'Underdog', Colors.indigo, Icons.pets);
+    addChip(result.trickyBonus, 'Tricky', Colors.pink, Icons.psychology);
+    addChip(result.slowSteadyBonus, 'Slow & Steady', Colors.brown, Icons.timer);
+
+    return chips;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isCorrect = result.correct;
     final points = result.points;
+
+    // Pick a random pun for wrong answers
+    final wrongText = _wrongAnswerPuns[Random().nextInt(_wrongAnswerPuns.length)];
+
+    final bonusChips = _buildBonusChips(context);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -480,70 +592,105 @@ class _YourResultCard extends StatelessWidget {
           width: 2,
         ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Result icon
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: isCorrect ? AppTheme.correctAnswer : AppTheme.wrongAnswer,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              isCorrect ? Icons.check : Icons.close,
-              color: Colors.white,
-              size: 28,
-            ),
-          ),
-          const SizedBox(width: 16),
-          // Text
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isCorrect ? 'You got it right!' : 'Better luck next time',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: isCorrect
-                            ? AppTheme.correctAnswer
-                            : AppTheme.wrongAnswer,
-                      ),
+          Row(
+            children: [
+              // Result icon
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: isCorrect ? AppTheme.correctAnswer : AppTheme.wrongAnswer,
+                  shape: BoxShape.circle,
                 ),
-                if (result.responseTime > 0)
-                  Text(
-                    '${(result.responseTime / 1000).toStringAsFixed(1)}s response time',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textSecondary,
+                child: Icon(
+                  isCorrect ? Icons.check : Icons.close,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 16),
+              // Text
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (isCorrect)
+                      Text(
+                        'You got it right!',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.correctAnswer,
+                            ),
+                      )
+                    else
+                      _buildStyledText(context, wrongText, AppTheme.wrongAnswer),
+                    if (result.responseTime > 0) Builder(
+                      builder: (context) {
+                        // Response time from server includes 3s countdown, subtract it for display
+                        final displayTimeMs = (result.responseTime - 3000).clamp(0, 999999);
+                        return Text(
+                          '${(displayTimeMs / 1000).toStringAsFixed(1)}s response time',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppTheme.textSecondary,
+                              ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              // Points
+              if (points > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppTheme.correctAnswer,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    '+$points',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                   ),
-              ],
-            ),
-          ),
-          // Points
-          if (points > 0)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppTheme.correctAnswer,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Text(
-                '+$points',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                )
+                    .animate(onPlay: (c) => c.repeat(reverse: true, count: 2))
+                    .scale(
+                      begin: const Offset(1.0, 1.0),
+                      end: const Offset(1.15, 1.15),
+                      duration: 300.ms,
+                      delay: 800.ms,
                     ),
-              ),
-            )
-                .animate(onPlay: (c) => c.repeat(reverse: true, count: 2))
-                .scale(
-                  begin: const Offset(1.0, 1.0),
-                  end: const Offset(1.15, 1.15),
-                  duration: 300.ms,
-                  delay: 800.ms,
-                ),
+            ],
+          ),
+          // Bonus chips row
+          if (bonusChips.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: bonusChips
+                  .asMap()
+                  .entries
+                  .map((entry) => entry.value
+                      .animate()
+                      .fadeIn(
+                        duration: 300.ms,
+                        delay: Duration(milliseconds: 900 + entry.key * 100),
+                      )
+                      .slideX(
+                        begin: -0.2,
+                        end: 0,
+                        duration: 300.ms,
+                        delay: Duration(milliseconds: 900 + entry.key * 100),
+                      ))
+                  .toList(),
+            ),
+          ],
         ],
       ),
     );
@@ -795,6 +942,7 @@ class _AnimatedScoreState extends State<_AnimatedScore>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<int> _scoreAnimation;
+  int _previousScore = 0;
 
   @override
   void initState() {
@@ -804,17 +952,36 @@ class _AnimatedScoreState extends State<_AnimatedScore>
       vsync: this,
     );
 
-    _scoreAnimation = IntTween(begin: 0, end: widget.score).animate(
+    _setupAnimation();
+
+    // Start counting after a delay
+    Future.delayed(const Duration(milliseconds: 1200), () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  void _setupAnimation() {
+    _scoreAnimation = IntTween(begin: _previousScore, end: widget.score).animate(
       CurvedAnimation(
         parent: _controller,
         curve: Curves.easeOutCubic,
       ),
     );
+  }
 
-    // Start counting after a delay based on index
-    Future.delayed(const Duration(milliseconds: 1200), () {
-      if (mounted) _controller.forward();
-    });
+  @override
+  void didUpdateWidget(_AnimatedScore oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // When score changes, restart animation from previous score to new score
+    if (oldWidget.score != widget.score) {
+      _previousScore = oldWidget.score;
+      _controller.reset();
+      _setupAnimation();
+      // Start animation after brief delay
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) _controller.forward();
+      });
+    }
   }
 
   @override

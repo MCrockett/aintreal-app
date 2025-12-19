@@ -10,6 +10,7 @@ import '../../core/websocket/game_state_provider.dart';
 import '../../core/websocket/ws_client.dart';
 import '../../core/websocket/ws_messages.dart';
 import '../../widgets/gradient_background.dart';
+import '../../widgets/how_to_play_dialog.dart';
 
 /// Lobby screen showing players waiting for game to start.
 class LobbyScreen extends ConsumerStatefulWidget {
@@ -27,6 +28,8 @@ class LobbyScreen extends ConsumerStatefulWidget {
 class _LobbyScreenState extends ConsumerState<LobbyScreen> {
   bool _isStarting = false;
   bool _initialized = false;
+  bool _isSoloMode = false;
+  bool _autoStartTriggered = false;
 
   @override
   void didChangeDependencies() {
@@ -49,6 +52,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
       final playerId = extra['playerId'] as String? ?? '';
       final isHost = extra['isHost'] as bool? ?? false;
       final configJson = extra['config'] as Map<String, dynamic>?;
+      _isSoloMode = extra['isSoloMode'] as bool? ?? false;
 
       WsGameConfig? config;
       if (configJson != null) {
@@ -71,6 +75,24 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
               isHost: isHost,
               config: config,
             );
+      });
+    }
+  }
+
+  /// Auto-start game for solo modes once connected
+  void _tryAutoStart() {
+    if (!_isSoloMode || _autoStartTriggered) return;
+
+    final gameState = ref.read(gameStateProvider);
+    if (gameState.connectionState == WsConnectionState.connected &&
+        gameState.isHost &&
+        gameState.players.isNotEmpty) {
+      _autoStartTriggered = true;
+      debugPrint('Auto-starting solo game...');
+      // Small delay to ensure connection is stable
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (!mounted) return;
+        ref.read(gameStateProvider.notifier).startGame();
       });
     }
   }
@@ -144,9 +166,12 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
 
   void _startGame() {
     final gameState = ref.read(gameStateProvider);
-    debugPrint('_startGame called: isHost=${gameState.isHost}, playerId=${gameState.playerId}, hostId=${gameState.hostId}, players=${gameState.players.length}');
-    if (!gameState.isHost || gameState.players.length < 2) {
-      debugPrint('_startGame blocked: isHost=${gameState.isHost}, playerCount=${gameState.players.length}');
+    debugPrint('_startGame called: isHost=${gameState.isHost}, playerId=${gameState.playerId}, hostId=${gameState.hostId}, players=${gameState.players.length}, isSoloMode=$_isSoloMode');
+
+    // Solo modes only need 1 player, party mode needs 2+
+    final minPlayers = _isSoloMode ? 1 : 2;
+    if (!gameState.isHost || gameState.players.length < minPlayers) {
+      debugPrint('_startGame blocked: isHost=${gameState.isHost}, playerCount=${gameState.players.length}, minPlayers=$minPlayers');
       return;
     }
 
@@ -176,10 +201,24 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
       }
     });
 
+    // Auto-start for solo modes
+    _tryAutoStart();
+
     final players = gameState.players;
     final isHost = gameState.isHost;
-    final canStart = isHost && players.length >= 2;
+    final minPlayers = _isSoloMode ? 1 : 2;
+    final canStart = isHost && players.length >= minPlayers;
     final config = gameState.config;
+
+    // Solo mode: show simplified "Starting..." UI
+    if (_isSoloMode) {
+      return _SoloModeLoadingScreen(
+        gameCode: widget.gameCode,
+        config: config,
+        connectionState: gameState.connectionState,
+        onCancel: _leaveGame,
+      );
+    }
 
     return GradientBackground(
       child: SafeArea(
@@ -351,6 +390,12 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
                       ),
                     ),
                   ],
+                  const SizedBox(height: 16),
+                  // How to Play link
+                  TextButton(
+                    onPressed: () => showHowToPlayDialog(context),
+                    child: const Text('How to Play'),
+                  ),
                 ],
               ),
             ),
@@ -587,6 +632,147 @@ class _PlayerTile extends StatelessWidget {
               size: 20,
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// Loading screen for solo modes (Classic Solo, Marathon).
+/// Shows a simple "Starting..." UI while connecting and auto-starting.
+class _SoloModeLoadingScreen extends StatelessWidget {
+  const _SoloModeLoadingScreen({
+    required this.gameCode,
+    required this.config,
+    required this.connectionState,
+    required this.onCancel,
+  });
+
+  final String gameCode;
+  final WsGameConfig? config;
+  final WsConnectionState connectionState;
+  final VoidCallback onCancel;
+
+  String get _modeTitle {
+    final mode = config?.mode ?? 'classic';
+    return switch (mode) {
+      'marathon' => 'Marathon',
+      'classic' => 'Classic Solo',
+      _ => 'Solo Game',
+    };
+  }
+
+  String get _statusText {
+    return switch (connectionState) {
+      WsConnectionState.connecting => 'Connecting...',
+      WsConnectionState.connected => 'Starting game...',
+      WsConnectionState.reconnecting => 'Reconnecting...',
+      WsConnectionState.disconnected => 'Connection lost',
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GradientBackground(
+      child: SafeArea(
+        child: Column(
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 8, 16, 0),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: onCancel,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _modeTitle,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const Spacer(),
+                  _ConnectionIndicator(state: connectionState),
+                ],
+              ),
+            ),
+
+            // Centered loading content
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Mode icon
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        gradient: AppTheme.primaryGradient,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        config?.mode == 'marathon'
+                            ? Icons.emoji_events
+                            : Icons.person,
+                        size: 48,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Status text
+                    Text(
+                      _statusText,
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Loading indicator
+                    const SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 3,
+                        color: AppTheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Config info
+                    if (config != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.backgroundLight,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${config!.rounds} rounds  ·  ${config!.timePerRound}s per round',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: AppTheme.textSecondary,
+                              ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Cancel button at bottom
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: OutlinedButton(
+                onPressed: onCancel,
+                child: const Text('Cancel'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

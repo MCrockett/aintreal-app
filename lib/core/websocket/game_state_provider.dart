@@ -100,10 +100,12 @@ class GameOverData {
   const GameOverData({
     required this.rankings,
     required this.totalRounds,
+    this.credits,
   });
 
   final List<FinalRanking> rankings;
   final int totalRounds;
+  final List<PhotographerCredit>? credits;
 }
 
 /// Complete game state.
@@ -409,13 +411,14 @@ class GameStateNotifier extends StateNotifier<GameState> {
           ),
         );
 
-      case GameOverMessage(:final rankings, :final totalRounds):
-        debugPrint('GameOver received! Rankings: ${rankings.length}, totalRounds: $totalRounds');
+      case GameOverMessage(:final rankings, :final totalRounds, :final credits):
+        debugPrint('GameOver received! Rankings: ${rankings.length}, totalRounds: $totalRounds, credits: ${credits?.length ?? 0}');
         state = state.copyWith(
           status: GameStatus.finished,
           gameOverData: GameOverData(
             rankings: rankings,
             totalRounds: totalRounds,
+            credits: credits,
           ),
           clearRoundData: true,
           clearRevealData: true,
@@ -443,9 +446,44 @@ class GameStateNotifier extends StateNotifier<GameState> {
       case ErrorMessage(:final message):
         state = state.copyWith(error: message);
 
-      case MarathonEndedMessage():
-        // Handle marathon mode ending
-        state = state.copyWith(status: GameStatus.finished);
+      case EarlyClickWarningMessage(:final message):
+        // Flutter app blocks clicks via overlay, but handle message for consistency
+        // Show warning and mark round as having early click
+        debugPrint('Early click warning: $message');
+        // Show as error message (snackbar will display it)
+        state = state.copyWith(error: message);
+        break;
+
+      case MarathonEndedMessage(
+          :final streak,
+          :final totalRounds,
+          :final completed,
+          :final avgResponseTime,
+          :final credits
+        ):
+        // Handle marathon mode ending - create a FinalRanking for the player
+        final playerName = state.playerName ?? 'Player';
+        final playerId = state.playerId ?? '';
+        final ranking = FinalRanking(
+          playerId: playerId,
+          name: playerName,
+          score: streak * 100,
+          rank: 1,
+          correctAnswers: streak,
+          avgResponseTime: avgResponseTime,
+          bestStreak: streak,
+        );
+        state = state.copyWith(
+          status: GameStatus.finished,
+          gameOverData: GameOverData(
+            rankings: [ranking],
+            totalRounds: totalRounds,
+            credits: credits,
+          ),
+          clearRoundData: true,
+          clearRevealData: true,
+        );
+        debugPrint('Marathon ended! streak=$streak, completed=$completed');
 
       case UnknownMessage():
         // Ignore unknown messages

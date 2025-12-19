@@ -10,6 +10,7 @@ enum WsMessageType {
   gameStarting,
   roundStart,
   playerAnswered,
+  earlyClickWarning,
   reveal,
   marathonEnded,
   gameOver,
@@ -32,6 +33,7 @@ WsMessageType parseMessageType(String type) {
     'game_starting' => WsMessageType.gameStarting,
     'round_start' => WsMessageType.roundStart,
     'player_answered' => WsMessageType.playerAnswered,
+    'early_click_warning' => WsMessageType.earlyClickWarning,
     'reveal' => WsMessageType.reveal,
     'round_reveal' => WsMessageType.reveal,
     'reveal_phase_start' => WsMessageType.unknown, // TODO: Implement reveal UI
@@ -61,6 +63,7 @@ sealed class WsMessage {
       WsMessageType.gameStarting => GameStartingMessage.fromJson(json),
       WsMessageType.roundStart => RoundStartMessage.fromJson(json),
       WsMessageType.playerAnswered => PlayerAnsweredMessage.fromJson(json),
+      WsMessageType.earlyClickWarning => EarlyClickWarningMessage.fromJson(json),
       WsMessageType.reveal => RevealMessage.fromJson(json),
       WsMessageType.marathonEnded => MarathonEndedMessage.fromJson(json),
       WsMessageType.gameOver => GameOverMessage.fromJson(json),
@@ -323,6 +326,19 @@ class PlayerAnsweredMessage extends WsMessage {
   final int totalPlayers;
 }
 
+/// Early click warning from server (clicked before countdown ended).
+class EarlyClickWarningMessage extends WsMessage {
+  const EarlyClickWarningMessage({required this.message});
+
+  factory EarlyClickWarningMessage.fromJson(Map<String, dynamic> json) {
+    return EarlyClickWarningMessage(
+      message: json['message'] as String? ?? 'Too early! No speed bonus this round.',
+    );
+  }
+
+  final String message;
+}
+
 /// Round result for a player.
 class PlayerResult {
   const PlayerResult({
@@ -331,7 +347,15 @@ class PlayerResult {
     required this.choice,
     required this.correct,
     required this.responseTime,
-    required this.points,
+    this.rank,
+    this.rankBonus,
+    this.speedBonus,
+    this.streakBonus,
+    this.luckyBonus,
+    this.comebackBonus,
+    this.underdogBonus,
+    this.trickyBonus,
+    this.slowSteadyBonus,
   });
 
   factory PlayerResult.fromJson(Map<String, dynamic> json) {
@@ -342,7 +366,15 @@ class PlayerResult {
       // Server sends 'isCorrect', not 'correct'
       correct: (json['correct'] ?? json['isCorrect']) as bool? ?? false,
       responseTime: json['responseTime'] as int? ?? 0,
-      points: json['points'] as int? ?? 0,
+      rank: json['rank'] as int?,
+      rankBonus: json['rankBonus'] as int?,
+      speedBonus: json['speedBonus'] as int?,
+      streakBonus: json['streakBonus'] as int?,
+      luckyBonus: json['luckyBonus'] as int?,
+      comebackBonus: json['comebackBonus'] as int?,
+      underdogBonus: json['underdogBonus'] as int?,
+      trickyBonus: json['trickyBonus'] as int?,
+      slowSteadyBonus: json['slowSteadyBonus'] as int?,
     );
   }
 
@@ -351,7 +383,42 @@ class PlayerResult {
   final String? choice;
   final bool correct;
   final int responseTime;
-  final int points;
+
+  // Per-player bonus breakdown
+  final int? rank;
+  final int? rankBonus;
+  final int? speedBonus;
+  final int? streakBonus;
+  final int? luckyBonus;
+  final int? comebackBonus;
+  final int? underdogBonus;
+  final int? trickyBonus;
+  final int? slowSteadyBonus;
+
+  /// Calculate total points earned this round (base + all bonuses)
+  int get points {
+    int total = correct ? 100 : 0;
+    total += rankBonus ?? 0;
+    total += speedBonus ?? 0;
+    total += streakBonus ?? 0;
+    total += luckyBonus ?? 0;
+    total += comebackBonus ?? 0;
+    total += underdogBonus ?? 0;
+    total += trickyBonus ?? 0;
+    total += slowSteadyBonus ?? 0;
+    return total;
+  }
+
+  /// Check if player has any bonuses
+  bool get hasBonus =>
+      rankBonus != null ||
+      speedBonus != null ||
+      streakBonus != null ||
+      luckyBonus != null ||
+      comebackBonus != null ||
+      underdogBonus != null ||
+      trickyBonus != null ||
+      slowSteadyBonus != null;
 }
 
 /// Player score update.
@@ -374,6 +441,27 @@ class PlayerScore {
   final String playerId;
   final String name;
   final int score;
+}
+
+/// Photographer credit for an image.
+class PhotographerCredit {
+  const PhotographerCredit({
+    required this.photographer,
+    required this.photographerUrl,
+    this.thumbnailUrl,
+  });
+
+  factory PhotographerCredit.fromJson(Map<String, dynamic> json) {
+    return PhotographerCredit(
+      photographer: json['photographer'] as String,
+      photographerUrl: json['photographer_url'] as String,
+      thumbnailUrl: json['thumbnail_url'] as String?,
+    );
+  }
+
+  final String photographer;
+  final String photographerUrl;
+  final String? thumbnailUrl;
 }
 
 /// Bonus awarded in a round.
@@ -449,30 +537,45 @@ class RevealMessage extends WsMessage {
 class MarathonEndedMessage extends WsMessage {
   const MarathonEndedMessage({
     required this.streak,
+    required this.totalRounds,
     required this.completed,
+    this.failedRound,
     this.topUrl,
     this.bottomUrl,
     this.aiPosition,
     this.playerChoice,
+    this.avgResponseTime,
+    this.credits,
   });
 
   factory MarathonEndedMessage.fromJson(Map<String, dynamic> json) {
+    final creditsJson = json['credits'] as List<dynamic>?;
     return MarathonEndedMessage(
       streak: json['streak'] as int,
+      totalRounds: json['totalRounds'] as int? ?? 26,
       completed: json['completed'] as bool,
+      failedRound: json['failedRound'] as int?,
       topUrl: json['topUrl'] as String?,
       bottomUrl: json['bottomUrl'] as String?,
       aiPosition: json['aiPosition'] as String?,
       playerChoice: json['playerChoice'] as String?,
+      avgResponseTime: json['avgResponseTime'] as int?,
+      credits: creditsJson
+          ?.map((c) => PhotographerCredit.fromJson(c as Map<String, dynamic>))
+          .toList(),
     );
   }
 
   final int streak;
+  final int totalRounds;
   final bool completed;
+  final int? failedRound;
   final String? topUrl;
   final String? bottomUrl;
   final String? aiPosition;
   final String? playerChoice;
+  final int? avgResponseTime;
+  final List<PhotographerCredit>? credits;
 }
 
 /// Final ranking for game over.
@@ -483,6 +586,8 @@ class FinalRanking {
     required this.score,
     required this.rank,
     this.correctAnswers = 0,
+    this.avgResponseTime,
+    this.bestStreak = 0,
   });
 
   factory FinalRanking.fromJson(Map<String, dynamic> json) {
@@ -494,6 +599,8 @@ class FinalRanking {
       rank: json['rank'] as int,
       // Server sends 'correct', not 'correctAnswers'
       correctAnswers: (json['correctAnswers'] ?? json['correct']) as int? ?? 0,
+      avgResponseTime: json['avgResponseTime'] as int?,
+      bestStreak: json['bestStreak'] as int? ?? 0,
     );
   }
 
@@ -502,6 +609,8 @@ class FinalRanking {
   final int score;
   final int rank;
   final int correctAnswers;
+  final int? avgResponseTime; // Average response time in ms (includes 3s countdown)
+  final int bestStreak; // Best correct answer streak
 }
 
 /// Game over with final rankings.
@@ -513,18 +622,21 @@ class GameOverMessage extends WsMessage {
   });
 
   factory GameOverMessage.fromJson(Map<String, dynamic> json) {
+    final creditsJson = json['credits'] as List<dynamic>?;
     return GameOverMessage(
       rankings: (json['rankings'] as List<dynamic>)
           .map((r) => FinalRanking.fromJson(r as Map<String, dynamic>))
           .toList(),
       totalRounds: json['totalRounds'] as int,
-      credits: json['credits'] as List<dynamic>?,
+      credits: creditsJson
+          ?.map((c) => PhotographerCredit.fromJson(c as Map<String, dynamic>))
+          .toList(),
     );
   }
 
   final List<FinalRanking> rankings;
   final int totalRounds;
-  final List<dynamic>? credits;
+  final List<PhotographerCredit>? credits;
 }
 
 /// Play Again - return to lobby.
