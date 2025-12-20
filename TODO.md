@@ -1,14 +1,14 @@
 # AIn't Real App - TODO
 
-**Last Updated:** December 14, 2025
+**Last Updated:** December 19, 2025
 
 ## Current Status
 
 - **Platform:** Flutter 3.38.4 (stable)
 - **Package:** `com.aintreal`
-- **Branch:** `feature/1.4-results-screen`
-- **Phase:** M1 Complete, Epic 7.1-7.3 Complete
-- **Next:** M2 remaining polish (7.4 Image Preloading)
+- **Branch:** `main`
+- **Phase:** M1 & M2 Complete
+- **Next:** M3 Authentication (Firebase setup, Google/Apple sign-in)
 
 ---
 
@@ -206,7 +206,7 @@
 |------|-------------|--------|--------|
 | 7.3.1 | Add confetti animation for winner | 2h | [x] |
 | 7.3.2 | Add victory sound/animation | 1h | [x] |
-| 7.3.3 | Marathon "Perfect" celebration (26/26) | 1h | [ ] |
+| 7.3.3 | Marathon "Perfect" celebration (26/26) | 1h | [x] |
 
 ---
 
@@ -214,13 +214,13 @@
 
 **Goal:** Smooth image loading experience
 **Priority:** P1 - High
-**Status:** Planned
+**Status:** Complete
 
 | Task | Description | Effort | Status |
 |------|-------------|--------|--------|
-| 7.4.1 | Preload next round images during current round | 2h | [ ] |
-| 7.4.2 | Cache strategy for image management | 1h | [ ] |
-| 7.4.3 | Loading placeholders | 1h | [ ] |
+| 7.4.1 | Preload current round images during Get Ready | 2h | [x] |
+| 7.4.2 | Cache strategy (CachedNetworkImage) | 1h | [x] |
+| 7.4.3 | Loading placeholders (shimmer animation) | 1h | [x] |
 
 ---
 
