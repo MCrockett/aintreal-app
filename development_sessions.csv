@@ -1,0 +1,7 @@
+Date,StartTime,EndTime,Duration(hours),CommitCount,MainActivities,CommitMessages
+2025-12-11,00:16,00:31,0.5,3,Initial project setup,"Initial project setup with design document;Add App Store status to CLAUDE.md;Add Flutter project scaffolding"
+2025-12-12,22:21,23:27,1.1,3,Documentation and foundation,"docs: restructure documentation;docs: adopt Theme.Epic.Task methodology;feat(1.1): implement project foundation theme and home screen"
+2025-12-13,01:33,16:36,3.0,6,Core game implementation,"feat(2.2): implement lobby screens;fix: add missing main.dart;feat(3.1): implement API client;feat(3.2): implement WebSocket;feat(1.3): implement game screen;feat(1.4): implement results screen"
+2025-12-14,08:43,10:17,1.6,7,M1 completion and polish,"fix(1.4): game flow fixes;docs: update TODO.md and DONE.md;feat(7.1.1): add reveal screen;fix(7.1.1): fix reveal message parsing;docs: update TODO.md;feat(7.1.3): complete reveal animations;feat(7.2+7.3): add sound effects and celebrations"
+2025-12-18,22:08,22:08,1.0,1,Feature parity with web,"feat: polish and feature parity with web"
+2025-12-19,22:35,22:35,0.5,1,M2 completion,"docs: mark M2 milestone complete"
