@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/auth/sign_in_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/lobby/create_game_screen.dart';
 import '../features/lobby/join_game_screen.dart';
@@ -14,6 +15,7 @@ import '../models/game.dart';
 class AppRoutes {
   AppRoutes._();
 
+  static const String signIn = '/sign-in';
   static const String home = '/';
   static const String createGame = '/create';
   static const String joinGame = '/join';
@@ -40,6 +42,11 @@ final GoRouter appRouter = GoRouter(
   initialLocation: AppRoutes.home,
   debugLogDiagnostics: true,
   routes: [
+    GoRoute(
+      path: AppRoutes.signIn,
+      name: 'signIn',
+      builder: (context, state) => const SignInScreen(),
+    ),
     GoRoute(
       path: AppRoutes.home,
       name: 'home',

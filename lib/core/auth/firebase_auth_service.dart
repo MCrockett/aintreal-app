@@ -25,10 +25,7 @@ class FirebaseAuthService {
     final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
     if (googleUser == null) {
-      throw FirebaseAuthException(
-        code: 'sign-in-cancelled',
-        message: 'Google sign-in was cancelled',
-      );
+      throw AuthCancelledException();
     }
 
     // Obtain the auth details from the request
@@ -111,16 +108,8 @@ class FirebaseAuthService {
   }
 }
 
-/// Custom exception for Firebase auth errors.
-class FirebaseAuthException implements Exception {
-  final String code;
-  final String message;
-
-  FirebaseAuthException({
-    required this.code,
-    required this.message,
-  });
-
+/// Exception thrown when user cancels authentication.
+class AuthCancelledException implements Exception {
   @override
-  String toString() => 'FirebaseAuthException($code): $message';
+  String toString() => 'Authentication was cancelled by the user';
 }

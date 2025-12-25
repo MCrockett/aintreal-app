@@ -64,13 +64,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final credential = await _authService.signInWithGoogle();
       state = AuthStateAuthenticated(credential.user!);
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'sign-in-cancelled') {
-        // User cancelled, go back to unauthenticated
-        state = const AuthStateUnauthenticated();
-      } else {
-        state = AuthStateError(e.message);
-      }
+    } on AuthCancelledException {
+      // User cancelled, go back to unauthenticated
+      state = const AuthStateUnauthenticated();
     } catch (e) {
       debugPrint('Google sign-in error: $e');
       state = AuthStateError('Failed to sign in with Google');
