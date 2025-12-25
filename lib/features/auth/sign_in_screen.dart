@@ -2,12 +2,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../config/routes.dart';
 import '../../config/theme.dart';
 import '../../core/auth/auth_provider.dart';
-import '../../utils/guest_name_generator.dart';
+import '../../core/auth/session_provider.dart';
 import '../../widgets/gradient_background.dart';
 import '../../widgets/logo.dart';
 
@@ -31,13 +29,13 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
 
     try {
       await ref.read(authProvider.notifier).signInWithGoogle();
-      if (mounted) {
-        context.go(AppRoutes.home);
-      }
+      // Router redirect will handle navigation
     } catch (e) {
-      setState(() {
-        _error = 'Failed to sign in with Google';
-      });
+      if (mounted) {
+        setState(() {
+          _error = 'Failed to sign in with Google';
+        });
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -55,13 +53,13 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
 
     try {
       await ref.read(authProvider.notifier).signInWithApple();
-      if (mounted) {
-        context.go(AppRoutes.home);
-      }
+      // Router redirect will handle navigation
     } catch (e) {
-      setState(() {
-        _error = 'Failed to sign in with Apple';
-      });
+      if (mounted) {
+        setState(() {
+          _error = 'Failed to sign in with Apple';
+        });
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -71,11 +69,28 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     }
   }
 
-  void _continueAsGuest() {
-    final guestName = GuestNameGenerator.generate();
-    // TODO: Store guest name in local state/preferences
-    // For now, just navigate to home
-    context.go(AppRoutes.home, extra: {'guestName': guestName});
+  Future<void> _continueAsGuest() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      await ref.read(sessionProvider.notifier).startGuestSession();
+      // Router redirect will handle navigation
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = 'Failed to start guest session';
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
