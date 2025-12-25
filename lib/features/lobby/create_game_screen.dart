@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/theme.dart';
 import '../../core/api/api_exceptions.dart';
 import '../../core/api/game_api.dart';
+import '../../core/auth/session_provider.dart';
 import '../../models/game.dart';
 import '../../widgets/gradient_background.dart';
 
 /// Screen for creating a new game with configuration options.
-class CreateGameScreen extends StatefulWidget {
+class CreateGameScreen extends ConsumerStatefulWidget {
   const CreateGameScreen({
     super.key,
     this.mode = GameMode.party,
@@ -27,10 +29,10 @@ class CreateGameScreen extends StatefulWidget {
   final bool? initialRandomBonuses;
 
   @override
-  State<CreateGameScreen> createState() => _CreateGameScreenState();
+  ConsumerState<CreateGameScreen> createState() => _CreateGameScreenState();
 }
 
-class _CreateGameScreenState extends State<CreateGameScreen> {
+class _CreateGameScreenState extends ConsumerState<CreateGameScreen> {
   final _nameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
@@ -41,6 +43,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
   bool _randomBonuses = true;
 
   bool _isCreating = false;
+  bool _isGuest = false;
 
   static const List<int> roundOptions = [4, 5, 6, 8, 10];
   static const List<int> timeOptions = [3, 5, 7, 10];
@@ -73,7 +76,17 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
   @override
   void initState() {
     super.initState();
-    // Pre-fill from initial values if provided (e.g., from Play Again)
+
+    // Get name from session (guest or authenticated)
+    final session = ref.read(sessionProvider);
+    if (session is SessionGuest) {
+      _nameController.text = session.guestName;
+      _isGuest = true;
+    } else if (session is SessionAuthenticated) {
+      _nameController.text = session.displayName;
+    }
+
+    // Override with initial values if provided (e.g., from Play Again)
     if (widget.initialName != null) {
       _nameController.text = widget.initialName!;
     }
@@ -202,26 +215,63 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                 padding: const EdgeInsets.all(24),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    // Name input
+                    // Name display (read-only for guests, editable for authenticated)
                     Text(
                       'Your Name',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        hintText: 'Enter your name',
+                    if (_isGuest) ...[
+                      // Guest name display (read-only)
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.backgroundLight,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: AppTheme.secondary, width: 2),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                _nameController.text,
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                      color: AppTheme.textPrimary,
+                                    ),
+                              ),
+                            ),
+                            Icon(
+                              Icons.lock_outline,
+                              size: 18,
+                              color: AppTheme.textMuted,
+                            ),
+                          ],
+                        ),
                       ),
-                      textCapitalization: TextCapitalization.words,
-                      maxLength: 20,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter your name';
-                        }
-                        return null;
-                      },
-                    ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Playing as guest',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppTheme.textMuted,
+                            ),
+                      ),
+                    ] else ...[
+                      // Editable name for authenticated users
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(
+                          hintText: 'Enter your name',
+                        ),
+                        textCapitalization: TextCapitalization.words,
+                        maxLength: 20,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please enter your name';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
 
                     const SizedBox(height: 32),
 

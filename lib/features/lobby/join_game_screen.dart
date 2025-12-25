@@ -1,28 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/theme.dart';
 import '../../core/api/api_exceptions.dart';
 import '../../core/api/game_api.dart';
+import '../../core/auth/session_provider.dart';
 import '../../widgets/gradient_background.dart';
 
 /// Screen for joining an existing game with a code.
-class JoinGameScreen extends StatefulWidget {
+class JoinGameScreen extends ConsumerStatefulWidget {
   const JoinGameScreen({super.key});
 
   @override
-  State<JoinGameScreen> createState() => _JoinGameScreenState();
+  ConsumerState<JoinGameScreen> createState() => _JoinGameScreenState();
 }
 
-class _JoinGameScreenState extends State<JoinGameScreen> {
+class _JoinGameScreenState extends ConsumerState<JoinGameScreen> {
   final _nameController = TextEditingController();
   final _codeController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   final _codeFocusNode = FocusNode();
 
   bool _isJoining = false;
+  bool _isGuest = false;
   String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    // Get name from session
+    final session = ref.read(sessionProvider);
+    if (session is SessionGuest) {
+      _nameController.text = session.guestName;
+      _isGuest = true;
+    } else if (session is SessionAuthenticated) {
+      _nameController.text = session.displayName;
+    }
+  }
 
   @override
   void dispose() {
@@ -131,30 +147,65 @@ class _JoinGameScreenState extends State<JoinGameScreen> {
                   delegate: SliverChildListDelegate([
                     const SizedBox(height: 20),
 
-                    // Name input
+                    // Name display (read-only for guests)
                     Text(
                       'Your Name',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        hintText: 'Enter your name',
+                    if (_isGuest) ...[
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.backgroundLight,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: AppTheme.secondary, width: 2),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                _nameController.text,
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                      color: AppTheme.textPrimary,
+                                    ),
+                              ),
+                            ),
+                            Icon(
+                              Icons.lock_outline,
+                              size: 18,
+                              color: AppTheme.textMuted,
+                            ),
+                          ],
+                        ),
                       ),
-                      textCapitalization: TextCapitalization.words,
-                      maxLength: 20,
-                      textInputAction: TextInputAction.next,
-                      onFieldSubmitted: (_) {
-                        _codeFocusNode.requestFocus();
-                      },
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter your name';
-                        }
-                        return null;
-                      },
-                    ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Playing as guest',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppTheme.textMuted,
+                            ),
+                      ),
+                    ] else ...[
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(
+                          hintText: 'Enter your name',
+                        ),
+                        textCapitalization: TextCapitalization.words,
+                        maxLength: 20,
+                        textInputAction: TextInputAction.next,
+                        onFieldSubmitted: (_) {
+                          _codeFocusNode.requestFocus();
+                        },
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please enter your name';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
 
                     const SizedBox(height: 24),
 
