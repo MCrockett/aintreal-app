@@ -1,4 +1,4 @@
-package com.aintreal.aintreal_app
+package com.upstreampartners.aintreal
 
 import io.flutter.embedding.android.FlutterActivity
 
