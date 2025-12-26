@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,6 +10,7 @@ import '../../config/theme.dart';
 import '../../core/audio/sound_service.dart';
 import '../../core/websocket/game_state_provider.dart';
 import '../../core/websocket/ws_messages.dart';
+import '../../widgets/cross_platform_image.dart';
 import '../../widgets/gradient_background.dart';
 
 /// AI puns for wrong answers - each contains "AI" to be styled
@@ -381,7 +381,7 @@ class _RevealImage extends StatelessWidget {
                 fit: StackFit.expand,
                 children: [
                   // Image
-                  CachedNetworkImage(
+                  CrossPlatformImage(
                     imageUrl: imageUrl,
                     fit: BoxFit.cover,
                     placeholder: (context, url) => Container(

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -42,7 +43,26 @@ class SessionNotifier extends StateNotifier<SessionState> {
   final Ref _ref;
 
   Future<void> _init() async {
-    // Check if user is already authenticated with Firebase
+    // On web, skip Firebase auth - just use guest mode
+    if (kIsWeb) {
+      // Check for stored guest name on web
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final storedGuestName = prefs.getString(_guestNameKey);
+        if (storedGuestName != null) {
+          state = SessionGuest(storedGuestName);
+          return;
+        }
+      } catch (e) {
+        // SharedPreferences might fail on web in some contexts
+        debugPrint('SharedPreferences error on web: $e');
+      }
+      // No stored guest name - go to sign-in screen
+      state = const SessionNone();
+      return;
+    }
+
+    // Mobile: Check if user is already authenticated with Firebase
     final authState = _ref.read(authProvider);
     if (authState is AuthStateAuthenticated) {
       state = SessionAuthenticated(authState.displayName);
