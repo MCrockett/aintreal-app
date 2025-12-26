@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/routes.dart';
 import '../../config/theme.dart';
+import '../../core/auth/session_provider.dart';
 import '../../models/game.dart';
 import '../../widgets/gradient_background.dart';
 import '../../widgets/how_to_play_dialog.dart';
 import '../../widgets/logo.dart';
 
 /// Home screen with game mode selection.
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final session = ref.watch(sessionProvider);
     return GradientBackground(
       child: SafeArea(
         child: Padding(
@@ -82,6 +85,22 @@ class HomeScreen extends StatelessWidget {
                 onPressed: () => showHowToPlayDialog(context),
                 child: const Text('How to Play'),
               ),
+              const SizedBox(height: 8),
+              // Player info and sign out
+              if (session is SessionGuest || session is SessionAuthenticated)
+                TextButton.icon(
+                  onPressed: () => ref.read(sessionProvider.notifier).endSession(),
+                  icon: const Icon(Icons.logout, size: 18),
+                  label: Text(
+                    session is SessionGuest
+                        ? 'Sign out (${session.guestName})'
+                        : 'Sign out',
+                    style: TextStyle(color: AppTheme.textMuted),
+                  ),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppTheme.textMuted,
+                  ),
+                ),
               const Spacer(),
             ],
           ),
