@@ -292,16 +292,18 @@
 ## Epic 6.2: Push Notifications (MF-PUSH)
 
 **Goal:** Game invite notifications
-**Priority:** P2 - Medium
-**Status:** Complete (client-side)
+**Priority:** P3 - Low
+**Status:** Removed (overkill for current scope)
 
 | Task | Description | Effort | Status |
 |------|-------------|--------|--------|
-| 6.2.1 | Set up FCM in Firebase | 1h | [x] |
-| 6.2.2 | Request notification permissions | 1h | [x] |
-| 6.2.3 | Register FCM token with backend | 1h | [x] |
-| 6.2.4 | Implement backend POST /api/user/fcm-token | 1h | [~] future |
-| 6.2.5 | Handle notification taps (deep linking) | 2h | [x] |
+| 6.2.1 | Set up FCM in Firebase | 1h | [~] removed |
+| 6.2.2 | Request notification permissions | 1h | [~] removed |
+| 6.2.3 | Register FCM token with backend | 1h | [~] removed |
+| 6.2.4 | Implement backend POST /api/user/fcm-token | 1h | [~] removed |
+| 6.2.5 | Handle notification taps (deep linking) | 2h | [~] removed |
+
+*Note: Push notifications removed from scope. Deep linking works via URL schemes instead.*
 
 ---
 
@@ -509,6 +511,11 @@ Milestones are built from completed Epics:
 ---
 
 ## Backlog (Future)
+
+### Flutter Web
+- [ ] **Try Mode:** Demo flow for /try traffic (1 untimed + 2 timed rounds → success → guest mode)
+- [ ] **AdSense Integration:** Web ads (requires AdSense approval)
+- [ ] **Turnstile Bot Protection:** Add Cloudflare Turnstile to create/join on web
 
 ### Web Polish
 - [ ] Achievements system
