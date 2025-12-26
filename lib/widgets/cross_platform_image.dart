@@ -2,6 +2,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../config/env.dart';
+
 // Conditional import for web-specific code
 import 'cross_platform_image_stub.dart'
     if (dart.library.html) 'cross_platform_image_web.dart' as platform;
@@ -42,6 +44,7 @@ class CrossPlatformImage extends StatelessWidget {
     return CachedNetworkImage(
       imageUrl: imageUrl,
       fit: fit,
+      httpHeaders: const {'X-Mobile-App': Env.mobileAppSecret},
       placeholder: placeholder != null
           ? (context, url) => placeholder!(context, url)
           : null,
@@ -60,8 +63,14 @@ class CrossPlatformImageProvider {
       // On web, preload using native browser
       platform.preloadWebImage(url);
     } else {
-      // On mobile, use CachedNetworkImageProvider
-      await precacheImage(CachedNetworkImageProvider(url), context);
+      // On mobile, use CachedNetworkImageProvider with auth header
+      await precacheImage(
+        CachedNetworkImageProvider(
+          url,
+          headers: const {'X-Mobile-App': Env.mobileAppSecret},
+        ),
+        context,
+      );
     }
   }
 }
