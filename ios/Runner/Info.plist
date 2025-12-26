@@ -55,6 +55,18 @@
 				<string>com.googleusercontent.apps.34973143986-08g7qsr648p46hirf202s48775f0e9rk</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>aintreal</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>aintreal</string>
+			</array>
+		</dict>
 	</array>
+	<key>FlutterDeepLinkingEnabled</key>
+	<true/>
 </dict>
 </plist>

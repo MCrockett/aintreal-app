@@ -8,6 +8,7 @@ import '../../config/env.dart';
 import '../../config/routes.dart';
 import '../../config/theme.dart';
 import '../../core/audio/sound_service.dart';
+import '../../core/sharing/share_service.dart';
 import '../../core/websocket/game_state_provider.dart';
 import '../../core/websocket/ws_messages.dart';
 import '../../models/game.dart' hide GameState, GameStatus;
@@ -121,6 +122,33 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
     context.go('/');
   }
 
+  void _shareResults() {
+    final gameState = ref.read(gameStateProvider);
+    final gameOverData = gameState.gameOverData;
+    final playerId = gameState.playerId;
+    final config = gameState.config;
+
+    if (gameOverData == null) return;
+
+    // Find current player's ranking
+    final myRanking = gameOverData.rankings.cast<FinalRanking?>().firstWhere(
+          (r) => r?.playerId == playerId,
+          orElse: () => null,
+        );
+
+    if (myRanking == null) return;
+
+    ShareService.instance.shareResults(
+      score: myRanking.score,
+      correctAnswers: myRanking.correctAnswers,
+      totalRounds: gameOverData.totalRounds,
+      gameMode: config?.mode ?? 'party',
+      rank: myRanking.rank,
+      totalPlayers: gameOverData.rankings.length,
+      bestStreak: myRanking.bestStreak > 0 ? myRanking.bestStreak : null,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final gameState = ref.watch(gameStateProvider);
@@ -211,7 +239,12 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const SizedBox(width: 48), // Balance
+                      // Share button
+                      IconButton(
+                        icon: const Icon(Icons.share),
+                        onPressed: _shareResults,
+                        tooltip: 'Share Results',
+                      ),
                       Text(
                         'Game Over!',
                         style:
