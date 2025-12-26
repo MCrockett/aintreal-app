@@ -6,6 +6,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../config/env.dart';
 import '../../config/theme.dart';
+import '../../core/sharing/share_service.dart';
 import '../../core/websocket/game_state_provider.dart';
 import '../../core/websocket/ws_client.dart';
 import '../../core/websocket/ws_messages.dart';
@@ -116,6 +117,14 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
         content: Text('Link copied!'),
         duration: Duration(seconds: 2),
       ),
+    );
+  }
+
+  void _shareInvite() {
+    final gameState = ref.read(gameStateProvider);
+    ShareService.instance.shareGameInvite(
+      gameCode: widget.gameCode,
+      playerName: gameState.playerName,
     );
   }
 
@@ -265,6 +274,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
                 onCopyCode: _copyCode,
                 onCopyLink: _copyLink,
                 onShowQr: _showQrCode,
+                onShare: _shareInvite,
               ),
             ),
 
@@ -439,12 +449,14 @@ class _GameCodeCard extends StatelessWidget {
     required this.onCopyCode,
     required this.onCopyLink,
     required this.onShowQr,
+    required this.onShare,
   });
 
   final String gameCode;
   final VoidCallback onCopyCode;
   final VoidCallback onCopyLink;
   final VoidCallback onShowQr;
+  final VoidCallback onShare;
 
   @override
   Widget build(BuildContext context) {
@@ -489,6 +501,12 @@ class _GameCodeCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              _ShareButton(
+                icon: Icons.share,
+                label: 'Share',
+                onTap: onShare,
+              ),
+              const SizedBox(width: 12),
               _ShareButton(
                 icon: Icons.link,
                 label: 'Copy Link',
