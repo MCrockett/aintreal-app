@@ -116,9 +116,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               ),
               const SizedBox(height: 48),
 
-              // Sign in text
+              // Sign in text (different message on web)
               Text(
-                'Sign in to save your stats',
+                kIsWeb ? 'Play in your browser' : 'Sign in to save your stats',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: AppTheme.textSecondary,
                     ),
@@ -150,17 +150,19 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                 const SizedBox(height: 16),
               ],
 
-              // Google Sign-In button
-              _SignInButton(
-                onPressed: _isLoading || isAuthLoading ? null : _signInWithGoogle,
-                icon: _GoogleIcon(),
-                label: 'Continue with Google',
-                backgroundColor: Colors.white,
-                textColor: Colors.black87,
-              ),
-              const SizedBox(height: 12),
+              // Google Sign-In button (mobile only)
+              if (!kIsWeb) ...[
+                _SignInButton(
+                  onPressed: _isLoading || isAuthLoading ? null : _signInWithGoogle,
+                  icon: _GoogleIcon(),
+                  label: 'Continue with Google',
+                  backgroundColor: Colors.white,
+                  textColor: Colors.black87,
+                ),
+                const SizedBox(height: 12),
+              ],
 
-              // Apple Sign-In button (iOS only - hidden on web)
+              // Apple Sign-In button (iOS only)
               if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) ...[
                 _SignInButton(
                   onPressed: _isLoading || isAuthLoading ? null : _signInWithApple,
@@ -172,36 +174,40 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                 const SizedBox(height: 12),
               ],
 
-              const SizedBox(height: 8),
-
-              // Divider
-              Row(
-                children: [
-                  const Expanded(child: Divider(color: AppTheme.secondary)),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      'or',
-                      style: TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 14,
+              // Divider (mobile only - web only has guest option)
+              if (!kIsWeb) ...[
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Expanded(child: Divider(color: AppTheme.secondary)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'or',
+                        style: TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
-                  ),
-                  const Expanded(child: Divider(color: AppTheme.secondary)),
-                ],
-              ),
+                    const Expanded(child: Divider(color: AppTheme.secondary)),
+                  ],
+                ),
+                const SizedBox(height: 20),
+              ],
 
-              const SizedBox(height: 20),
-
-              // Guest button
+              // Guest button (primary action on web)
               _SignInButton(
                 onPressed: _isLoading || isAuthLoading ? null : _continueAsGuest,
-                icon: const Icon(Icons.person_outline, color: AppTheme.textPrimary, size: 24),
-                label: 'Play as Guest',
-                backgroundColor: AppTheme.secondary,
-                textColor: AppTheme.textPrimary,
-                subtitle: 'Stats won\'t be saved',
+                icon: Icon(
+                  kIsWeb ? Icons.play_arrow : Icons.person_outline,
+                  color: kIsWeb ? Colors.white : AppTheme.textPrimary,
+                  size: 24,
+                ),
+                label: kIsWeb ? 'Start Playing' : 'Play as Guest',
+                backgroundColor: kIsWeb ? AppTheme.primary : AppTheme.secondary,
+                textColor: kIsWeb ? Colors.white : AppTheme.textPrimary,
+                subtitle: kIsWeb ? null : 'Stats won\'t be saved',
               ),
 
               const Spacer(flex: 2),
