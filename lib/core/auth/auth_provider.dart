@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'firebase_auth_service.dart';
 
+/// Whether auth is available (mobile only, not web)
+const bool _isAuthAvailable = !kIsWeb;
+
 /// Auth state representing the user's authentication status.
 sealed class AuthState {
   const AuthState();
@@ -42,9 +45,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
     _init();
   }
 
-  final FirebaseAuthService _authService;
+  final FirebaseAuthService? _authService;
 
   void _init() {
+    // On web, auth is not available - always unauthenticated
+    if (!_isAuthAvailable || _authService == null) {
+      state = const AuthStateUnauthenticated();
+      return;
+    }
+
     // Listen to auth state changes
     _authService.authStateChanges.listen((user) {
       if (user != null) {
@@ -60,6 +69,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   /// Sign in with Google.
   Future<void> signInWithGoogle() async {
+    if (_authService == null) return;
     state = const AuthStateLoading();
     try {
       final credential = await _authService.signInWithGoogle();
@@ -76,6 +86,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   /// Sign in with Apple.
   Future<void> signInWithApple() async {
+    if (_authService == null) return;
     state = const AuthStateLoading();
     try {
       final credential = await _authService.signInWithApple();
@@ -92,6 +103,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   /// Sign out.
   Future<void> signOut() async {
+    if (_authService == null) return;
     state = const AuthStateLoading();
     try {
       await _authService.signOut();
@@ -110,8 +122,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 }
 
-/// Provider for the auth service singleton.
-final authServiceProvider = Provider<FirebaseAuthService>((ref) {
+/// Provider for the auth service singleton (null on web).
+final authServiceProvider = Provider<FirebaseAuthService?>((ref) {
+  if (!_isAuthAvailable) return null;
   return FirebaseAuthService();
 });
 
