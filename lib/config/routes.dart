@@ -23,7 +23,7 @@ class AppRoutes {
   static const String profile = '/profile';
   static const String createGame = '/create';
   static const String joinGame = '/join';
-  static const String joinWithCode = '/join/:code'; // Deep link route
+  static const String joinWithCode = '/join/:code'; // Deep links and notifications
   static const String lobby = '/lobby/:code';
   static const String game = '/game/:code';
   static const String reveal = '/reveal/:code';
@@ -112,7 +112,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'join',
         builder: (context, state) => const JoinGameScreen(),
       ),
-      // Deep link route: /join/:code
+      // Deep link / notification route: /join/:code
       GoRoute(
         path: AppRoutes.joinWithCode,
         name: 'joinWithCode',

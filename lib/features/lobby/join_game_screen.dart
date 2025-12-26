@@ -13,7 +13,7 @@ import '../../widgets/gradient_background.dart';
 class JoinGameScreen extends ConsumerStatefulWidget {
   const JoinGameScreen({super.key, this.initialCode});
 
-  /// Optional code from deep link.
+  /// Optional code from deep link or push notification.
   final String? initialCode;
 
   @override
@@ -42,7 +42,7 @@ class _JoinGameScreenState extends ConsumerState<JoinGameScreen> {
       _nameController.text = session.displayName;
     }
 
-    // Pre-fill code from deep link
+    // Pre-fill code from deep link or notification
     if (widget.initialCode != null && widget.initialCode!.isNotEmpty) {
       _codeController.text = widget.initialCode!.toUpperCase();
     }
