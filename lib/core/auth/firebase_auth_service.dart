@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
@@ -50,6 +51,8 @@ class FirebaseAuthService {
     final rawNonce = _generateNonce();
     final nonce = _sha256ofString(rawNonce);
 
+    debugPrint('Apple Sign-In: Starting with nonce hash: ${nonce.substring(0, 10)}...');
+
     // Request Apple ID credential
     final appleCredential = await SignInWithApple.getAppleIDCredential(
       scopes: [
@@ -59,11 +62,35 @@ class FirebaseAuthService {
       nonce: nonce,
     );
 
+    debugPrint('Apple Sign-In: Got Apple credential');
+    debugPrint('Apple Sign-In: identityToken present: ${appleCredential.identityToken != null}');
+    debugPrint('Apple Sign-In: identityToken length: ${appleCredential.identityToken?.length ?? 0}');
+    debugPrint('Apple Sign-In: authorizationCode present: ${appleCredential.authorizationCode != null}');
+    debugPrint('Apple Sign-In: userIdentifier: ${appleCredential.userIdentifier}');
+    debugPrint('Apple Sign-In: email: ${appleCredential.email}');
+
+    // Decode JWT header to see audience/issuer
+    if (appleCredential.identityToken != null) {
+      final parts = appleCredential.identityToken!.split('.');
+      if (parts.length >= 2) {
+        try {
+          final payload = parts[1];
+          final normalized = base64Url.normalize(payload);
+          final decoded = utf8.decode(base64Url.decode(normalized));
+          debugPrint('Apple Sign-In: JWT payload: $decoded');
+        } catch (e) {
+          debugPrint('Apple Sign-In: Could not decode JWT: $e');
+        }
+      }
+    }
+
     // Create an OAuth credential from the Apple credential
     final oauthCredential = OAuthProvider('apple.com').credential(
       idToken: appleCredential.identityToken,
       rawNonce: rawNonce,
     );
+
+    debugPrint('Apple Sign-In: Created Firebase credential, attempting sign in...');
 
     // Sign in to Firebase with the Apple credential
     final userCredential = await _auth.signInWithCredential(oauthCredential);

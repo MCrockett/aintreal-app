@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +9,7 @@ import '../../config/env.dart';
 import '../../config/theme.dart';
 import '../../core/audio/sound_service.dart';
 import '../../core/websocket/game_state_provider.dart';
+import '../../widgets/cross_platform_image.dart';
 import '../../widgets/gradient_background.dart';
 
 /// Service for preloading game images.
@@ -25,11 +25,8 @@ class ImagePreloader {
       if (_preloadedUrls.contains(url)) continue;
 
       try {
-        // Use CachedNetworkImage's provider to cache the image
-        await precacheImage(
-          CachedNetworkImageProvider(url),
-          context,
-        );
+        // Use cross-platform provider to cache the image
+        await CrossPlatformImageProvider.preload(context, url);
         _preloadedUrls.add(url);
         debugPrint('Preloaded image: $url');
       } catch (e) {
@@ -611,7 +608,7 @@ class _GameImage extends StatelessWidget {
             fit: StackFit.expand,
             children: [
               // Image
-              CachedNetworkImage(
+              CrossPlatformImage(
                 imageUrl: imageUrl,
                 fit: BoxFit.cover,
                 placeholder: (context, url) => _ShimmerPlaceholder(),

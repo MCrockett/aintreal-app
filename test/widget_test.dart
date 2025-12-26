@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:aintreal_app/app.dart';
+import 'package:aintreal_app/widgets/logo.dart';
 
 void main() {
   testWidgets('App renders home screen', (WidgetTester tester) async {
@@ -12,8 +13,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Verify the app title is shown
-    expect(find.text("n't Real"), findsOneWidget);
+    // Verify the logo widget is shown
+    expect(find.byType(Logo), findsOneWidget);
+    // Verify the tagline is shown
     expect(find.text('Spot the AI'), findsOneWidget);
   });
 }
