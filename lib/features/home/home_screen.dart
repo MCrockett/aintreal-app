@@ -6,6 +6,7 @@ import '../../config/routes.dart';
 import '../../config/theme.dart';
 import '../../core/auth/session_provider.dart';
 import '../../models/game.dart';
+import '../../widgets/banner_ad_widget.dart';
 import '../../widgets/gradient_background.dart';
 import '../../widgets/how_to_play_dialog.dart';
 import '../../widgets/logo.dart';
@@ -102,6 +103,10 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
               const Spacer(),
+
+              // Banner ad at bottom
+              const BannerAdWidget(),
+              const SizedBox(height: 8),
             ],
           ),
         ),

@@ -7,8 +7,8 @@
 - **Platform:** Flutter 3.38.4 (stable)
 - **Package:** `com.upstreampartners.aintreal`
 - **Branch:** `main`
-- **Phase:** M1, M2, M3 & Epic 6 Complete (except Push Notifications)
-- **Next:** Epic 5.1-5.2 (AdMob) then Epic 8 (Google Play)
+- **Phase:** M1, M2, M3, M4, M5 Complete
+- **Next:** Epic 8 (Google Play Store submission)
 
 ---
 
@@ -293,15 +293,15 @@
 
 **Goal:** Game invite notifications
 **Priority:** P2 - Medium
-**Status:** Planned
+**Status:** Complete (client-side)
 
 | Task | Description | Effort | Status |
 |------|-------------|--------|--------|
-| 6.2.1 | Set up FCM in Firebase | 1h | [ ] |
-| 6.2.2 | Request notification permissions | 1h | [ ] |
-| 6.2.3 | Register FCM token with backend | 1h | [ ] |
-| 6.2.4 | Implement backend POST /api/user/fcm-token | 1h | [ ] |
-| 6.2.5 | Handle notification taps (deep linking) | 2h | [ ] |
+| 6.2.1 | Set up FCM in Firebase | 1h | [x] |
+| 6.2.2 | Request notification permissions | 1h | [x] |
+| 6.2.3 | Register FCM token with backend | 1h | [x] |
+| 6.2.4 | Implement backend POST /api/user/fcm-token | 1h | [~] future |
+| 6.2.5 | Handle notification taps (deep linking) | 2h | [x] |
 
 ---
 
@@ -337,14 +337,14 @@
 
 **Goal:** Ad platform configuration
 **Priority:** P2 - Medium
-**Status:** Planned
+**Status:** Complete
 
 | Task | Description | Effort | Status |
 |------|-------------|--------|--------|
-| 5.1.1 | Create AdMob account/app | 1h | [ ] |
-| 5.1.2 | Add google_mobile_ads package | 30m | [ ] |
-| 5.1.3 | Configure Android AdMob App ID | 30m | [ ] |
-| 5.1.4 | Configure iOS AdMob App ID | 30m | [ ] |
+| 5.1.1 | Create AdMob account/app | 1h | [x] test IDs |
+| 5.1.2 | Add google_mobile_ads package | 30m | [x] |
+| 5.1.3 | Configure Android AdMob App ID | 30m | [x] |
+| 5.1.4 | Configure iOS AdMob App ID | 30m | [x] |
 
 ---
 
@@ -352,17 +352,17 @@
 
 **Goal:** Banner, interstitial, and rewarded ads
 **Priority:** P2 - Medium
-**Status:** Planned
+**Status:** Complete (core features)
 
 | Task | Description | Effort | Status |
 |------|-------------|--------|--------|
-| 5.2.1 | Create ad_banner.dart widget | 1h | [ ] |
-| 5.2.2 | Add banner to home screen bottom | 30m | [ ] |
-| 5.2.3 | Add banner to lobby screen bottom | 30m | [ ] |
-| 5.2.4 | Create interstitial ad manager | 1h | [ ] |
-| 5.2.5 | Show interstitial after every 3 games | 1h | [ ] |
-| 5.2.6 | Create rewarded ad manager | 1h | [ ] |
-| 5.2.7 | Add Marathon "Continue" option with rewarded ad | 2h | [ ] |
+| 5.2.1 | Create ad_banner.dart widget | 1h | [x] |
+| 5.2.2 | Add banner to home screen bottom | 30m | [x] |
+| 5.2.3 | Add banner to lobby screen bottom | 30m | [~] skipped |
+| 5.2.4 | Create interstitial ad manager | 1h | [x] |
+| 5.2.5 | Show interstitial when leaving game | 1h | [x] |
+| 5.2.6 | Create rewarded ad manager | 1h | [~] future |
+| 5.2.7 | Add Marathon "Continue" option with rewarded ad | 2h | [~] future |
 
 ---
 
