@@ -23,8 +23,10 @@ echo "Building Flutter web..."
 echo "Creating deployment structure..."
 mkdir -p build/deploy/play
 
-# Copy landing page to root
+# Copy landing pages to root
 cp landing/index.html build/deploy/
+cp landing/privacy.html build/deploy/
+cp landing/terms.html build/deploy/
 
 # Copy Flutter web app to /play/
 cp -r build/web/* build/deploy/play/
