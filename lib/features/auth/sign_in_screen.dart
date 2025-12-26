@@ -1,5 +1,4 @@
-import 'dart:io';
-
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -161,8 +160,8 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Apple Sign-In button (iOS only, or always show for testing)
-              if (Platform.isIOS) ...[
+              // Apple Sign-In button (iOS only - hidden on web)
+              if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) ...[
                 _SignInButton(
                   onPressed: _isLoading || isAuthLoading ? null : _signInWithApple,
                   icon: const Icon(Icons.apple, color: Colors.white, size: 24),
