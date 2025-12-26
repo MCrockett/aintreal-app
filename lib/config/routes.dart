@@ -23,7 +23,7 @@ class AppRoutes {
   static const String profile = '/profile';
   static const String createGame = '/create';
   static const String joinGame = '/join';
-  static const String joinWithCode = '/join/:code'; // For deep links and notifications
+  static const String joinWithCode = '/join/:code'; // Deep links and notifications
   static const String lobby = '/lobby/:code';
   static const String game = '/game/:code';
   static const String reveal = '/reveal/:code';

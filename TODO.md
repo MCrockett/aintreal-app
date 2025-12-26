@@ -7,8 +7,8 @@
 - **Platform:** Flutter 3.38.4 (stable)
 - **Package:** `com.upstreampartners.aintreal`
 - **Branch:** `main`
-- **Phase:** M1, M2 & M3 Complete (Apple Sign-In blocked)
-- **Next:** Epic 6.2 (Push Notifications) or Epic 5.1 (AdMob)
+- **Phase:** M1, M2, M3 & Epic 6 Complete (except Push Notifications)
+- **Next:** Epic 5.1-5.2 (AdMob) then Epic 8 (Google Play)
 
 ---
 
@@ -309,13 +309,13 @@
 
 **Goal:** Share game invites and results
 **Priority:** P2 - Medium
-**Status:** Planned
+**Status:** Complete
 
 | Task | Description | Effort | Status |
 |------|-------------|--------|--------|
-| 6.3.1 | Add share button to game over screen | 1h | [ ] |
-| 6.3.2 | Generate shareable game invite link | 1h | [ ] |
-| 6.3.3 | Share results with score summary | 1h | [ ] |
+| 6.3.1 | Add share button to game over screen | 1h | [x] |
+| 6.3.2 | Generate shareable game invite link | 1h | [x] |
+| 6.3.3 | Share results with score summary | 1h | [x] |
 
 ---
 
@@ -323,13 +323,13 @@
 
 **Goal:** Direct game join via links
 **Priority:** P2 - Medium
-**Status:** Planned
+**Status:** Complete
 
 | Task | Description | Effort | Status |
 |------|-------------|--------|--------|
-| 6.4.1 | Configure Android deep links (aintreal://join/CODE) | 1h | [ ] |
-| 6.4.2 | Configure iOS universal links | 1h | [ ] |
-| 6.4.3 | Handle deep link navigation in GoRouter | 1h | [ ] |
+| 6.4.1 | Configure Android deep links (aintreal://join/CODE) | 1h | [x] |
+| 6.4.2 | Configure iOS universal links | 1h | [x] |
+| 6.4.3 | Handle deep link navigation in GoRouter | 1h | [x] |
 
 ---
 
