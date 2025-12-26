@@ -1,50 +1,52 @@
 import 'dart:math';
 
-/// Generates AI-themed guest names like "GrAINyPixel42" or "NeurALNova07"
+/// Generates AI-themed guest names like "BrAINyToaster42" or "ChAInedLlama07"
 class GuestNameGenerator {
   static final _random = Random();
 
-  // AI-themed adjectives (with "AI" embedded where possible)
+  // Adjectives with "AI" naturally embedded
   static const _adjectives = [
-    'GrAINy',
     'BrAINy',
-    'NeurAL',
-    'DigitAL',
-    'VirtuAL',
-    'PixelAI',
-    'CyberAI',
-    'RobotAI',
-    'SynthAI',
-    'LogicAL',
-    'BinAIry',
-    'GlitchAI',
-    'VectorAI',
-    'TensorAI',
-    'QuantAI',
+    'GrAINy',
+    'TrAIned',
+    'ChAIned',
+    'UnchAIned',
+    'PAInted',
+    'DetAIled',
+    'ContAIned',
+    'SustAIned',
+    'CertAIn',
+    'QuAInt',
+    'MAIntAIned',
   ];
 
-  // Tech/AI-themed nouns
+  // Funny/fun nouns
   static const _nouns = [
     'Bot',
-    'Node',
     'Pixel',
-    'Nova',
-    'Core',
-    'Byte',
-    'Wave',
-    'Pulse',
-    'Spark',
-    'Ghost',
-    'Signal',
-    'Matrix',
-    'Cipher',
-    'Nexus',
-    'Glitch',
+    'Toaster',
+    'Potato',
+    'Noodle',
+    'Banana',
+    'Pickle',
+    'Waffle',
+    'Nugget',
+    'Gremlin',
+    'Goblin',
+    'Wizard',
+    'Pirate',
+    'Ninja',
+    'Llama',
+    'Penguin',
+    'Raccoon',
+    'Walrus',
+    'Muffin',
+    'Taco',
   ];
 
   /// Generate a random guest name.
   /// Format: {Adjective}{Noun}{2-digit number}
-  /// Example: "GrAINyPixel42", "NeurALNova07"
+  /// Example: "BrAINyToaster42", "ChAInedLlama07"
   static String generate() {
     final adjective = _adjectives[_random.nextInt(_adjectives.length)];
     final noun = _nouns[_random.nextInt(_nouns.length)];
