@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../core/auth/session_provider.dart';
 import '../features/auth/sign_in_screen.dart';
 import '../features/home/home_screen.dart';
+import '../features/profile/profile_screen.dart';
 import '../features/lobby/create_game_screen.dart';
 import '../features/lobby/join_game_screen.dart';
 import '../features/lobby/lobby_screen.dart';
@@ -19,6 +20,7 @@ class AppRoutes {
 
   static const String signIn = '/sign-in';
   static const String home = '/';
+  static const String profile = '/profile';
   static const String createGame = '/create';
   static const String joinGame = '/join';
   static const String lobby = '/lobby/:code';
@@ -77,6 +79,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.home,
         name: 'home',
         builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.profile,
+        name: 'profile',
+        builder: (context, state) => const ProfileScreen(),
       ),
       GoRoute(
         path: AppRoutes.createGame,
