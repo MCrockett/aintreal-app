@@ -10,10 +10,12 @@ class ShareService {
   static const _baseUrl = 'https://aint-real.com';
 
   /// Share a game invite link.
+  /// Uses web URL for broad compatibility (works on web and opens app if installed).
   Future<void> shareGameInvite({
     required String gameCode,
     String? playerName,
   }) async {
+    // Use web URL - it works in browser and can open app via deep link
     final inviteUrl = '$_baseUrl/play/#/join/$gameCode';
     final text = playerName != null
         ? "$playerName invited you to play AIn't Real!\n\nCan you spot the AI? Join the game:\n$inviteUrl"

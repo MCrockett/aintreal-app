@@ -11,7 +11,10 @@ import '../../widgets/gradient_background.dart';
 
 /// Screen for joining an existing game with a code.
 class JoinGameScreen extends ConsumerStatefulWidget {
-  const JoinGameScreen({super.key});
+  const JoinGameScreen({super.key, this.initialCode});
+
+  /// Optional code from deep link.
+  final String? initialCode;
 
   @override
   ConsumerState<JoinGameScreen> createState() => _JoinGameScreenState();
@@ -37,6 +40,11 @@ class _JoinGameScreenState extends ConsumerState<JoinGameScreen> {
       _isGuest = true;
     } else if (session is SessionAuthenticated) {
       _nameController.text = session.displayName;
+    }
+
+    // Pre-fill code from deep link
+    if (widget.initialCode != null && widget.initialCode!.isNotEmpty) {
+      _codeController.text = widget.initialCode!.toUpperCase();
     }
   }
 
