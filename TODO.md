@@ -370,13 +370,15 @@
 
 **Goal:** App icon, splash screen
 **Priority:** P2 - Medium
-**Status:** Planned
+**Status:** Complete
 
 | Task | Description | Effort | Status |
 |------|-------------|--------|--------|
-| 8.1.1 | Create app icon (all sizes) | 2h | [ ] |
-| 8.1.2 | Create splash screen | 1h | [ ] |
-| 8.1.3 | Configure native splash package | 1h | [ ] |
+| 8.1.1 | Create app icon (all sizes) | 2h | [x] |
+| 8.1.2 | Create splash screen | 1h | [x] |
+| 8.1.3 | Configure native splash package | 1h | [x] |
+| 8.1.4 | Configure release signing (keystore) | 1h | [x] |
+| 8.1.5 | Build signed release AAB | 30m | [x] |
 
 ---
 
@@ -384,15 +386,17 @@
 
 **Goal:** App store submission materials
 **Priority:** P3 - Low
-**Status:** Planned
+**Status:** In Progress
 
 | Task | Description | Effort | Status |
 |------|-------------|--------|--------|
 | 8.2.1 | Create app screenshots (phone + tablet) | 3h | [ ] |
-| 8.2.2 | Write app description | 1h | [ ] |
+| 8.2.2 | Write app description | 1h | [x] |
 | 8.2.3 | Create feature graphic | 1h | [ ] |
-| 8.2.4 | Create/update privacy policy | 2h | [ ] |
+| 8.2.4 | Create/update privacy policy | 2h | [x] exists |
 | 8.2.5 | Create terms of service | 1h | [ ] |
+| 8.2.6 | Implement account deletion (Play Store compliance) | 2h | [x] |
+| 8.2.7 | Write reviewer instructions | 30m | [x] |
 
 ---
 

@@ -191,15 +191,23 @@ See [aintreal-game/GAMEFLOW.md](../aintreal-game/GAMEFLOW.md) for WebSocket mess
 
 ## Current State (December 2025)
 
-**Status**: Design phase complete, ready for M1 implementation
+**Status**: M1-M5 Complete, Google Play submission in progress
 
-**Completed**:
-- Tech stack decisions finalized
-- Architecture designed
-- Dependencies identified
-- TODO.md backlog created
+**Completed Milestones:**
+- M1: Core game loop (Party, Classic, Marathon modes)
+- M2: Polish & parity (reveal animations, sounds, confetti)
+- M3: Authentication (Firebase, Google Sign-In)
+- M4: Mobile features (haptics, deep links, sharing)
+- M5: Monetization (AdMob banner + interstitial)
 
-**Next**: Epic 1.1 (UI-FOUNDATION) - Project Setup
+**In Progress:**
+- M6: App store release (Epic 8)
+  - App icon and splash screen complete
+  - Release signing configured
+  - Store description drafted
+  - Account deletion implemented
+
+**Next**: Upload AAB to Google Play Console
 
 ## Questions?
 
