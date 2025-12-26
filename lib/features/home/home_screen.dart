@@ -86,15 +86,15 @@ class HomeScreen extends ConsumerWidget {
                 child: const Text('How to Play'),
               ),
               const SizedBox(height: 8),
-              // Player info and sign out
+              // Player info and profile
               if (session is SessionGuest || session is SessionAuthenticated)
                 TextButton.icon(
-                  onPressed: () => ref.read(sessionProvider.notifier).endSession(),
-                  icon: const Icon(Icons.logout, size: 18),
+                  onPressed: () => context.push(AppRoutes.profile),
+                  icon: const Icon(Icons.person, size: 18),
                   label: Text(
                     session is SessionGuest
-                        ? 'Sign out (${session.guestName})'
-                        : 'Sign out',
+                        ? session.guestName
+                        : (session as SessionAuthenticated).displayName,
                     style: TextStyle(color: AppTheme.textMuted),
                   ),
                   style: TextButton.styleFrom(

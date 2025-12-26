@@ -5,10 +5,10 @@
 ## Current Status
 
 - **Platform:** Flutter 3.38.4 (stable)
-- **Package:** `com.aintreal`
+- **Package:** `com.upstreampartners.aintreal`
 - **Branch:** `main`
-- **Phase:** M1 & M2 Complete
-- **Next:** M3 Authentication (Firebase setup, Google/Apple sign-in)
+- **Phase:** M1, M2 & M3 Complete (Apple Sign-In blocked)
+- **Next:** Epic 6.1 (Haptics) or Epic 5.1 (AdMob)
 
 ---
 
@@ -161,7 +161,7 @@
 | 1.4.2 | Build ranking_list.dart component | 1h | [x] |
 | 1.4.3 | Display final scores and winner | 1h | [x] |
 | 1.4.4 | Add Play Again / New Game buttons | 1h | [x] |
-| 1.4.5 | Show photographer credits | 30m | [ ] |
+| 1.4.5 | Show photographer credits | 30m | [x] |
 
 ---
 
@@ -228,15 +228,15 @@
 
 **Goal:** Firebase project and configuration
 **Priority:** P1 - High
-**Status:** Planned
+**Status:** Complete
 
 | Task | Description | Effort | Status |
 |------|-------------|--------|--------|
-| 4.1.1 | Create Firebase project "aintreal" | 1h | [ ] |
-| 4.1.2 | Add Android app to Firebase | 30m | [ ] |
-| 4.1.3 | Add iOS app to Firebase | 30m | [ ] |
-| 4.1.4 | Download and add config files | 30m | [ ] |
-| 4.1.5 | Initialize Firebase in main.dart | 30m | [ ] |
+| 4.1.1 | Create Firebase project "aintreal" | 1h | [x] |
+| 4.1.2 | Add Android app to Firebase | 30m | [x] |
+| 4.1.3 | Add iOS app to Firebase | 30m | [x] |
+| 4.1.4 | Download and add config files | 30m | [x] |
+| 4.1.5 | Initialize Firebase in main.dart | 30m | [x] |
 
 ---
 
@@ -244,15 +244,16 @@
 
 **Goal:** Sign-in with Google and Apple
 **Priority:** P1 - High
-**Status:** Planned
+**Status:** In Progress (Apple blocked)
 
 | Task | Description | Effort | Status |
 |------|-------------|--------|--------|
-| 4.2.1 | Create firebase_auth.dart service | 2h | [ ] |
-| 4.2.2 | Create auth_provider.dart Riverpod provider | 2h | [ ] |
-| 4.2.3 | Implement Google Sign-In | 2h | [ ] |
-| 4.2.4 | Implement Sign in with Apple | 2h | [ ] |
-| 4.2.5 | Create sign-in screen with platform buttons | 2h | [ ] |
+| 4.2.1 | Create firebase_auth.dart service | 2h | [x] |
+| 4.2.2 | Create auth_provider.dart Riverpod provider | 2h | [x] |
+| 4.2.3 | Implement Google Sign-In | 2h | [x] |
+| 4.2.4 | Implement Sign in with Apple | 2h | [~] blocked |
+| 4.2.5 | Create sign-in screen with platform buttons | 2h | [x] |
+| 4.2.6 | Implement Guest mode | 1h | [x] |
 
 ---
 
@@ -260,16 +261,16 @@
 
 **Goal:** User stats and profile management
 **Priority:** P1 - High
-**Status:** Planned
+**Status:** Complete
 
 | Task | Description | Effort | Status |
 |------|-------------|--------|--------|
-| 4.3.1 | Implement backend POST /api/auth/firebase | 2h | [ ] |
-| 4.3.2 | Create user table in D1 (backend) | 1h | [ ] |
-| 4.3.3 | Create profile_screen.dart layout | 2h | [ ] |
-| 4.3.4 | Build stats_card.dart component | 1h | [ ] |
-| 4.3.5 | Add editable display name | 1h | [ ] |
-| 4.3.6 | Add sign out button | 30m | [ ] |
+| 4.3.1 | Implement backend POST /api/auth/firebase | 2h | [x] |
+| 4.3.2 | Create user table in D1 (backend) | 1h | [x] |
+| 4.3.3 | Create profile_screen.dart layout | 2h | [x] |
+| 4.3.4 | Build stats_card.dart component | 1h | [x] |
+| 4.3.5 | Add editable display name | 1h | [x] |
+| 4.3.6 | Add sign out button | 30m | [x] |
 
 ---
 
@@ -425,6 +426,68 @@
 
 ---
 
+## Epic 9.1: Unit Tests (TS-UNIT)
+
+**Goal:** Test business logic and data parsing
+**Priority:** P1 - High
+**Status:** In Progress
+
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 9.1.1 | WebSocket message parsing tests | 1h | [ ] |
+| 9.1.2 | Game state provider tests | 1h | [ ] |
+| 9.1.3 | Score calculation tests | 30m | [ ] |
+| 9.1.4 | Model serialization tests | 30m | [ ] |
+
+---
+
+## Epic 9.2: Widget Tests (TS-WIDGET)
+
+**Goal:** Test UI components render and interact correctly
+**Priority:** P1 - High
+**Status:** Planned
+
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 9.2.1 | Home screen widget tests | 1h | [ ] |
+| 9.2.2 | Lobby screen widget tests | 1h | [ ] |
+| 9.2.3 | Game screen widget tests | 1h | [ ] |
+| 9.2.4 | Results screen widget tests | 1h | [ ] |
+| 9.2.5 | Reveal screen widget tests | 1h | [ ] |
+| 9.2.6 | Shared widgets tests (Logo, HowToPlay, etc.) | 1h | [ ] |
+
+---
+
+## Epic 9.3: Integration Tests (TS-INTEGRATION)
+
+**Goal:** End-to-end test flows on real devices
+**Priority:** P2 - Medium
+**Status:** Planned
+
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 9.3.1 | Set up integration_test package | 30m | [ ] |
+| 9.3.2 | Solo game flow test (Classic mode) | 2h | [ ] |
+| 9.3.3 | Navigation flow test | 1h | [ ] |
+| 9.3.4 | Create test mocks for WebSocket/API | 2h | [ ] |
+
+---
+
+## Epic 9.4: Golden Tests (TS-GOLDEN)
+
+**Goal:** Visual regression testing with screenshot comparisons
+**Priority:** P3 - Low
+**Status:** Planned
+
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 9.4.1 | Set up golden test infrastructure | 1h | [ ] |
+| 9.4.2 | Home screen golden (iOS + Android) | 1h | [ ] |
+| 9.4.3 | Game screen golden | 1h | [ ] |
+| 9.4.4 | Results screen golden | 1h | [ ] |
+
+---
+
 ## Milestone Summary
 
 Milestones are built from completed Epics:
@@ -433,6 +496,7 @@ Milestones are built from completed Epics:
 |-----------|----------------|----------|
 | **M1: Playable Game** | 1.1, 1.2, 2.1, 2.2, 3.1, 3.2, 1.3, 1.4 | P0 |
 | **M2: Polish** | 7.1, 7.2, 7.3, 7.4 | P1 |
+| **M2.5: Test Suite** | 9.1, 9.2, 9.3, 9.4 | P1 |
 | **M3: Authentication** | 4.1, 4.2, 4.3 | P1 |
 | **M4: Mobile Features** | 6.1, 6.2, 6.3, 6.4 | P2 |
 | **M5: Monetization** | 5.1, 5.2 | P2 |

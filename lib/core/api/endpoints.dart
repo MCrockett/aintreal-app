@@ -19,8 +19,10 @@ abstract class Endpoints {
   static const String stats = '/api/stats';
   static const String leaderboard = '/api/stats/leaderboard';
 
-  /// Future auth endpoints (for mobile app).
+  /// Auth endpoints (for mobile app).
   static const String authFirebase = '/api/auth/firebase';
-  static const String userProfile = '/api/user/profile';
+  static const String authProfile = '/api/auth/profile';
+
+  /// Future endpoints.
   static const String userFcmToken = '/api/user/fcm-token';
 }
