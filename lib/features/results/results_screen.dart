@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../config/env.dart';
 import '../../config/routes.dart';
 import '../../config/theme.dart';
 import '../../core/audio/sound_service.dart';
@@ -895,7 +896,7 @@ class _PhotographerCreditsState extends State<_PhotographerCredits> {
                             borderRadius: BorderRadius.circular(6),
                             child: credit.thumbnailUrl != null
                                 ? Image.network(
-                                    credit.thumbnailUrl!,
+                                    '${Env.apiBase}${credit.thumbnailUrl!}',
                                     width: 48,
                                     height: 48,
                                     fit: BoxFit.cover,
