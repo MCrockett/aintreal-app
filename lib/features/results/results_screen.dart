@@ -1,4 +1,5 @@
 import 'package:confetti/confetti.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../config/env.dart';
 import '../../config/routes.dart';
 import '../../config/theme.dart';
+import '../../core/ads/ad_service.dart';
 import '../../core/audio/sound_service.dart';
 import '../../core/sharing/share_service.dart';
 import '../../core/websocket/game_state_provider.dart';
@@ -112,14 +114,22 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
     }
   }
 
-  void _newGame() {
+  Future<void> _newGame() async {
+    // Show interstitial ad before leaving (mobile only)
+    if (!kIsWeb) {
+      await AdService.instance.showInterstitialAd();
+    }
     ref.read(gameStateProvider.notifier).leave();
-    context.go('/');
+    if (mounted) context.go('/');
   }
 
-  void _leaveGame() {
+  Future<void> _leaveGame() async {
+    // Show interstitial ad before leaving (mobile only)
+    if (!kIsWeb) {
+      await AdService.instance.showInterstitialAd();
+    }
     ref.read(gameStateProvider.notifier).leave();
-    context.go('/');
+    if (mounted) context.go('/');
   }
 
   void _shareResults() {

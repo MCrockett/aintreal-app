@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
+import 'core/ads/ad_service.dart';
 import 'core/audio/sound_service.dart';
 import 'core/notifications/push_notification_service.dart';
 
@@ -16,6 +17,9 @@ void main() async {
 
     // Initialize push notifications after Firebase
     await PushNotificationService.instance.init();
+
+    // Initialize AdMob
+    await AdService.instance.init();
   }
 
   // Initialize sound service
