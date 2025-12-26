@@ -1,6 +1,6 @@
 # AIn't Real App - TODO
 
-**Last Updated:** December 19, 2025
+**Last Updated:** December 26, 2025
 
 ## Current Status
 
@@ -8,7 +8,7 @@
 - **Package:** `com.upstreampartners.aintreal`
 - **Branch:** `main`
 - **Phase:** M1, M2 & M3 Complete (Apple Sign-In blocked)
-- **Next:** Epic 6.1 (Haptics) or Epic 5.1 (AdMob)
+- **Next:** Epic 6.2 (Push Notifications) or Epic 5.1 (AdMob)
 
 ---
 
@@ -278,14 +278,14 @@
 
 **Goal:** Tactile feedback for interactions
 **Priority:** P2 - Medium
-**Status:** Planned
+**Status:** Complete (integrated with Epic 7.2)
 
 | Task | Description | Effort | Status |
 |------|-------------|--------|--------|
-| 6.1.1 | Create haptics.dart utility | 1h | [ ] |
-| 6.1.2 | Add haptic on answer selection | 30m | [ ] |
-| 6.1.3 | Add haptic on timer expiry | 30m | [ ] |
-| 6.1.4 | Add haptic on bonus/win | 30m | [ ] |
+| 6.1.1 | Create haptics.dart utility | 1h | [x] |
+| 6.1.2 | Add haptic on answer selection | 30m | [x] |
+| 6.1.3 | Add haptic on timer expiry | 30m | [x] |
+| 6.1.4 | Add haptic on bonus/win | 30m | [x] |
 
 ---
 
