@@ -36,9 +36,14 @@ class PushNotificationService {
     // Request permission
     await requestPermission();
 
-    // Get initial token
-    _currentToken = await _messaging.getToken();
-    debugPrint('FCM Token: $_currentToken');
+    // Get initial token (may fail on emulators without Google Play Services)
+    try {
+      _currentToken = await _messaging.getToken();
+      debugPrint('FCM Token: $_currentToken');
+    } catch (e) {
+      debugPrint('FCM getToken failed (expected on emulators): $e');
+      // Continue without token - app should still work
+    }
 
     // Listen for token refresh
     _messaging.onTokenRefresh.listen((token) {
@@ -54,9 +59,13 @@ class PushNotificationService {
     FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
 
     // Check if app was opened from a notification (terminated state)
-    final initialMessage = await _messaging.getInitialMessage();
-    if (initialMessage != null) {
-      _handleNotificationTap(initialMessage);
+    try {
+      final initialMessage = await _messaging.getInitialMessage();
+      if (initialMessage != null) {
+        _handleNotificationTap(initialMessage);
+      }
+    } catch (e) {
+      debugPrint('FCM getInitialMessage failed: $e');
     }
   }
 
