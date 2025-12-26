@@ -2,10 +2,13 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:crypto/crypto.dart';
+import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+
+import '../../config/env.dart';
 
 /// Service for handling Firebase authentication with Google and Apple sign-in.
 class FirebaseAuthService {
@@ -116,6 +119,36 @@ class FirebaseAuthService {
       _auth.signOut(),
       _googleSignIn.signOut(),
     ]);
+  }
+
+  /// Delete user account data from the backend.
+  /// This must be called before deleting the Firebase user.
+  Future<void> deleteAccountData() async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw Exception('No user signed in');
+    }
+
+    // Get the Firebase ID token
+    final idToken = await user.getIdToken();
+
+    // Call the backend to delete account data
+    final dio = Dio();
+    final response = await dio.delete(
+      '${Env.apiBase}/api/auth/account',
+      options: Options(
+        headers: {
+          'Authorization': 'Bearer $idToken',
+          'X-Mobile-App': Env.mobileAppSecret,
+        },
+      ),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete account data: ${response.statusMessage}');
+    }
+
+    debugPrint('Account data deleted from server');
   }
 
   /// Generate a random nonce string for Apple Sign-In.

@@ -120,6 +120,30 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = const AuthStateUnauthenticated();
     }
   }
+
+  /// Delete user account and all associated data.
+  /// This deletes data from the backend and then deletes the Firebase user.
+  Future<void> deleteAccount() async {
+    if (_authService == null) return;
+    final currentState = state;
+    if (currentState is! AuthStateAuthenticated) return;
+
+    state = const AuthStateLoading();
+    try {
+      // First, delete server-side data
+      await _authService.deleteAccountData();
+
+      // Then delete the Firebase user
+      await currentState.user.delete();
+
+      state = const AuthStateUnauthenticated();
+    } catch (e) {
+      debugPrint('Delete account error: $e');
+      // Restore previous state on error
+      state = currentState;
+      rethrow;
+    }
+  }
 }
 
 /// Provider for the auth service singleton (null on web).
