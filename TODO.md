@@ -518,6 +518,10 @@ Milestones are built from completed Epics:
 - [ ] Leaderboards UI
 - [ ] Friends & invites
 
+### New Game Modes (Post-Launch)
+- [ ] **Quad Mode (Solo & Party):** Show 4 images, random number are AI (1-3)
+- [ ] **Slice Mode (Solo & Party):** Show ~30% slice of image (vertical or horizontal crop)
+
 ---
 
 ## Quick Links
