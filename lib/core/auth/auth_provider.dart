@@ -69,7 +69,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = const AuthStateUnauthenticated();
     } catch (e) {
       debugPrint('Google sign-in error: $e');
-      state = AuthStateError('Failed to sign in with Google');
+      state = const AuthStateUnauthenticated();
+      rethrow;
     }
   }
 
@@ -79,9 +80,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final credential = await _authService.signInWithApple();
       state = AuthStateAuthenticated(credential.user!);
+    } on AuthCancelledException {
+      // User cancelled, go back to unauthenticated
+      state = const AuthStateUnauthenticated();
     } catch (e) {
       debugPrint('Apple sign-in error: $e');
-      state = AuthStateError('Failed to sign in with Apple');
+      state = const AuthStateUnauthenticated();
+      rethrow;
     }
   }
 
