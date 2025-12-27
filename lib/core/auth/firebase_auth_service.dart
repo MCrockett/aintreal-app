@@ -9,6 +9,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import '../../config/env.dart';
+import '../api/auth_api.dart';
 
 /// Service for handling Firebase authentication with Google and Apple sign-in.
 class FirebaseAuthService {
@@ -43,7 +44,12 @@ class FirebaseAuthService {
     );
 
     // Sign in to Firebase with the Google credential
-    return await _auth.signInWithCredential(credential);
+    final userCredential = await _auth.signInWithCredential(credential);
+
+    // Sync with backend to create/update user record
+    await _syncWithBackend(userCredential.user);
+
+    return userCredential;
   }
 
   /// Sign in with Apple.
@@ -110,7 +116,33 @@ class FirebaseAuthService {
       }
     }
 
+    // Sync with backend to create/update user record
+    await _syncWithBackend(userCredential.user);
+
     return userCredential;
+  }
+
+  /// Sync user with backend after sign-in.
+  /// Creates or updates the user record in our database.
+  Future<void> _syncWithBackend(User? user) async {
+    if (user == null) return;
+
+    try {
+      final idToken = await user.getIdToken();
+      if (idToken == null) {
+        debugPrint('FirebaseAuthService: Could not get ID token for backend sync');
+        return;
+      }
+
+      await AuthApi.instance.authenticateWithFirebase(
+        idToken,
+        displayName: user.displayName,
+      );
+      debugPrint('FirebaseAuthService: User synced with backend');
+    } catch (e) {
+      // Don't fail sign-in if backend sync fails
+      debugPrint('FirebaseAuthService: Backend sync failed: $e');
+    }
   }
 
   /// Sign out from all providers.
