@@ -17,9 +17,12 @@ class GameApi {
   /// Create a new game with the given configuration.
   ///
   /// Returns the game code, player ID, and WebSocket URL.
+  /// If [idToken] is provided, the player will be linked to their Firebase account
+  /// and stats will be tracked.
   Future<CreateGameResponse> createGame({
     required String playerName,
     required GameConfig config,
+    String? idToken,
   }) async {
     try {
       final response = await _client.post<Map<String, dynamic>>(
@@ -27,6 +30,7 @@ class GameApi {
         data: {
           'hostName': playerName,
           'config': config.toJson(),
+          if (idToken != null) 'idToken': idToken,
         },
       );
 
@@ -47,15 +51,19 @@ class GameApi {
   /// Join an existing game with a code.
   ///
   /// Returns the player ID, WebSocket URL, and current game state.
+  /// If [idToken] is provided, the player will be linked to their Firebase account
+  /// and stats will be tracked.
   Future<JoinGameResponse> joinGame({
     required String code,
     required String playerName,
+    String? idToken,
   }) async {
     try {
       final response = await _client.post<Map<String, dynamic>>(
         Endpoints.gameJoin(code.toUpperCase()),
         data: {
           'playerName': playerName,
+          if (idToken != null) 'idToken': idToken,
         },
       );
 

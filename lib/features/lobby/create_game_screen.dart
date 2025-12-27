@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../config/theme.dart';
 import '../../core/api/api_exceptions.dart';
 import '../../core/api/game_api.dart';
+import '../../core/auth/auth_provider.dart';
 import '../../core/auth/session_provider.dart';
 import '../../models/game.dart';
 import '../../widgets/gradient_background.dart';
@@ -131,9 +132,17 @@ class _CreateGameScreenState extends ConsumerState<CreateGameScreen> {
         mode: widget.mode,
       );
 
+      // Get ID token if authenticated (for stats tracking)
+      String? idToken;
+      final authState = ref.read(authProvider);
+      if (authState is AuthStateAuthenticated) {
+        idToken = await authState.user.getIdToken();
+      }
+
       final response = await GameApi.instance.createGame(
         playerName: _nameController.text.trim(),
         config: config,
+        idToken: idToken,
       );
 
       if (!mounted) return;

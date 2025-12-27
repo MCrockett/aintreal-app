@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../config/theme.dart';
 import '../../core/api/api_exceptions.dart';
 import '../../core/api/game_api.dart';
+import '../../core/auth/auth_provider.dart';
 import '../../core/auth/session_provider.dart';
 import '../../widgets/gradient_background.dart';
 
@@ -74,9 +75,17 @@ class _JoinGameScreenState extends ConsumerState<JoinGameScreen> {
     }
 
     try {
+      // Get ID token if authenticated (for stats tracking)
+      String? idToken;
+      final authState = ref.read(authProvider);
+      if (authState is AuthStateAuthenticated) {
+        idToken = await authState.user.getIdToken();
+      }
+
       final response = await GameApi.instance.joinGame(
         code: code,
         playerName: playerName,
+        idToken: idToken,
       );
 
       if (!mounted) return;
