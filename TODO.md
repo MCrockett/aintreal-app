@@ -394,9 +394,9 @@
 |------|-------------|--------|--------|
 | 8.2.1 | Create app screenshots (phone + tablet) | 3h | [ ] |
 | 8.2.2 | Write app description | 1h | [x] |
-| 8.2.3 | Create feature graphic | 1h | [ ] |
+| 8.2.3 | Create feature graphic | 1h | [x] |
 | 8.2.4 | Create/update privacy policy | 2h | [x] exists |
-| 8.2.5 | Create terms of service | 1h | [ ] |
+| 8.2.5 | Create terms of service | 1h | [x] exists |
 | 8.2.6 | Implement account deletion (Play Store compliance) | 2h | [x] |
 | 8.2.7 | Write reviewer instructions | 30m | [x] |
 
