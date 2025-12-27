@@ -247,56 +247,62 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
         child: Stack(
         children: [
           SafeArea(
-            child: Column(
-              children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Column(
                     children: [
-                      // Share button
-                      IconButton(
-                        icon: const Icon(Icons.share),
-                        onPressed: _shareResults,
-                        tooltip: 'Share Results',
+                      // Header
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Share button
+                            IconButton(
+                              icon: const Icon(Icons.share),
+                              onPressed: _shareResults,
+                              tooltip: 'Share Results',
+                            ),
+                            Text(
+                              'Game Over!',
+                              style:
+                                  Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                            ),
+                            // Close button
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: _leaveGame,
+                            ),
+                          ],
+                        ),
                       ),
-                      Text(
-                        'Game Over!',
-                        style:
-                            Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                      ),
-                      // Close button
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: _leaveGame,
-                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Winner announcement (party mode) or Score summary (solo mode)
+                      if (rankings.isNotEmpty)
+                        _isSoloMode(gameState.config)
+                            ? _SoloResultBanner(
+                                ranking: rankings.first,
+                                totalRounds: totalRounds,
+                                isMarathonPerfect: isMarathon &&
+                                    rankings.first.correctAnswers >= totalRounds,
+                              )
+                            : _WinnerBanner(winner: rankings.first),
+
+                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
 
-                const SizedBox(height: 16),
-
-                // Winner announcement (party mode) or Score summary (solo mode)
-                if (rankings.isNotEmpty)
-                  _isSoloMode(gameState.config)
-                      ? _SoloResultBanner(
-                          ranking: rankings.first,
-                          totalRounds: totalRounds,
-                          isMarathonPerfect: isMarathon &&
-                              rankings.first.correctAnswers >= totalRounds,
-                        )
-                      : _WinnerBanner(winner: rankings.first),
-
-                const SizedBox(height: 24),
-
                 // Rankings list (only for party mode with multiple players)
                 if (!_isSoloMode(gameState.config))
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    sliver: SliverToBoxAdapter(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -317,88 +323,108 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                             ],
                           ),
                           const SizedBox(height: 12),
-                          Expanded(
-                            child: _RankingsList(
-                              rankings: rankings,
-                              currentPlayerId: playerId,
-                            ),
-                          ),
                         ],
                       ),
                     ),
-                  )
-                else
-                  const Spacer(),
+                  ),
+                if (!_isSoloMode(gameState.config))
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final ranking = rankings[index];
+                          final isMe = ranking.playerId == playerId;
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: _RankingTile(
+                              ranking: ranking,
+                              isMe: isMe,
+                            ),
+                          );
+                        },
+                        childCount: rankings.length,
+                      ),
+                    ),
+                  ),
 
-                // Photo credits (if available)
-                if (gameOverData.credits != null &&
-                    gameOverData.credits!.isNotEmpty)
-                  _PhotographerCredits(credits: gameOverData.credits!),
-
-                // Action buttons
-                Padding(
-                  padding: const EdgeInsets.all(24),
+                SliverToBoxAdapter(
                   child: Column(
                     children: [
-                      if (isHost) ...[
-                        // Play Again button (host only)
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: AppTheme.primaryGradient,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: ElevatedButton(
-                            onPressed: _playAgain,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              shadowColor: Colors.transparent,
-                            ),
-                            child: const Text('Play Again'),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        // New Game button
-                        OutlinedButton(
-                          onPressed: _newGame,
-                          child: const Text('New Game'),
-                        ),
-                      ] else ...[
-                        // Non-host waiting message
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: AppTheme.backgroundLight,
-                            borderRadius: BorderRadius.circular(12),
-                            border:
-                                Border.all(color: AppTheme.secondary, width: 2),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: AppTheme.primary,
+                      // Photo credits (if available)
+                      if (gameOverData.credits != null &&
+                          gameOverData.credits!.isNotEmpty)
+                        _PhotographerCredits(credits: gameOverData.credits!),
+
+                      // Action buttons
+                      Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          children: [
+                            if (isHost) ...[
+                              // Play Again button (host only)
+                              Container(
+                                decoration: BoxDecoration(
+                                  gradient: AppTheme.primaryGradient,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: ElevatedButton(
+                                  onPressed: _playAgain,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.transparent,
+                                  ),
+                                  child: const Text('Play Again'),
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Waiting for host to start next game...',
-                                style: Theme.of(context).textTheme.bodyMedium,
+                              const SizedBox(height: 12),
+                              // New Game button
+                              OutlinedButton(
+                                onPressed: _newGame,
+                                child: const Text('New Game'),
+                              ),
+                            ] else ...[
+                              // Non-host waiting message
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.backgroundLight,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: AppTheme.secondary,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppTheme.primary,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      'Waiting for host to start next game...',
+                                      style: Theme.of(context).textTheme.bodyMedium,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              // Leave button (non-host)
+                              OutlinedButton(
+                                onPressed: _leaveGame,
+                                child: const Text('Leave Game'),
                               ),
                             ],
-                          ),
+                          ],
                         ),
-                        const SizedBox(height: 12),
-                        // Leave button (non-host)
-                        OutlinedButton(
-                          onPressed: _leaveGame,
-                          child: const Text('Leave Game'),
-                        ),
-                      ],
+                      ),
                     ],
                   ),
                 ),
@@ -666,33 +692,6 @@ class _StatItem extends StatelessWidget {
               ),
         ),
       ],
-    );
-  }
-}
-
-/// List of all player rankings.
-class _RankingsList extends StatelessWidget {
-  const _RankingsList({
-    required this.rankings,
-    required this.currentPlayerId,
-  });
-
-  final List<FinalRanking> rankings;
-  final String? currentPlayerId;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.separated(
-      itemCount: rankings.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 8),
-      itemBuilder: (context, index) {
-        final ranking = rankings[index];
-        final isMe = ranking.playerId == currentPlayerId;
-        return _RankingTile(
-          ranking: ranking,
-          isMe: isMe,
-        );
-      },
     );
   }
 }
