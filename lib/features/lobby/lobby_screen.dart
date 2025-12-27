@@ -498,21 +498,21 @@ class _GameCodeCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
             children: [
               _ShareButton(
                 icon: Icons.share,
                 label: 'Share',
                 onTap: onShare,
               ),
-              const SizedBox(width: 12),
               _ShareButton(
                 icon: Icons.link,
                 label: 'Copy Link',
                 onTap: onCopyLink,
               ),
-              const SizedBox(width: 12),
               _ShareButton(
                 icon: Icons.qr_code,
                 label: 'QR Code',
@@ -543,7 +543,7 @@ class _ShareButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: AppTheme.secondary,
           borderRadius: BorderRadius.circular(8),
@@ -551,8 +551,8 @@ class _ShareButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 18, color: AppTheme.textPrimary),
-            const SizedBox(width: 8),
+            Icon(icon, size: 16, color: AppTheme.textPrimary),
+            const SizedBox(width: 6),
             Text(
               label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
