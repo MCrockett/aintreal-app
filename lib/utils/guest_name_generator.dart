@@ -50,7 +50,10 @@ class GuestNameGenerator {
   static String generate() {
     final adjective = _adjectives[_random.nextInt(_adjectives.length)];
     final noun = _nouns[_random.nextInt(_nouns.length)];
-    final number = _random.nextInt(100).toString().padLeft(2, '0');
+    // Avoid inappropriate numbers
+    int num = _random.nextInt(100);
+    if (num == 69) num = _random.nextInt(100);
+    final number = num.toString().padLeft(2, '0');
     return '$adjective$noun$number';
   }
 }
