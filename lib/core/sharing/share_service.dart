@@ -15,8 +15,8 @@ class ShareService {
     required String gameCode,
     String? playerName,
   }) async {
-    // Use web URL - it works in browser and can open app via deep link
-    final inviteUrl = '$_baseUrl/play/#/join/$gameCode';
+    // Use /join/:code URL - server redirects to play.aint-real.com/?join=CODE
+    final inviteUrl = '$_baseUrl/join/$gameCode';
     final text = playerName != null
         ? "$playerName invited you to play AIn't Real!\n\nCan you spot the AI? Join the game:\n$inviteUrl"
         : "You're invited to play AIn't Real!\n\nCan you spot the AI? Join the game:\n$inviteUrl";

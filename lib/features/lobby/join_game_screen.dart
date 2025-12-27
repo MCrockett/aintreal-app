@@ -239,14 +239,14 @@ class _JoinGameScreenState extends ConsumerState<JoinGameScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp('[A-Za-z]')),
+                        FilteringTextInputFormatter.allow(RegExp('[A-Za-z0-9]')),
                         UpperCaseTextFormatter(),
                       ],
                       textInputAction: TextInputAction.done,
                       onFieldSubmitted: (_) => _joinGame(),
                       validator: (value) {
                         if (value == null || value.trim().length != 4) {
-                          return 'Enter the 4-letter code';
+                          return 'Enter the 4-character code';
                         }
                         return null;
                       },
