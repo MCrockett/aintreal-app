@@ -82,10 +82,13 @@ class SessionNotifier extends StateNotifier<SessionState> {
 
     // Listen to auth changes
     _ref.listen<AuthState>(authProvider, (previous, next) {
+      debugPrint('SessionNotifier: Auth changed from ${previous.runtimeType} to ${next.runtimeType}');
       if (next is AuthStateAuthenticated) {
+        debugPrint('SessionNotifier: Setting SessionAuthenticated for ${next.displayName}');
         state = SessionAuthenticated(next.displayName);
         _clearGuestName();
       } else if (next is AuthStateUnauthenticated && state is SessionAuthenticated) {
+        debugPrint('SessionNotifier: Clearing session, setting SessionNone');
         state = const SessionNone();
       }
     });

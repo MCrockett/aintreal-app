@@ -523,6 +523,9 @@ Milestones are built from completed Epics:
 - [ ] First-time tutorial overlay
 - [ ] Tap image to view fullscreen
 
+### Cleanup
+- [ ] Remove debug logging from auth_provider.dart and session_provider.dart
+
 ### Future Features
 - [ ] Custom game rooms
 - [ ] Category/difficulty selection

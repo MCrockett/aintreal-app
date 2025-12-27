@@ -70,11 +70,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
   /// Sign in with Google.
   Future<void> signInWithGoogle() async {
     if (_authService == null) return;
+    debugPrint('AuthNotifier: Starting Google sign-in');
     state = const AuthStateLoading();
     try {
       final credential = await _authService.signInWithGoogle();
+      debugPrint('AuthNotifier: Google sign-in success, user: ${credential.user?.uid}');
       state = AuthStateAuthenticated(credential.user!);
+      debugPrint('AuthNotifier: State set to AuthStateAuthenticated');
     } on AuthCancelledException {
+      debugPrint('AuthNotifier: Google sign-in cancelled');
       // User cancelled, go back to unauthenticated
       state = const AuthStateUnauthenticated();
     } catch (e) {
