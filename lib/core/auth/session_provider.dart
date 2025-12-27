@@ -91,9 +91,9 @@ class SessionNotifier extends StateNotifier<SessionState> {
     });
   }
 
-  /// Start a guest session with a generated name.
-  Future<void> startGuestSession() async {
-    final guestName = GuestNameGenerator.generate();
+  /// Start a guest session with a generated or custom name.
+  Future<void> startGuestSession([String? customName]) async {
+    final guestName = customName ?? GuestNameGenerator.generate();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_guestNameKey, guestName);
     state = SessionGuest(guestName);

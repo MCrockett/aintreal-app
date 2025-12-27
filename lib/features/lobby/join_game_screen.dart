@@ -65,18 +65,25 @@ class _JoinGameScreenState extends ConsumerState<JoinGameScreen> {
     });
 
     final code = _codeController.text.trim().toUpperCase();
+    final playerName = _nameController.text.trim();
+
+    // Create guest session if user doesn't have one (e.g., from deep link)
+    final session = ref.read(sessionProvider);
+    if (session is! SessionGuest && session is! SessionAuthenticated) {
+      await ref.read(sessionProvider.notifier).startGuestSession(playerName);
+    }
 
     try {
       final response = await GameApi.instance.joinGame(
         code: code,
-        playerName: _nameController.text.trim(),
+        playerName: playerName,
       );
 
       if (!mounted) return;
 
       // Navigate to lobby with data from API
       context.go('/lobby/$code', extra: {
-        'playerName': _nameController.text.trim(),
+        'playerName': playerName,
         'playerId': response.playerId,
         'isHost': false,
         'config': response.gameState.config.toJson(),
