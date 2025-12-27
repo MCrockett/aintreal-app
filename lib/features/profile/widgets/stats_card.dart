@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -234,7 +235,7 @@ class StatsCard extends ConsumerWidget {
         if (stats.gamesPlayed == 0) ...[
           const SizedBox(height: 20),
           if (isGuest)
-            // Guest sign-in prompt
+            // Guest info prompt
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -263,10 +264,13 @@ class StatsCard extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Sign in to save your stats and play across devices.',
+                    kIsWeb
+                        ? 'Stats are not saved for guest sessions. Download the app to sign in and save your progress!'
+                        : 'Sign in to save your stats and play across devices.',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
-                  if (onSignIn != null) ...[
+                  // Only show sign-in button on mobile
+                  if (!kIsWeb && onSignIn != null) ...[
                     const SizedBox(height: 12),
                     SizedBox(
                       width: double.infinity,
