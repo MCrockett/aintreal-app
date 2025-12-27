@@ -14,6 +14,7 @@ import '../../core/sharing/share_service.dart';
 import '../../core/websocket/game_state_provider.dart';
 import '../../core/websocket/ws_messages.dart';
 import '../../models/game.dart' hide GameState, GameStatus;
+import '../../widgets/cross_platform_image.dart';
 import '../../widgets/gradient_background.dart';
 
 /// Results screen showing final rankings and scores.
@@ -938,13 +939,17 @@ class _PhotographerCreditsState extends State<_PhotographerCredits> {
                           ClipRRect(
                             borderRadius: BorderRadius.circular(6),
                             child: credit.thumbnailUrl != null
-                                ? Image.network(
-                                    '${Env.apiBase}${credit.thumbnailUrl!}',
+                                ? SizedBox(
                                     width: 48,
                                     height: 48,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) =>
-                                        _PlaceholderThumbnail(),
+                                    child: CrossPlatformImage(
+                                      imageUrl: '${Env.apiBase}${credit.thumbnailUrl!}',
+                                      fit: BoxFit.cover,
+                                      placeholder: (context, url) =>
+                                          _PlaceholderThumbnail(),
+                                      errorWidget: (context, url, error) =>
+                                          _PlaceholderThumbnail(),
+                                    ),
                                   )
                                 : _PlaceholderThumbnail(),
                           ),

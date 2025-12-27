@@ -572,9 +572,12 @@ class _YourResultCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isCorrect = result.correct;
     final points = result.points;
+    final timedOut = result.choice == null && !isCorrect;
 
-    // Pick a random pun for wrong answers
-    final wrongText = _wrongAnswerPuns[Random().nextInt(_wrongAnswerPuns.length)];
+    // Pick a random pun for wrong answers (not timeout)
+    final wrongText = timedOut
+        ? "Time's up!"
+        : _wrongAnswerPuns[Random().nextInt(_wrongAnswerPuns.length)];
 
     final bonusChips = _buildBonusChips(context);
 
@@ -606,7 +609,11 @@ class _YourResultCard extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  isCorrect ? Icons.check : Icons.close,
+                  isCorrect
+                      ? Icons.check
+                      : timedOut
+                          ? Icons.timer_off
+                          : Icons.close,
                   color: Colors.white,
                   size: 28,
                 ),
