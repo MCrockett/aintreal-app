@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import '../../config/theme.dart';
 import '../../core/api/api_exceptions.dart';
 import '../../core/api/game_api.dart';
-import '../../core/auth/auth_provider.dart';
 import '../../core/auth/session_provider.dart';
 import '../../models/game.dart';
 import '../../widgets/gradient_background.dart';
@@ -134,9 +134,12 @@ class _CreateGameScreenState extends ConsumerState<CreateGameScreen> {
 
       // Get ID token if authenticated (for stats tracking)
       String? idToken;
-      final authState = ref.read(authProvider);
-      if (authState is AuthStateAuthenticated) {
-        idToken = await authState.user.getIdToken();
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        idToken = await currentUser.getIdToken();
+        debugPrint('CreateGameScreen: Got idToken for user ${currentUser.uid}');
+      } else {
+        debugPrint('CreateGameScreen: No currentUser, playing as guest');
       }
 
       final response = await GameApi.instance.createGame(
@@ -224,14 +227,13 @@ class _CreateGameScreenState extends ConsumerState<CreateGameScreen> {
                 padding: const EdgeInsets.all(24),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    // Name display (read-only for guests, editable for authenticated)
-                    Text(
-                      'Your Name',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    if (_isGuest) ...[
-                      // Guest name display (read-only)
+                    // Name display - only show for party mode (multiplayer)
+                    if (!_isSoloMode) ...[
+                      Text(
+                        'Your Name',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -250,39 +252,24 @@ class _CreateGameScreenState extends ConsumerState<CreateGameScreen> {
                               ),
                             ),
                             Icon(
-                              Icons.lock_outline,
+                              _isGuest ? Icons.person_outline : Icons.verified_user,
                               size: 18,
-                              color: AppTheme.textMuted,
+                              color: _isGuest ? AppTheme.textMuted : AppTheme.secondary,
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Playing as guest',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppTheme.textMuted,
-                            ),
-                      ),
-                    ] else ...[
-                      // Editable name for authenticated users
-                      TextFormField(
-                        controller: _nameController,
-                        decoration: const InputDecoration(
-                          hintText: 'Enter your name',
+                      if (_isGuest) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          'Playing as guest',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppTheme.textMuted,
+                              ),
                         ),
-                        textCapitalization: TextCapitalization.words,
-                        maxLength: 20,
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter your name';
-                          }
-                          return null;
-                        },
-                      ),
+                      ],
+                      const SizedBox(height: 32),
                     ],
-
-                    const SizedBox(height: 32),
 
                     // Game Settings - only show for non-marathon modes
                     if (_showConfigOptions) ...[

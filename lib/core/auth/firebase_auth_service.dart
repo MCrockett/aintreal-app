@@ -125,23 +125,30 @@ class FirebaseAuthService {
   /// Sync user with backend after sign-in.
   /// Creates or updates the user record in our database.
   Future<void> _syncWithBackend(User? user) async {
-    if (user == null) return;
+    debugPrint('FirebaseAuthService: _syncWithBackend called');
+    if (user == null) {
+      debugPrint('FirebaseAuthService: user is null, skipping sync');
+      return;
+    }
 
     try {
+      debugPrint('FirebaseAuthService: Getting ID token for ${user.uid}');
       final idToken = await user.getIdToken();
       if (idToken == null) {
         debugPrint('FirebaseAuthService: Could not get ID token for backend sync');
         return;
       }
 
-      await AuthApi.instance.authenticateWithFirebase(
+      debugPrint('FirebaseAuthService: Calling authenticateWithFirebase...');
+      final response = await AuthApi.instance.authenticateWithFirebase(
         idToken,
         displayName: user.displayName,
       );
-      debugPrint('FirebaseAuthService: User synced with backend');
-    } catch (e) {
+      debugPrint('FirebaseAuthService: User synced with backend - isNewUser: ${response.isNewUser}');
+    } catch (e, stack) {
       // Don't fail sign-in if backend sync fails
       debugPrint('FirebaseAuthService: Backend sync failed: $e');
+      debugPrint('FirebaseAuthService: Stack: $stack');
     }
   }
 

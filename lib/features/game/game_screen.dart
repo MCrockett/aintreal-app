@@ -244,7 +244,15 @@ class _GameScreenState extends ConsumerState<GameScreen>
       // Game over - navigate to results
       if (next.status == GameStatus.finished && next.gameOverData != null) {
         debugPrint('Game finished! Navigating to results...');
-        context.go('/results/${widget.gameCode}');
+        // For marathon mode, add a delay so player can see the wrong answer
+        final isMarathon = next.config?.mode == 'marathon';
+        if (isMarathon) {
+          Future.delayed(const Duration(seconds: 3), () {
+            if (mounted) context.go('/results/${widget.gameCode}');
+          });
+        } else {
+          context.go('/results/${widget.gameCode}');
+        }
       }
 
       // Navigate to reveal screen when revealing starts
@@ -437,6 +445,38 @@ class _GameScreenState extends ConsumerState<GameScreen>
                           ),
                         ),
                       ),
+
+                  // Marathon Game Over overlay
+                  if (gameState.status == GameStatus.finished &&
+                      config?.mode == 'marathon')
+                    Container(
+                      color: Colors.black.withValues(alpha: 0.7),
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'GAME OVER',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .displayLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.wrongAnswer,
+                                  ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Final Streak: ${gameState.gameOverData?.rankings.firstOrNull?.correctAnswers ?? 0}',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headlineMedium
+                                  ?.copyWith(color: AppTheme.textSecondary),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
 
                 ],
               ),

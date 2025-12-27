@@ -62,36 +62,57 @@ class SessionNotifier extends StateNotifier<SessionState> {
       return;
     }
 
-    // Mobile: Check if user is already authenticated with Firebase
-    final authState = _ref.read(authProvider);
-    if (authState is AuthStateAuthenticated) {
-      state = SessionAuthenticated(authState.displayName);
-      return;
-    }
-
-    // Check for stored guest name
-    final prefs = await SharedPreferences.getInstance();
-    final storedGuestName = prefs.getString(_guestNameKey);
-    if (storedGuestName != null) {
-      state = SessionGuest(storedGuestName);
-      return;
-    }
-
-    // No session
-    state = const SessionNone();
-
-    // Listen to auth changes
+    // Mobile: Set up auth listener FIRST to catch Firebase session restoration
     _ref.listen<AuthState>(authProvider, (previous, next) {
-      debugPrint('SessionNotifier: Auth changed from ${previous.runtimeType} to ${next.runtimeType}');
+      debugPrint('SessionNotifier: Auth changed from ${previous?.runtimeType} to ${next.runtimeType}');
       if (next is AuthStateAuthenticated) {
         debugPrint('SessionNotifier: Setting SessionAuthenticated for ${next.displayName}');
         state = SessionAuthenticated(next.displayName);
         _clearGuestName();
-      } else if (next is AuthStateUnauthenticated && state is SessionAuthenticated) {
-        debugPrint('SessionNotifier: Clearing session, setting SessionNone');
-        state = const SessionNone();
+      } else if (next is AuthStateUnauthenticated) {
+        // Only clear session if we were previously authenticated
+        // Don't clear guest sessions when auth becomes unauthenticated
+        if (state is SessionAuthenticated) {
+          debugPrint('SessionNotifier: Clearing authenticated session, setting SessionNone');
+          state = const SessionNone();
+        } else if (state is SessionLoading) {
+          // Auth finished loading as unauthenticated, check for guest
+          _checkGuestSession();
+        }
       }
     });
+
+    // Check current auth state (might already be loaded)
+    final authState = _ref.read(authProvider);
+    debugPrint('SessionNotifier: Initial auth state: ${authState.runtimeType}');
+
+    if (authState is AuthStateAuthenticated) {
+      debugPrint('SessionNotifier: Already authenticated as ${authState.displayName}');
+      state = SessionAuthenticated(authState.displayName);
+      return;
+    }
+
+    if (authState is AuthStateUnauthenticated) {
+      // Auth already loaded and user not signed in - check for guest
+      await _checkGuestSession();
+      return;
+    }
+
+    // Auth is still loading - stay in SessionLoading until listener fires
+    debugPrint('SessionNotifier: Auth still loading, waiting...');
+  }
+
+  /// Check for stored guest session or set SessionNone.
+  Future<void> _checkGuestSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    final storedGuestName = prefs.getString(_guestNameKey);
+    if (storedGuestName != null) {
+      debugPrint('SessionNotifier: Found stored guest name: $storedGuestName');
+      state = SessionGuest(storedGuestName);
+    } else {
+      debugPrint('SessionNotifier: No guest name, setting SessionNone');
+      state = const SessionNone();
+    }
   }
 
   /// Start a guest session with a generated or custom name.

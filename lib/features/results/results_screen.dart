@@ -12,6 +12,7 @@ import '../../core/ads/ad_service.dart';
 import '../../core/audio/sound_service.dart';
 import '../../core/sharing/share_service.dart';
 import '../../core/websocket/game_state_provider.dart';
+import '../profile/widgets/stats_card.dart';
 import '../../core/websocket/ws_messages.dart';
 import '../../models/game.dart' hide GameState, GameStatus;
 import '../../widgets/cross_platform_image.dart';
@@ -96,6 +97,8 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
 
       // Disconnect and clear state
       ref.read(gameStateProvider.notifier).leave();
+      // Refresh stats so profile screen shows updated data
+      ref.invalidate(userStatsProvider);
 
       // Use go() to replace navigation stack (not push which keeps old screens)
       context.go(
@@ -121,6 +124,8 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
       await AdService.instance.showInterstitialAd();
     }
     ref.read(gameStateProvider.notifier).leave();
+    // Refresh stats so profile screen shows updated data
+    ref.invalidate(userStatsProvider);
     if (mounted) context.go('/');
   }
 
@@ -130,6 +135,8 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
       await AdService.instance.showInterstitialAd();
     }
     ref.read(gameStateProvider.notifier).leave();
+    // Refresh stats so profile screen shows updated data
+    ref.invalidate(userStatsProvider);
     if (mounted) context.go('/');
   }
 

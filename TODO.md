@@ -1,6 +1,6 @@
 # AIn't Real App - TODO
 
-**Last Updated:** December 26, 2025
+**Last Updated:** December 27, 2025
 
 ## Current Status
 
@@ -268,9 +268,10 @@
 | 4.3.1 | Implement backend POST /api/auth/firebase | 2h | [x] |
 | 4.3.2 | Create user table in D1 (backend) | 1h | [x] |
 | 4.3.3 | Create profile_screen.dart layout | 2h | [x] |
-| 4.3.4 | Build stats_card.dart component | 1h | [x] |
+| 4.3.4 | Build stats_card.dart component (per-mode sections) | 1h | [x] |
 | 4.3.5 | Add editable display name | 1h | [x] |
 | 4.3.6 | Add sign out button | 30m | [x] |
+| 4.3.7 | Per-mode stats (Party/Solo/Marathon separate) | 2h | [x] |
 
 ---
 

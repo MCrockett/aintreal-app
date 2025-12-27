@@ -480,7 +480,7 @@ class GameStateNotifier extends StateNotifier<GameState> {
             totalRounds: totalRounds,
             credits: credits,
           ),
-          clearRoundData: true,
+          // Don't clear round data - keep last image visible during delay
           clearRevealData: true,
         );
         debugPrint('Marathon ended! streak=$streak, completed=$completed');
