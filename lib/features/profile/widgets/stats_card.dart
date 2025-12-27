@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../config/theme.dart';
 import '../../../core/api/auth_api.dart';
@@ -269,8 +270,17 @@ class StatsCard extends ConsumerWidget {
                         : 'Sign in to save your stats and play across devices.',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
-                  // Only show sign-in button on mobile
-                  if (!kIsWeb && onSignIn != null) ...[
+                  // Show sign-in button on mobile, or "Get the App" link on web
+                  if (kIsWeb) ...[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: () => launchUrl(Uri.parse('https://aint-real.com')),
+                        child: const Text('Get the App'),
+                      ),
+                    ),
+                  ] else if (onSignIn != null) ...[
                     const SizedBox(height: 12),
                     SizedBox(
                       width: double.infinity,
