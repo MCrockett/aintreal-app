@@ -79,7 +79,14 @@ class UserStats {
 
 /// Card displaying user game statistics.
 class StatsCard extends ConsumerWidget {
-  const StatsCard({super.key});
+  const StatsCard({
+    super.key,
+    this.isGuest = false,
+    this.onSignIn,
+  });
+
+  final bool isGuest;
+  final VoidCallback? onSignIn;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -108,7 +115,7 @@ class StatsCard extends ConsumerWidget {
           ),
           const SizedBox(height: 20),
           statsAsync.when(
-            data: (stats) => _buildStats(context, stats),
+            data: (stats) => _buildStats(context, stats, isGuest, onSignIn),
             loading: () => const Center(
               child: Padding(
                 padding: EdgeInsets.all(20),
@@ -136,7 +143,7 @@ class StatsCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildStats(BuildContext context, UserStats stats) {
+  Widget _buildStats(BuildContext context, UserStats stats, bool isGuest, VoidCallback? onSignIn) {
     return Column(
       children: [
         // Main stats row
@@ -223,28 +230,75 @@ class StatsCard extends ConsumerWidget {
             const Expanded(child: SizedBox()),
           ],
         ),
-        // Coming soon message for empty stats
+        // Message for empty stats
         if (stats.gamesPlayed == 0) ...[
           const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppTheme.secondary.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.info_outline, size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Play some games to see your stats!',
+          if (isGuest)
+            // Guest sign-in prompt
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppTheme.warning.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppTheme.warning.withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: AppTheme.warning,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Playing as Guest',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Sign in to save your stats and play across devices.',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
-                ),
-              ],
+                  if (onSignIn != null) ...[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: onSignIn,
+                        child: const Text('Sign In'),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            )
+          else
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.secondary.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Play some games to see your stats!',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
         ],
       ],
     );

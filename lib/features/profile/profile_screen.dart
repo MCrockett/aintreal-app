@@ -248,7 +248,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 const SizedBox(height: 32),
 
                 // Stats card
-                const StatsCard(),
+                StatsCard(
+                  isGuest: isGuest,
+                  onSignIn: isGuest
+                      ? () => ref.read(sessionProvider.notifier).endSession()
+                      : null,
+                ),
 
                 const SizedBox(height: 24),
 
@@ -315,54 +320,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
 
                 const SizedBox(height: 24),
-
-                // Account section for guests
-                if (isGuest) ...[
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.backgroundLight,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppTheme.secondary),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.info_outline,
-                              color: AppTheme.warning,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Playing as Guest',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Sign in to save your stats and play across devices.',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton(
-                            onPressed: () {
-                              ref.read(sessionProvider.notifier).endSession();
-                            },
-                            child: const Text('Sign In'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                ],
 
                 // Sign out button
                 SizedBox(
