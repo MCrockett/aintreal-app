@@ -185,6 +185,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
   }
 
   void _onImageTap(String choice) {
+    // Block clicks during Get Ready countdown
+    if (_showGetReady) return;
+
     final gameState = ref.read(gameStateProvider);
     if (gameState.roundData?.hasAnswered == true) return;
 
@@ -370,11 +373,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     ),
                   ),
 
-                  // Get Ready overlay - semi-transparent and allows taps through
-                  // This enables early click detection (clicks during countdown)
+                  // Get Ready overlay - blocks taps until countdown finishes
                   if (_showGetReady)
-                    IgnorePointer(
-                      child: Container(
+                    Container(
                         color: Colors.black.withValues(alpha: 0.85),
                         child: Center(
                           child: Column(
@@ -434,7 +435,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
                           ),
                         ),
                       ),
-                    ),
 
                 ],
               ),
