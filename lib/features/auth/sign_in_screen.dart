@@ -106,7 +106,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               const Spacer(flex: 2),
 
               // Logo and tagline
-              const Logo(),
+              const Logo(showIcon: true, iconSize: 120),
               const SizedBox(height: 8),
               Text(
                 'Spot the AI',
