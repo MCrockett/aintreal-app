@@ -213,25 +213,27 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
     final topUrl = revealData.topUrl;
     final bottomUrl = revealData.bottomUrl;
 
-    return GradientBackground(
-      child: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: AppTheme.backgroundLight,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      'Round ${revealData.round} Results',
+    return PopScope(
+      canPop: false,
+      child: GradientBackground(
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.backgroundLight,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'Round ${revealData.round} Results',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -327,6 +329,7 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
 
             const SizedBox(height: 16),
           ],
+        ),
         ),
       ),
     );

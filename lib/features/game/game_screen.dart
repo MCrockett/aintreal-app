@@ -282,12 +282,14 @@ class _GameScreenState extends ConsumerState<GameScreen>
     final isCorrect =
         hasAnswered && playerChoice != null && playerChoice == aiPosition;
 
-    return GradientBackground(
-      child: SafeArea(
-        child: Column(
-          children: [
-            // Header with round info
-            _GameHeader(
+    return PopScope(
+      canPop: false,
+      child: GradientBackground(
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Header with round info
+              _GameHeader(
               currentRound: roundData.round,
               totalRounds: roundData.totalRounds,
               remainingSeconds: _remainingSeconds,
@@ -440,6 +442,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
               ),
             ),
           ],
+        ),
         ),
       ),
     );

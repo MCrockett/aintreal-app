@@ -229,7 +229,12 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
       );
     }
 
-    return GradientBackground(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _leaveGame();
+      },
+      child: GradientBackground(
       child: SafeArea(
         child: Column(
           children: [
@@ -411,6 +416,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

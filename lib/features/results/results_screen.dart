@@ -238,8 +238,13 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
     // Play victory or game over sound
     _playGameEndSound(isWinner);
 
-    return GradientBackground(
-      child: Stack(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _leaveGame();
+      },
+      child: GradientBackground(
+        child: Stack(
         children: [
           SafeArea(
             child: Column(
@@ -424,6 +429,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
               ),
             ),
         ],
+        ),
       ),
     );
   }
