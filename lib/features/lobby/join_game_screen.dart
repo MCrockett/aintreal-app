@@ -263,7 +263,7 @@ class _JoinGameScreenState extends ConsumerState<JoinGameScreen> {
 
                     // Help text
                     Text(
-                      'Ask the host for the 4-letter game code',
+                      'Ask the host for the 4-character game code',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: AppTheme.textMuted,
                           ),
