@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/theme.dart';
+import '../../core/audio/sound_service.dart';
 import '../../core/auth/auth_provider.dart';
 import '../../core/auth/session_provider.dart';
 import '../../widgets/gradient_background.dart';
@@ -20,11 +21,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _isEditing = false;
   late TextEditingController _nameController;
   bool _isSaving = false;
+  bool _soundEnabled = true;
+  bool _hapticEnabled = true;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController();
+    _loadSettings();
+  }
+
+  void _loadSettings() {
+    _soundEnabled = SoundService.instance.soundEnabled;
+    _hapticEnabled = SoundService.instance.hapticEnabled;
   }
 
   @override
@@ -240,6 +249,70 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
                 // Stats card
                 const StatsCard(),
+
+                const SizedBox(height: 24),
+
+                // Settings section
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.backgroundLight,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Settings',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.volume_up,
+                                   color: AppTheme.textSecondary, size: 20),
+                              const SizedBox(width: 12),
+                              const Text('Sound Effects'),
+                            ],
+                          ),
+                          Switch(
+                            value: _soundEnabled,
+                            onChanged: (value) {
+                              setState(() => _soundEnabled = value);
+                              SoundService.instance.setSoundEnabled(value);
+                            },
+                            activeColor: AppTheme.primary,
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.vibration,
+                                   color: AppTheme.textSecondary, size: 20),
+                              const SizedBox(width: 12),
+                              const Text('Haptic Feedback'),
+                            ],
+                          ),
+                          Switch(
+                            value: _hapticEnabled,
+                            onChanged: (value) {
+                              setState(() => _hapticEnabled = value);
+                              SoundService.instance.setHapticEnabled(value);
+                            },
+                            activeColor: AppTheme.primary,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
 
                 const SizedBox(height: 24),
 
