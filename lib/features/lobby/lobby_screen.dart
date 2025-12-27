@@ -416,7 +416,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
   }
 }
 
-/// Connection status indicator.
+/// Connection status indicator - only shows when there's an issue.
 class _ConnectionIndicator extends StatelessWidget {
   const _ConnectionIndicator({required this.state});
 
@@ -424,20 +424,39 @@ class _ConnectionIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (color, icon) = switch (state) {
-      WsConnectionState.connected => (Colors.green, Icons.wifi),
-      WsConnectionState.connecting => (Colors.orange, Icons.wifi),
-      WsConnectionState.reconnecting => (Colors.orange, Icons.wifi_off),
-      WsConnectionState.disconnected => (Colors.red, Icons.wifi_off),
+    // Don't show anything when connected - only show issues
+    if (state == WsConnectionState.connected) {
+      return const SizedBox.shrink();
+    }
+
+    final (color, icon, label) = switch (state) {
+      WsConnectionState.connected => (Colors.green, Icons.wifi, ''),
+      WsConnectionState.connecting => (Colors.orange, Icons.wifi, 'Connecting...'),
+      WsConnectionState.reconnecting => (Colors.orange, Icons.wifi_off, 'Reconnecting...'),
+      WsConnectionState.disconnected => (Colors.red, Icons.wifi_off, 'Disconnected'),
     };
 
     return Container(
-      padding: const EdgeInsets.all(6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.2),
-        shape: BoxShape.circle,
+        borderRadius: BorderRadius.circular(16),
       ),
-      child: Icon(icon, size: 16, color: color),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
