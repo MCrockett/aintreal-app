@@ -593,63 +593,77 @@ class _PlayerTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppTheme.backgroundLight,
-        borderRadius: BorderRadius.circular(12),
-        border: player.isHost
-            ? Border.all(color: AppTheme.primary.withValues(alpha: 0.5), width: 2)
-            : null,
-      ),
-      child: Row(
-        children: [
-          // Avatar placeholder
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              gradient: AppTheme.primaryGradient,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                player.name.isNotEmpty ? player.name[0].toUpperCase() : '?',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
+    final isDisconnected = !player.connected;
+
+    return Opacity(
+      opacity: isDisconnected ? 0.5 : 1.0,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppTheme.backgroundLight,
+          borderRadius: BorderRadius.circular(12),
+          border: player.isHost
+              ? Border.all(color: AppTheme.primary.withValues(alpha: 0.5), width: 2)
+              : null,
+        ),
+        child: Row(
+          children: [
+            // Avatar placeholder
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                gradient: isDisconnected ? null : AppTheme.primaryGradient,
+                color: isDisconnected ? AppTheme.textMuted : null,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  player.name.isNotEmpty ? player.name[0].toUpperCase() : '?',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  player.name,
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-                if (player.isHost)
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    'Host',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    player.name,
+                    style: Theme.of(context).textTheme.titleSmall,
                   ),
-              ],
+                  if (isDisconnected)
+                    Text(
+                      'Disconnected',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppTheme.error,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    )
+                  else if (player.isHost)
+                    Text(
+                      'Host',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppTheme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                ],
+              ),
             ),
-          ),
-          if (player.isHost)
-            Icon(
-              Icons.star,
-              color: AppTheme.bonusRank,
-              size: 20,
-            ),
-        ],
+            if (player.isHost)
+              Icon(
+                Icons.star,
+                color: AppTheme.bonusRank,
+                size: 20,
+              ),
+          ],
+        ),
       ),
     );
   }

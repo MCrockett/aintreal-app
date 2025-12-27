@@ -112,6 +112,7 @@ class WsPlayer {
     required this.isHost,
     this.score = 0,
     this.hasAnswered = false,
+    this.connected = true,
   });
 
   factory WsPlayer.fromJson(Map<String, dynamic> json) {
@@ -121,6 +122,7 @@ class WsPlayer {
       isHost: json['isHost'] as bool? ?? false,
       score: json['score'] as int? ?? 0,
       hasAnswered: json['hasAnswered'] as bool? ?? false,
+      connected: json['connected'] as bool? ?? true,
     );
   }
 
@@ -129,6 +131,7 @@ class WsPlayer {
   final bool isHost;
   final int score;
   final bool hasAnswered;
+  final bool connected;
 }
 
 /// Someone joined the lobby or connected via WebSocket.
