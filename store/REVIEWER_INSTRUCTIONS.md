@@ -19,7 +19,7 @@ AIn't Real is a "Spot the AI" game where players identify which of two images is
 - Complete the game to see results
 
 #### 2. MULTIPLAYER (Requires 2 devices)
-- Device 1: Select "Party Mode" → Create Game → Note the 4-letter code
+- Device 1: Select "Party Mode" → Create Game → Note the 4-character code
 - Device 2: Tap "Join Game" → Enter the code
 - Host taps "Start Game" when ready
 
@@ -30,7 +30,6 @@ AIn't Real is a "Spot the AI" game where players identify which of two images is
 
 ### NOTES
 - Test ads are displayed (AdMob test mode)
-- All game modes work offline after initial load
 - No in-app purchases
 
 ---
