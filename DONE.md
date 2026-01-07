@@ -212,6 +212,133 @@ This document archives all completed work for the aintreal-app project.
 
 ---
 
+## Epic 7.4: Image Preloading (PO-PRELOAD) - December 2025
+**Status:** Complete
+
+- [x] 7.4.1 Preload current round images during Get Ready
+- [x] 7.4.2 Cache strategy (CachedNetworkImage)
+- [x] 7.4.3 Loading placeholders (shimmer animation)
+
+---
+
+## Epic 4.1: Firebase Setup (AU-FIREBASE) - December 2025
+**Status:** Complete
+
+- [x] 4.1.1 Created Firebase project "aintreal"
+- [x] 4.1.2 Added Android app to Firebase
+- [x] 4.1.3 Added iOS app to Firebase
+- [x] 4.1.4 Downloaded and added config files
+- [x] 4.1.5 Initialized Firebase in main.dart
+
+---
+
+## Epic 4.2: Auth Integration (AU-AUTH) - December 2025
+**Status:** Partial (Apple blocked)
+
+- [x] 4.2.1 Created firebase_auth.dart service
+- [x] 4.2.2 Created auth_provider.dart Riverpod provider
+- [x] 4.2.3 Implemented Google Sign-In
+- [~] 4.2.4 Sign in with Apple - blocked pending developer account
+- [x] 4.2.5 Created sign-in screen with platform buttons
+- [x] 4.2.6 Implemented Guest mode
+
+---
+
+## Epic 4.3: User Profile (AU-PROFILE) - December 2025
+**Status:** Complete
+
+- [x] 4.3.1 Implemented backend POST /api/auth/firebase
+- [x] 4.3.2 Created user table in D1 (backend)
+- [x] 4.3.3 Created profile_screen.dart layout
+- [x] 4.3.4 Built stats_card.dart component (per-mode sections)
+- [x] 4.3.5 Added editable display name
+- [x] 4.3.6 Added sign out button
+- [x] 4.3.7 Per-mode stats (Party/Solo/Marathon separate)
+
+---
+
+## Epic 6.1: Haptic Feedback (MF-HAPTICS) - December 2025
+**Status:** Complete (integrated with Epic 7.2)
+
+- [x] 6.1.1 Created haptics.dart utility
+- [x] 6.1.2 Added haptic on answer selection
+- [x] 6.1.3 Added haptic on timer expiry
+- [x] 6.1.4 Added haptic on bonus/win
+
+---
+
+## Epic 6.2: Push Notifications (MF-PUSH)
+**Status:** Removed (overkill for current scope)
+
+Push notifications removed from scope. Deep linking works via URL schemes instead.
+
+---
+
+## Epic 6.3: Native Sharing (MF-SHARE) - December 2025
+**Status:** Complete
+
+- [x] 6.3.1 Added share button to game over screen
+- [x] 6.3.2 Generated shareable game invite link
+- [x] 6.3.3 Share results with score summary
+
+---
+
+## Epic 6.4: Deep Links (MF-DEEPLINKS) - December 2025
+**Status:** Complete
+
+- [x] 6.4.1 Configured Android deep links (aintreal://join/CODE)
+- [x] 6.4.2 Configured iOS universal links
+- [x] 6.4.3 Handled deep link navigation in GoRouter
+
+---
+
+## Epic 5.1: AdMob Setup (MO-ADMOB) - December 2025
+**Status:** Complete
+
+- [x] 5.1.1 Created AdMob account/app (test IDs)
+- [x] 5.1.2 Added google_mobile_ads package
+- [x] 5.1.3 Configured Android AdMob App ID
+- [x] 5.1.4 Configured iOS AdMob App ID
+
+---
+
+## Epic 5.2: Ad Implementation (MO-ADS) - December 2025
+**Status:** Complete (core features)
+
+- [x] 5.2.1 Created ad_banner.dart widget
+- [x] 5.2.2 Added banner to home screen bottom
+- [~] 5.2.3 Lobby screen banner - skipped
+- [x] 5.2.4 Created interstitial ad manager
+- [x] 5.2.5 Show interstitial when leaving game
+- [~] 5.2.6 Rewarded ad manager - future
+- [~] 5.2.7 Marathon "Continue" with rewarded ad - future
+
+---
+
+## Epic 8.1: App Assets (RE-ASSETS) - December 2025
+**Status:** Complete
+
+- [x] 8.1.1 Created app icon (all sizes)
+- [x] 8.1.2 Created splash screen
+- [x] 8.1.3 Configured native splash package
+- [x] 8.1.4 Configured release signing (keystore)
+- [x] 8.1.5 Built signed release AAB
+
+---
+
+## Milestone Summary
+
+| Milestone | Status | Date |
+|-----------|--------|------|
+| M1: Playable Game | Complete | Dec 2025 |
+| M2: Polish | Complete | Dec 2025 |
+| M3: Authentication | Complete | Dec 2025 |
+| M4: Mobile Features | Complete | Dec 2025 |
+| M5: Monetization | Complete | Dec 2025 |
+| M6: Release | In Progress | - |
+
+---
+
 ## Document Last Updated
 
-December 14, 2025
+January 6, 2026
