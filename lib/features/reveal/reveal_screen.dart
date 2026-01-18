@@ -267,6 +267,8 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
                         isAi: aiPosition == 'top',
                         scaleAnimation: _scaleAnimation,
                         glowAnimation: _glowAnimation,
+                        isSelected: myResult?.choice == 'top',
+                        isCorrect: myResult?.correct ?? false,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -277,6 +279,8 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
                         isAi: aiPosition == 'bottom',
                         scaleAnimation: _scaleAnimation,
                         glowAnimation: _glowAnimation,
+                        isSelected: myResult?.choice == 'bottom',
+                        isCorrect: myResult?.correct ?? false,
                       ),
                     ),
                   ],
@@ -351,15 +355,24 @@ class _RevealImage extends StatelessWidget {
     required this.isAi,
     required this.scaleAnimation,
     required this.glowAnimation,
+    required this.isSelected,
+    required this.isCorrect,
   });
 
   final String imageUrl;
   final bool isAi;
   final Animation<double> scaleAnimation;
   final Animation<double> glowAnimation;
+  final bool isSelected;
+  final bool isCorrect;
 
   @override
   Widget build(BuildContext context) {
+    // Border color: selected images use result color, non-selected use AI/Real color
+    final borderColor = isSelected
+        ? (isCorrect ? AppTheme.correctAnswer : AppTheme.wrongAnswer)
+        : (isAi ? AppTheme.wrongAnswer : AppTheme.correctAnswer);
+
     return AnimatedBuilder(
       animation: Listenable.merge([scaleAnimation, glowAnimation]),
       builder: (context, child) {
@@ -369,16 +382,13 @@ class _RevealImage extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: isAi
-                    ? AppTheme.wrongAnswer.withValues(alpha: glowAnimation.value)
-                    : AppTheme.correctAnswer
-                        .withValues(alpha: glowAnimation.value),
-                width: isAi ? 4 : 2,
+                color: borderColor.withValues(alpha: glowAnimation.value),
+                width: isSelected ? 4 : 2,
               ),
-              boxShadow: isAi
+              boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: AppTheme.wrongAnswer
+                        color: borderColor
                             .withValues(alpha: 0.5 * glowAnimation.value),
                         blurRadius: 20 * glowAnimation.value,
                         spreadRadius: 4 * glowAnimation.value,

@@ -325,6 +325,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                             isSelected: playerChoice == 'top',
                             isAi: aiPosition == 'top',
                             showLabel: hasAnswered,
+                            isCorrect: isCorrect,
                           ),
                         ),
                         // Result indicator between images (always reserve space)
@@ -377,6 +378,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                             isSelected: playerChoice == 'bottom',
                             isAi: aiPosition == 'bottom',
                             showLabel: hasAnswered,
+                            isCorrect: isCorrect,
                           ),
                         ),
                       ],
@@ -611,6 +613,7 @@ class _GameImage extends StatelessWidget {
     required this.isSelected,
     required this.isAi,
     required this.showLabel,
+    required this.isCorrect,
   });
 
   final String imageUrl;
@@ -619,6 +622,7 @@ class _GameImage extends StatelessWidget {
   final bool isSelected;
   final bool isAi;
   final bool showLabel;
+  final bool isCorrect;
 
   @override
   Widget build(BuildContext context) {
@@ -630,14 +634,14 @@ class _GameImage extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: isSelected
               ? Border.all(
-                  color: isAi ? AppTheme.wrongAnswer : AppTheme.correctAnswer,
+                  color: isCorrect ? AppTheme.correctAnswer : AppTheme.wrongAnswer,
                   width: 4,
                 )
               : Border.all(color: AppTheme.secondary, width: 2),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: (isAi ? AppTheme.wrongAnswer : AppTheme.correctAnswer)
+                    color: (isCorrect ? AppTheme.correctAnswer : AppTheme.wrongAnswer)
                         .withValues(alpha: 0.3),
                     blurRadius: 12,
                     spreadRadius: 2,
