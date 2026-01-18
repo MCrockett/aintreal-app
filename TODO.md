@@ -91,8 +91,8 @@ See [DONE.md](DONE.md) for completed milestones (M1-M5) and [CLAUDE.md](CLAUDE.m
 - [ ] Tap image to view fullscreen
 
 ### Bugs/Polish
-- [ ] Non-host players: detect when host closes game or leaves lobby
-- [ ] Review wrong answer color logic (confusing feedback)
+- [x] Non-host players: detect when host closes game or leaves lobby
+- [x] Review wrong answer color logic (confusing feedback)
 
 ### Cleanup
 - [ ] Remove debug logging from auth_provider.dart and session_provider.dart

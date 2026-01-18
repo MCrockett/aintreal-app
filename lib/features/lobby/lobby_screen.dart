@@ -193,6 +193,48 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
     context.go('/');
   }
 
+  void _showHostLeftDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Game Ended'),
+        content: const Text('The host has left the game.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              ref.read(gameStateProvider.notifier).disconnect();
+              this.context.go('/');
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showConnectionLostDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Connection Lost'),
+        content: const Text('The connection to the game was lost.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              ref.read(gameStateProvider.notifier).disconnect();
+              this.context.go('/');
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final gameState = ref.watch(gameStateProvider);
@@ -202,6 +244,21 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
       if (next.status == GameStatus.playing && next.roundData != null) {
         context.go('/game/${widget.gameCode}');
       }
+
+      // Handle host leaving - navigate non-host players back home
+      if (next.error == 'Host left the game' && !next.isHost) {
+        ref.read(gameStateProvider.notifier).clearError();
+        _showHostLeftDialog();
+        return;
+      }
+
+      // Handle connection lost while in lobby
+      if (previous?.connectionState == WsConnectionState.connected &&
+          next.connectionState == WsConnectionState.disconnected) {
+        _showConnectionLostDialog();
+        return;
+      }
+
       if (next.error != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(next.error!)),
