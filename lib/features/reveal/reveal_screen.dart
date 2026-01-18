@@ -142,7 +142,15 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
       // Navigate to results when game is over
       if (next.status == GameStatus.finished && next.gameOverData != null) {
         debugPrint('Game finished! Navigating to results...');
-        context.go('/results/${widget.gameCode}');
+        // For marathon mode, add a delay so player can see the wrong answer
+        final isMarathon = next.config?.mode == 'marathon';
+        if (isMarathon) {
+          Future.delayed(const Duration(seconds: 3), () {
+            if (mounted) context.go('/results/${widget.gameCode}');
+          });
+        } else {
+          context.go('/results/${widget.gameCode}');
+        }
       }
 
       // Navigate back to game screen when a new round starts

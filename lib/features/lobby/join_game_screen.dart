@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import '../../config/theme.dart';
 import '../../core/api/api_exceptions.dart';
 import '../../core/api/game_api.dart';
-import '../../core/auth/auth_provider.dart';
 import '../../core/auth/session_provider.dart';
 import '../../widgets/gradient_background.dart';
 
@@ -77,9 +77,10 @@ class _JoinGameScreenState extends ConsumerState<JoinGameScreen> {
     try {
       // Get ID token if authenticated (for stats tracking)
       String? idToken;
-      final authState = ref.read(authProvider);
-      if (authState is AuthStateAuthenticated) {
-        idToken = await authState.user.getIdToken();
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        idToken = await currentUser.getIdToken();
+        debugPrint('JoinGameScreen: Got idToken for user ${currentUser.uid}');
       }
 
       final response = await GameApi.instance.joinGame(

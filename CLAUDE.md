@@ -13,7 +13,7 @@ This file provides guidance to Claude Code when working with code in this reposi
 AIn't Real mobile app - Flutter implementation for iOS and Android.
 
 - **Type**: Flutter app connecting to existing Cloudflare Workers backend
-- **Package**: `com.aintreal`
+- **Package**: `com.aintreal.app`
 - **Flutter**: 3.38.4 (stable) at `~/Library/flutter`
 - **Backend**: `api.aint-real.com` (same as web)
 

@@ -30,8 +30,11 @@ class GameApi {
         data: {
           'hostName': playerName,
           'config': config.toJson(),
-          if (idToken != null) 'idToken': idToken,
         },
+        // Send token via Authorization header (more reliable than body)
+        options: idToken != null
+            ? Options(headers: {'Authorization': 'Bearer $idToken'})
+            : null,
       );
 
       final data = response.data;
@@ -63,8 +66,11 @@ class GameApi {
         Endpoints.gameJoin(code.toUpperCase()),
         data: {
           'playerName': playerName,
-          if (idToken != null) 'idToken': idToken,
         },
+        // Send token via Authorization header (more reliable than body)
+        options: idToken != null
+            ? Options(headers: {'Authorization': 'Bearer $idToken'})
+            : null,
       );
 
       final data = response.data;

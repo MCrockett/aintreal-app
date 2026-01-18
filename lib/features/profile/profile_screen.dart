@@ -463,22 +463,9 @@ class _ProfileHeader extends StatelessWidget {
             ],
           )
         else
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                displayName,
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              if (!isGuest) ...[
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.edit, size: 20),
-                  onPressed: onEditTap,
-                  tooltip: 'Edit name',
-                ),
-              ],
-            ],
+          Text(
+            displayName,
+            style: Theme.of(context).textTheme.headlineMedium,
           ),
 
         // Email for signed-in users

@@ -1,521 +1,88 @@
 # AIn't Real App - TODO
 
-**Last Updated:** December 26, 2025
+**Last Updated:** January 6, 2026
 
 ## Current Status
 
 - **Platform:** Flutter 3.38.4 (stable)
 - **Package:** `com.upstreampartners.aintreal`
-- **Branch:** `main`
-- **Phase:** M1, M2, M3, M4, M5 Complete
-- **Next:** Epic 8 (Google Play Store submission)
+- **Phase:** M1-M5 Complete, M6 In Progress
+- **Next:** Google Play Store submission
+
+See [DONE.md](DONE.md) for completed milestones (M1-M5) and [CLAUDE.md](CLAUDE.md) for development workflow.
 
 ---
 
-## Theme Overview
+## In Progress
 
-| # | Theme | Code | Description |
-|---|-------|------|-------------|
-| 1 | Core Gameplay | CG | Game screens, WebSocket, real-time play |
-| 2 | User Interface | UI | Screens, navigation, theming |
-| 3 | Networking | NW | API client, WebSocket, connectivity |
-| 4 | Authentication | AU | Firebase Auth, user profiles |
-| 5 | Monetization | MO | AdMob integration |
-| 6 | Mobile Features | MF | Haptics, push, sharing, deep links |
-| 7 | Polish | PO | Animations, sounds, celebrations |
-| 8 | Release | RE | Store assets, beta, production |
-
----
-
-## Priority Levels
-
-- **P0** - Critical: Must have for MVP
-- **P1** - High: Important for good UX
-- **P2** - Medium: Nice to have
-- **P3** - Low: Future enhancement
-
----
-
-## Epic 1.1: Project Foundation (UI-FOUNDATION)
-
-**Goal:** Set up project architecture and dependencies
-**Priority:** P0 - Critical
-**Status:** Complete
-
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 1.1.1 | Add all dependencies to pubspec.yaml | 1h | [x] |
-| 1.1.2 | Create folder structure per architecture | 1h | [x] |
-| 1.1.3 | Set up Riverpod providers structure | 1h | [x] |
-| 1.1.4 | Create env.dart with API configuration | 30m | [x] |
-| 1.1.5 | Run build_runner for code generation | 15m | [x] |
-
----
-
-## Epic 1.2: App Shell & Theme (UI-SHELL)
-
-**Goal:** Create app foundation with navigation and theming
-**Priority:** P0 - Critical
-**Status:** Complete
-
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 1.2.1 | Create dark theme matching web (theme.dart) | 2h | [x] |
-| 1.2.2 | Set up app.dart with MaterialApp + GoRouter | 1h | [x] |
-| 1.2.3 | Configure routes.dart with all navigation paths | 1h | [x] |
-| 1.2.4 | Create basic scaffold structure | 30m | [x] |
-
----
-
-## Epic 2.1: Home Screen (UI-HOME)
-
-**Goal:** Main entry point with game mode selection
-**Priority:** P0 - Critical
-**Status:** Complete
-
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 2.1.1 | Create home_screen.dart layout | 2h | [x] |
-| 2.1.2 | Build mode_card.dart component (Party, Classic, Marathon) | 2h | [x] |
-| 2.1.3 | Add "AIn't Real" branding/logo | 1h | [x] |
-| 2.1.4 | Implement mode selection navigation | 1h | [x] |
-
----
-
-## Epic 2.2: Lobby Screens (UI-LOBBY)
-
-**Goal:** Create and join game flows
-**Priority:** P0 - Critical
-**Status:** Complete
-
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 2.2.1 | Create create_game_screen.dart with config options | 2h | [x] |
-| 2.2.2 | Create join_game_screen.dart with code input | 2h | [x] |
-| 2.2.3 | Create lobby_screen.dart layout | 2h | [x] |
-| 2.2.4 | Build player_list.dart component | 1h | [x] |
-| 2.2.5 | Create game_code_display.dart widget | 1h | [x] |
-| 2.2.6 | Add QR code generation for sharing | 1h | [x] |
-| 2.2.7 | Implement host controls (Start button) | 1h | [x] |
-
----
-
-## Epic 3.1: API Client (NW-API)
-
-**Goal:** HTTP client for game creation and joining
-**Priority:** P0 - Critical
-**Status:** Complete
-
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 3.1.1 | Create api_client.dart with dio | 2h | [x] |
-| 3.1.2 | Define endpoints.dart constants | 30m | [x] |
-| 3.1.3 | Implement game creation endpoint | 1h | [x] |
-| 3.1.4 | Implement game join endpoint | 1h | [x] |
-| 3.1.5 | Add error handling and retry logic | 1h | [x] |
-
----
-
-## Epic 3.2: WebSocket Integration (NW-WS)
-
-**Goal:** Real-time game state synchronization
-**Priority:** P0 - Critical
-**Status:** Complete
-
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 3.2.1 | Create ws_client.dart with web_socket_channel | 2h | [x] |
-| 3.2.2 | Create ws_provider.dart Riverpod provider | 2h | [x] |
-| 3.2.3 | Implement message parsing for all server types | 2h | [x] |
-| 3.2.4 | Handle reconnection with exponential backoff | 2h | [x] |
-| 3.2.5 | Create game_provider.dart for game state | 2h | [x] |
-
----
-
-## Epic 1.3: Game Screen (CG-GAME)
-
-**Goal:** Active gameplay with image selection
-**Priority:** P0 - Critical
-**Status:** Complete
-
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 1.3.1 | Create game_screen.dart layout | 2h | [x] |
-| 1.3.2 | Build image_pair.dart with cached_network_image | 2h | [x] |
-| 1.3.3 | Create timer_bar.dart countdown component | 1h | [x] |
-| 1.3.4 | Implement tap-to-answer with WebSocket submission | 2h | [x] |
-| 1.3.5 | Create answer_feedback.dart for immediate response | 1h | [x] |
-| 1.3.6 | Add "Get Ready" countdown between rounds | 1h | [x] |
-
----
-
-## Epic 1.4: Results Screen (CG-RESULTS)
-
-**Goal:** Game over display with rankings
-**Priority:** P0 - Critical
-**Status:** Complete
-
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 1.4.1 | Create game_over_screen.dart layout | 2h | [x] |
-| 1.4.2 | Build ranking_list.dart component | 1h | [x] |
-| 1.4.3 | Display final scores and winner | 1h | [x] |
-| 1.4.4 | Add Play Again / New Game buttons | 1h | [x] |
-| 1.4.5 | Show photographer credits | 30m | [x] |
-
----
-
-## Epic 7.1: Reveal Sequence (PO-REVEAL)
-
-**Goal:** Animated round-by-round results
-**Priority:** P1 - High
-**Status:** Complete
-
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 7.1.1 | Create reveal_screen.dart for round reveals | 2h | [x] |
-| 7.1.2 | Implement AI image highlight animation | 2h | [x] |
-| 7.1.3 | Add score update animations with flutter_animate | 2h | [x] |
-| 7.1.4 | Display bonus awards with animations | 1h | [x] |
-| 7.1.5 | Show running leaderboard updates | 1h | [x] |
-
----
-
-## Epic 7.2: Sound Effects (PO-SOUND)
-
-**Goal:** Audio feedback for game events
-**Priority:** P1 - High
-**Status:** Complete
-
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 7.2.1 | Add correct/wrong answer sounds | 1h | [x] |
-| 7.2.2 | Add countdown tick sound | 30m | [x] |
-| 7.2.3 | Add bonus award sound | 30m | [x] |
-| 7.2.4 | Add game win/lose sounds | 30m | [x] |
-
----
-
-## Epic 7.3: Celebrations (PO-CELEBRATE)
-
-**Goal:** Victory animations and effects
-**Priority:** P1 - High
-**Status:** Complete
-
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 7.3.1 | Add confetti animation for winner | 2h | [x] |
-| 7.3.2 | Add victory sound/animation | 1h | [x] |
-| 7.3.3 | Marathon "Perfect" celebration (26/26) | 1h | [x] |
-
----
-
-## Epic 7.4: Image Preloading (PO-PRELOAD)
-
-**Goal:** Smooth image loading experience
-**Priority:** P1 - High
-**Status:** Complete
-
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 7.4.1 | Preload current round images during Get Ready | 2h | [x] |
-| 7.4.2 | Cache strategy (CachedNetworkImage) | 1h | [x] |
-| 7.4.3 | Loading placeholders (shimmer animation) | 1h | [x] |
-
----
-
-## Epic 4.1: Firebase Setup (AU-FIREBASE)
-
-**Goal:** Firebase project and configuration
-**Priority:** P1 - High
-**Status:** Complete
-
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 4.1.1 | Create Firebase project "aintreal" | 1h | [x] |
-| 4.1.2 | Add Android app to Firebase | 30m | [x] |
-| 4.1.3 | Add iOS app to Firebase | 30m | [x] |
-| 4.1.4 | Download and add config files | 30m | [x] |
-| 4.1.5 | Initialize Firebase in main.dart | 30m | [x] |
-
----
-
-## Epic 4.2: Auth Integration (AU-AUTH)
-
-**Goal:** Sign-in with Google and Apple
-**Priority:** P1 - High
-**Status:** In Progress (Apple blocked)
-
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 4.2.1 | Create firebase_auth.dart service | 2h | [x] |
-| 4.2.2 | Create auth_provider.dart Riverpod provider | 2h | [x] |
-| 4.2.3 | Implement Google Sign-In | 2h | [x] |
-| 4.2.4 | Implement Sign in with Apple | 2h | [~] blocked |
-| 4.2.5 | Create sign-in screen with platform buttons | 2h | [x] |
-| 4.2.6 | Implement Guest mode | 1h | [x] |
-
----
-
-## Epic 4.3: User Profile (AU-PROFILE)
-
-**Goal:** User stats and profile management
-**Priority:** P1 - High
-**Status:** Complete
-
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 4.3.1 | Implement backend POST /api/auth/firebase | 2h | [x] |
-| 4.3.2 | Create user table in D1 (backend) | 1h | [x] |
-| 4.3.3 | Create profile_screen.dart layout | 2h | [x] |
-| 4.3.4 | Build stats_card.dart component | 1h | [x] |
-| 4.3.5 | Add editable display name | 1h | [x] |
-| 4.3.6 | Add sign out button | 30m | [x] |
-
----
-
-## Epic 6.1: Haptic Feedback (MF-HAPTICS)
-
-**Goal:** Tactile feedback for interactions
-**Priority:** P2 - Medium
-**Status:** Complete (integrated with Epic 7.2)
-
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 6.1.1 | Create haptics.dart utility | 1h | [x] |
-| 6.1.2 | Add haptic on answer selection | 30m | [x] |
-| 6.1.3 | Add haptic on timer expiry | 30m | [x] |
-| 6.1.4 | Add haptic on bonus/win | 30m | [x] |
-
----
-
-## Epic 6.2: Push Notifications (MF-PUSH)
-
-**Goal:** Game invite notifications
-**Priority:** P3 - Low
-**Status:** Removed (overkill for current scope)
-
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 6.2.1 | Set up FCM in Firebase | 1h | [~] removed |
-| 6.2.2 | Request notification permissions | 1h | [~] removed |
-| 6.2.3 | Register FCM token with backend | 1h | [~] removed |
-| 6.2.4 | Implement backend POST /api/user/fcm-token | 1h | [~] removed |
-| 6.2.5 | Handle notification taps (deep linking) | 2h | [~] removed |
-
-*Note: Push notifications removed from scope. Deep linking works via URL schemes instead.*
-
----
-
-## Epic 6.3: Native Sharing (MF-SHARE)
-
-**Goal:** Share game invites and results
-**Priority:** P2 - Medium
-**Status:** Complete
-
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 6.3.1 | Add share button to game over screen | 1h | [x] |
-| 6.3.2 | Generate shareable game invite link | 1h | [x] |
-| 6.3.3 | Share results with score summary | 1h | [x] |
-
----
-
-## Epic 6.4: Deep Links (MF-DEEPLINKS)
-
-**Goal:** Direct game join via links
-**Priority:** P2 - Medium
-**Status:** Complete
-
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 6.4.1 | Configure Android deep links (aintreal://join/CODE) | 1h | [x] |
-| 6.4.2 | Configure iOS universal links | 1h | [x] |
-| 6.4.3 | Handle deep link navigation in GoRouter | 1h | [x] |
-
----
-
-## Epic 5.1: AdMob Setup (MO-ADMOB)
-
-**Goal:** Ad platform configuration
-**Priority:** P2 - Medium
-**Status:** Complete
-
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 5.1.1 | Create AdMob account/app | 1h | [x] test IDs |
-| 5.1.2 | Add google_mobile_ads package | 30m | [x] |
-| 5.1.3 | Configure Android AdMob App ID | 30m | [x] |
-| 5.1.4 | Configure iOS AdMob App ID | 30m | [x] |
-
----
-
-## Epic 5.2: Ad Implementation (MO-ADS)
-
-**Goal:** Banner, interstitial, and rewarded ads
-**Priority:** P2 - Medium
-**Status:** Complete (core features)
-
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 5.2.1 | Create ad_banner.dart widget | 1h | [x] |
-| 5.2.2 | Add banner to home screen bottom | 30m | [x] |
-| 5.2.3 | Add banner to lobby screen bottom | 30m | [~] skipped |
-| 5.2.4 | Create interstitial ad manager | 1h | [x] |
-| 5.2.5 | Show interstitial when leaving game | 1h | [x] |
-| 5.2.6 | Create rewarded ad manager | 1h | [~] future |
-| 5.2.7 | Add Marathon "Continue" option with rewarded ad | 2h | [~] future |
-
----
-
-## Epic 8.1: App Assets (RE-ASSETS)
-
-**Goal:** App icon, splash screen
-**Priority:** P2 - Medium
-**Status:** Complete
-
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 8.1.1 | Create app icon (all sizes) | 2h | [x] |
-| 8.1.2 | Create splash screen | 1h | [x] |
-| 8.1.3 | Configure native splash package | 1h | [x] |
-| 8.1.4 | Configure release signing (keystore) | 1h | [x] |
-| 8.1.5 | Build signed release AAB | 30m | [x] |
-
----
-
-## Epic 8.2: Store Preparation (RE-STORE)
-
+### Epic 8.2: Store Preparation (RE-STORE)
 **Goal:** App store submission materials
-**Priority:** P3 - Low
 **Status:** In Progress
 
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 8.2.1 | Create app screenshots (phone + tablet) | 3h | [x] phone done |
-| 8.2.2 | Write app description | 1h | [x] |
-| 8.2.3 | Create feature graphic | 1h | [x] |
-| 8.2.4 | Create/update privacy policy | 2h | [x] exists |
-| 8.2.5 | Create terms of service | 1h | [x] exists |
-| 8.2.6 | Implement account deletion (Play Store compliance) | 2h | [x] |
-| 8.2.7 | Write reviewer instructions | 30m | [x] |
+| Task | Description | Status |
+|------|-------------|--------|
+| 8.2.1 | Create app screenshots (phone + tablet) | [x] phone done |
+| 8.2.2 | Write app description | [x] |
+| 8.2.3 | Create feature graphic | [x] |
+| 8.2.4 | Create/update privacy policy | [x] |
+| 8.2.5 | Create terms of service | [x] |
+| 8.2.6 | Implement account deletion | [x] |
+| 8.2.7 | Write reviewer instructions | [x] |
+
+### Epic 4.2: Auth Integration (AU-AUTH) - Partial
+**Note:** Apple Sign-In blocked pending developer account
+
+| Task | Description | Status |
+|------|-------------|--------|
+| 4.2.4 | Implement Sign in with Apple | [~] blocked |
 
 ---
 
-## Epic 8.3: Beta Testing (RE-BETA)
+## Planned
 
+### Epic 8.3: Beta Testing (RE-BETA)
 **Goal:** Pre-release testing
-**Priority:** P3 - Low
-**Status:** Planned
 
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 8.3.1 | Set up TestFlight (iOS) | 1h | [ ] |
-| 8.3.2 | Set up Play Console internal testing | 1h | [ ] |
-| 8.3.3 | Recruit beta testers | 1h | [ ] |
-| 8.3.4 | Collect and address feedback | 4h | [ ] |
+- [ ] 8.3.1: Set up TestFlight (iOS)
+- [ ] 8.3.2: Set up Play Console internal testing
+- [ ] 8.3.3: Recruit beta testers
+- [ ] 8.3.4: Collect and address feedback
 
----
-
-## Epic 8.4: Production Release (RE-PROD)
-
+### Epic 8.4: Production Release (RE-PROD)
 **Goal:** App store submission
-**Priority:** P3 - Low
-**Status:** Planned
 
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 8.4.1 | Submit to Google Play | 2h | [ ] |
-| 8.4.2 | Submit to App Store | 2h | [ ] |
-| 8.4.3 | Monitor initial reviews | 2h | [ ] |
-| 8.4.4 | Address any store feedback | 4h | [ ] |
+- [ ] 8.4.1: Submit to Google Play
+- [ ] 8.4.2: Submit to App Store
+- [ ] 8.4.3: Monitor initial reviews
+- [ ] 8.4.4: Address any store feedback
 
 ---
 
-## Epic 9.1: Unit Tests (TS-UNIT)
+## Testing Backlog
 
-**Goal:** Test business logic and data parsing
-**Priority:** P1 - High
-**Status:** In Progress
+### Epic 9.1: Unit Tests (TS-UNIT)
+- [ ] 9.1.1: WebSocket message parsing tests
+- [ ] 9.1.2: Game state provider tests
+- [ ] 9.1.3: Score calculation tests
+- [ ] 9.1.4: Model serialization tests
 
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 9.1.1 | WebSocket message parsing tests | 1h | [ ] |
-| 9.1.2 | Game state provider tests | 1h | [ ] |
-| 9.1.3 | Score calculation tests | 30m | [ ] |
-| 9.1.4 | Model serialization tests | 30m | [ ] |
+### Epic 9.2: Widget Tests (TS-WIDGET)
+- [ ] 9.2.1-9.2.6: Screen widget tests (home, lobby, game, results, reveal, shared)
 
----
+### Epic 9.3: Integration Tests (TS-INTEGRATION)
+- [ ] 9.3.1-9.3.4: E2E flow tests
 
-## Epic 9.2: Widget Tests (TS-WIDGET)
-
-**Goal:** Test UI components render and interact correctly
-**Priority:** P1 - High
-**Status:** Planned
-
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 9.2.1 | Home screen widget tests | 1h | [ ] |
-| 9.2.2 | Lobby screen widget tests | 1h | [ ] |
-| 9.2.3 | Game screen widget tests | 1h | [ ] |
-| 9.2.4 | Results screen widget tests | 1h | [ ] |
-| 9.2.5 | Reveal screen widget tests | 1h | [ ] |
-| 9.2.6 | Shared widgets tests (Logo, HowToPlay, etc.) | 1h | [ ] |
+### Epic 9.4: Golden Tests (TS-GOLDEN)
+- [ ] 9.4.1-9.4.4: Visual regression tests
 
 ---
 
-## Epic 9.3: Integration Tests (TS-INTEGRATION)
-
-**Goal:** End-to-end test flows on real devices
-**Priority:** P2 - Medium
-**Status:** Planned
-
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 9.3.1 | Set up integration_test package | 30m | [ ] |
-| 9.3.2 | Solo game flow test (Classic mode) | 2h | [ ] |
-| 9.3.3 | Navigation flow test | 1h | [ ] |
-| 9.3.4 | Create test mocks for WebSocket/API | 2h | [ ] |
-
----
-
-## Epic 9.4: Golden Tests (TS-GOLDEN)
-
-**Goal:** Visual regression testing with screenshot comparisons
-**Priority:** P3 - Low
-**Status:** Planned
-
-| Task | Description | Effort | Status |
-|------|-------------|--------|--------|
-| 9.4.1 | Set up golden test infrastructure | 1h | [ ] |
-| 9.4.2 | Home screen golden (iOS + Android) | 1h | [ ] |
-| 9.4.3 | Game screen golden | 1h | [ ] |
-| 9.4.4 | Results screen golden | 1h | [ ] |
-
----
-
-## Milestone Summary
-
-Milestones are built from completed Epics:
-
-| Milestone | Epics Required | Priority |
-|-----------|----------------|----------|
-| **M1: Playable Game** | 1.1, 1.2, 2.1, 2.2, 3.1, 3.2, 1.3, 1.4 | P0 |
-| **M2: Polish** | 7.1, 7.2, 7.3, 7.4 | P1 |
-| **M2.5: Test Suite** | 9.1, 9.2, 9.3, 9.4 | P1 |
-| **M3: Authentication** | 4.1, 4.2, 4.3 | P1 |
-| **M4: Mobile Features** | 6.1, 6.2, 6.3, 6.4 | P2 |
-| **M5: Monetization** | 5.1, 5.2 | P2 |
-| **M6: Release** | 8.1, 8.2, 8.3, 8.4 | P3 |
-
----
-
-## Backlog (Future)
+## Future Backlog
 
 ### Flutter Web
-- [ ] **Try Mode:** Demo flow for /try traffic (1 untimed + 2 timed rounds → success → guest mode)
-- [ ] **AdSense Integration:** Web ads (requires AdSense approval)
-- [ ] **Turnstile Bot Protection:** Add Cloudflare Turnstile to create/join on web
+- [ ] Try Mode demo flow
+- [ ] AdSense Integration
+- [ ] Turnstile Bot Protection
 
 ### Web Polish
 - [ ] Achievements system
@@ -526,19 +93,13 @@ Milestones are built from completed Epics:
 ### Cleanup
 - [ ] Remove debug logging from auth_provider.dart and session_provider.dart
 
-### Future Features
-- [ ] Custom game rooms
-- [ ] Category/difficulty selection
-- [ ] Leaderboards UI
-- [ ] Friends & invites
-
 ### New Game Modes (Post-Launch)
-- [ ] **Quad Mode (Solo & Party):** Show 4 images, random number are AI (1-3)
-- [ ] **Slice Mode (Solo & Party):** Show ~30% slice of image (vertical or horizontal crop)
+- [ ] Quad Mode (4 images, 1-3 AI)
+- [ ] Slice Mode (30% crop)
 
 ---
 
 ## Quick Links
 
 - [CLAUDE.md](CLAUDE.md) - Development workflow
-- [DONE.md](DONE.md) - Completed work archive
+- [DONE.md](DONE.md) - Completed milestones archive

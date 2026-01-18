@@ -134,38 +134,97 @@ class UserProfile {
   final String lastLoginAt;
 }
 
-/// User statistics from the backend.
+/// User statistics from the backend (per-mode breakdown).
 class UserStats {
   const UserStats({
-    required this.gamesPlayed,
-    required this.gamesWon,
-    required this.totalCorrect,
-    required this.totalAnswered,
-    required this.bestMarathonStreak,
-    required this.perfectMarathons,
+    required this.party,
+    required this.solo,
+    required this.marathon,
   });
 
   factory UserStats.fromJson(Map<String, dynamic> json) {
     return UserStats(
-      gamesPlayed: json['gamesPlayed'] as int? ?? 0,
-      gamesWon: json['gamesWon'] as int? ?? 0,
-      totalCorrect: json['totalCorrect'] as int? ?? 0,
-      totalAnswered: json['totalAnswered'] as int? ?? 0,
-      bestMarathonStreak: json['bestMarathonStreak'] as int? ?? 0,
-      perfectMarathons: json['perfectMarathons'] as int? ?? 0,
+      party: PartyStats.fromJson(json['party'] as Map<String, dynamic>? ?? {}),
+      solo: SoloStats.fromJson(json['solo'] as Map<String, dynamic>? ?? {}),
+      marathon: MarathonStats.fromJson(json['marathon'] as Map<String, dynamic>? ?? {}),
     );
   }
 
-  final int gamesPlayed;
-  final int gamesWon;
-  final int totalCorrect;
-  final int totalAnswered;
-  final int bestMarathonStreak;
-  final int perfectMarathons;
+  final PartyStats party;
+  final SoloStats solo;
+  final MarathonStats marathon;
+}
 
-  double get accuracy =>
-      totalAnswered > 0 ? (totalCorrect / totalAnswered) * 100 : 0;
+/// Party mode stats.
+class PartyStats {
+  const PartyStats({
+    required this.games,
+    required this.wins,
+    required this.correct,
+    required this.answered,
+  });
 
-  double get winRate =>
-      gamesPlayed > 0 ? (gamesWon / gamesPlayed) * 100 : 0;
+  factory PartyStats.fromJson(Map<String, dynamic> json) {
+    return PartyStats(
+      games: json['games'] as int? ?? 0,
+      wins: json['wins'] as int? ?? 0,
+      correct: json['correct'] as int? ?? 0,
+      answered: json['answered'] as int? ?? 0,
+    );
+  }
+
+  final int games;
+  final int wins;
+  final int correct;
+  final int answered;
+
+  double get winRate => games > 0 ? (wins / games) * 100 : 0;
+  double get accuracy => answered > 0 ? (correct / answered) * 100 : 0;
+}
+
+/// Solo/classic mode stats.
+class SoloStats {
+  const SoloStats({
+    required this.games,
+    required this.correct,
+    required this.answered,
+  });
+
+  factory SoloStats.fromJson(Map<String, dynamic> json) {
+    return SoloStats(
+      games: json['games'] as int? ?? 0,
+      correct: json['correct'] as int? ?? 0,
+      answered: json['answered'] as int? ?? 0,
+    );
+  }
+
+  final int games;
+  final int correct;
+  final int answered;
+
+  double get accuracy => answered > 0 ? (correct / answered) * 100 : 0;
+}
+
+/// Marathon mode stats.
+class MarathonStats {
+  const MarathonStats({
+    required this.attempts,
+    required this.correct,
+    required this.bestStreak,
+    required this.perfectRuns,
+  });
+
+  factory MarathonStats.fromJson(Map<String, dynamic> json) {
+    return MarathonStats(
+      attempts: json['attempts'] as int? ?? 0,
+      correct: json['correct'] as int? ?? 0,
+      bestStreak: json['bestStreak'] as int? ?? 0,
+      perfectRuns: json['perfectRuns'] as int? ?? 0,
+    );
+  }
+
+  final int attempts;
+  final int correct;
+  final int bestStreak;
+  final int perfectRuns;
 }
