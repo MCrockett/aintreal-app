@@ -28,7 +28,8 @@ AIn't Real mobile app - Flutter implementation for iOS and Android.
 | UI Framework | Material 3 (dark theme) |
 | Image Caching | cached_network_image |
 | Analytics | Firebase Analytics |
-| Ads | AdMob (banner + interstitial + rewarded) |
+| Ads | AdMob (banner + interstitial) |
+| In-App Purchases | in_app_purchase |
 
 ## Architecture
 
@@ -41,8 +42,12 @@ lib/
 │   ├── routes.dart           # GoRouter route definitions
 │   └── theme.dart            # Material 3 theme (dark mode)
 ├── core/
+│   ├── ads/                  # AdMob service (banner + interstitial)
 │   ├── api/                  # dio client, endpoints
 │   ├── auth/                 # Firebase auth
+│   ├── audio/                # Sound effects service
+│   ├── purchases/            # In-app purchase service
+│   ├── sharing/              # Share service
 │   ├── websocket/            # WebSocket client, Riverpod provider
 │   └── storage/              # SharedPreferences
 ├── features/
@@ -50,8 +55,7 @@ lib/
 │   ├── lobby/                # Create/join game, player list
 │   ├── game/                 # Active gameplay
 │   ├── results/              # Game over, rankings
-│   ├── profile/              # User profile, stats
-│   └── settings/             # App settings
+│   └── profile/              # User profile, stats, settings
 ├── models/                   # Data models
 ├── widgets/                  # Shared UI components
 └── utils/                    # Helpers, extensions
@@ -189,7 +193,7 @@ GET  /api/images/:path       - Serve images from R2
 
 See [aintreal-game/GAMEFLOW.md](../aintreal-game/GAMEFLOW.md) for WebSocket message format.
 
-## Current State (December 2025)
+## Current State (January 2026)
 
 **Status**: M1-M5 Complete, Google Play submission in progress
 
@@ -198,7 +202,11 @@ See [aintreal-game/GAMEFLOW.md](../aintreal-game/GAMEFLOW.md) for WebSocket mess
 - M2: Polish & parity (reveal animations, sounds, confetti)
 - M3: Authentication (Firebase, Google Sign-In)
 - M4: Mobile features (haptics, deep links, sharing)
-- M5: Monetization (AdMob banner + interstitial)
+- M5: Monetization
+  - AdMob banner ads (home screen)
+  - AdMob interstitial ads with smart frequency (5 game grace, then every 3rd, 5-min cap)
+  - In-app purchase for ad removal ($2.99)
+  - Restore purchases functionality
 
 **In Progress:**
 - M6: App store release (Epic 8)

@@ -1,11 +1,14 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/theme.dart';
+import '../../core/ads/ad_service.dart';
 import '../../core/audio/sound_service.dart';
 import '../../core/auth/auth_provider.dart';
 import '../../core/auth/session_provider.dart';
+import '../../core/purchases/purchase_service.dart';
 import '../../widgets/gradient_background.dart';
 import 'widgets/stats_card.dart';
 
@@ -23,6 +26,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _isSaving = false;
   bool _soundEnabled = true;
   bool _hapticEnabled = true;
+  bool _adsRemoved = false;
+  bool _isPurchasing = false;
 
   @override
   void initState() {
@@ -34,6 +39,64 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   void _loadSettings() {
     _soundEnabled = SoundService.instance.soundEnabled;
     _hapticEnabled = SoundService.instance.hapticEnabled;
+    if (!kIsWeb) {
+      _adsRemoved = AdService.instance.isAdRemovalPurchased;
+    }
+  }
+
+  Future<void> _purchaseAdRemoval() async {
+    if (kIsWeb || _adsRemoved) return;
+
+    setState(() => _isPurchasing = true);
+
+    try {
+      final success = await PurchaseService.instance.purchaseAdRemoval();
+      if (!success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Purchase not available')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Purchase failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isPurchasing = false;
+          _adsRemoved = AdService.instance.isAdRemovalPurchased;
+        });
+      }
+    }
+  }
+
+  Future<void> _restorePurchases() async {
+    if (kIsWeb) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Restoring purchases...')),
+    );
+
+    await PurchaseService.instance.restorePurchases();
+
+    // Wait a moment for the purchase stream to process
+    await Future.delayed(const Duration(seconds: 2));
+
+    if (mounted) {
+      setState(() {
+        _adsRemoved = AdService.instance.isAdRemovalPurchased;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_adsRemoved
+              ? 'Purchases restored successfully'
+              : 'No previous purchases found'),
+        ),
+      );
+    }
   }
 
   @override
@@ -193,6 +256,77 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
   }
 
+  Widget _buildRemoveAdsSection() {
+    final price = PurchaseService.instance.adRemovalPrice;
+
+    if (_adsRemoved) {
+      // Already purchased
+      return Row(
+        children: [
+          Icon(Icons.check_circle, color: AppTheme.success, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Ads Removed',
+              style: TextStyle(color: AppTheme.success),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.block, color: AppTheme.textSecondary, size: 20),
+                const SizedBox(width: 12),
+                const Text('Remove Ads'),
+              ],
+            ),
+            _isPurchasing
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : ElevatedButton(
+                    onPressed: _purchaseAdRemoval,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primary,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                    ),
+                    child: Text(price ?? '\$2.99'),
+                  ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        TextButton(
+          onPressed: _restorePurchases,
+          style: TextButton.styleFrom(
+            padding: EdgeInsets.zero,
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: Text(
+            'Restore Purchases',
+            style: TextStyle(
+              color: AppTheme.textMuted,
+              fontSize: 12,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final session = ref.watch(sessionProvider);
@@ -315,6 +449,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ),
                         ],
                       ),
+                      // Remove Ads option (mobile only)
+                      if (!kIsWeb) ...[
+                        const Divider(height: 24),
+                        _buildRemoveAdsSection(),
+                      ],
                     ],
                   ),
                 ),

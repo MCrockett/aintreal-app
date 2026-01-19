@@ -42,35 +42,35 @@ See [DONE.md](DONE.md) for completed milestones (M1-M5) and [CLAUDE.md](CLAUDE.m
 ### Pre-Launch: Ad Placement Implementation
 **Goal:** Implement smart interstitial frequency
 
-- [ ] Implement interstitial trigger logic:
+- [x] Implement interstitial trigger logic:
   - No interstitials for first 5 games (let users get hooked)
   - Show after 5th game completion
   - Then show every 3rd game after that
   - Frequency cap: Max 1 per 5 minutes
   - Skip if user has purchased ad removal
-- [ ] Add interstitial call after game results screen
+- [x] Add interstitial call after game results screen
 - [ ] Test ad flow doesn't break game experience
-- [ ] Ensure proper loading states (game continues if ad fails)
+- [x] Ensure proper loading states (game continues if ad fails)
 - [ ] Test frequency capping works correctly
 
 ### Pre-Launch: IAP - Ad Removal
 **Goal:** Launch with one IAP product (Ad Removal $2.99)
 
-- [ ] Add `in_app_purchase` Flutter package to pubspec.yaml
+- [x] Add `in_app_purchase` Flutter package to pubspec.yaml
 - [ ] Configure Google Play Console product:
   - Product ID: `com.aintreal.remove_ads`
   - Type: Non-consumable (one-time purchase)
   - Price: $2.99 USD
-- [ ] Create purchase flow UI:
+- [x] Create purchase flow UI:
   - "Remove Ads" button in settings
   - Clear benefit messaging ("Play ad-free forever!")
   - Handle purchase states (pending, success, error, already owned)
-- [ ] Implement entitlement check:
+- [x] Implement entitlement check:
   - Store purchase state locally (shared_preferences)
   - Verify with Play Billing Library
   - Skip all ad loading when entitlement active
-  - Sync entitlement via Firebase (user_id → has_premium mapping in Firestore)
-- [ ] Implement "Restore Purchases" functionality
+  - ~~Sync entitlement via Firebase~~ (deferred - local storage sufficient for launch)
+- [x] Implement "Restore Purchases" functionality
 - [ ] Test with Google Play test accounts (sandbox environment)
 
 ### Pre-Launch: Limit Web Version

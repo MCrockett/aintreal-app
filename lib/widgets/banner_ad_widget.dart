@@ -24,8 +24,8 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
   }
 
   void _loadAd() {
-    // Skip on web
-    if (kIsWeb) return;
+    // Skip on web or if ads are disabled (user purchased removal)
+    if (kIsWeb || !AdService.instance.adsEnabled) return;
 
     _bannerAd = AdService.instance.createBannerAd(
       onAdLoaded: (ad) {

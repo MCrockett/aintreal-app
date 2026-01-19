@@ -44,6 +44,11 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
     Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) _confettiController.play();
     });
+
+    // Record game completion for ad frequency tracking (mobile only)
+    if (!kIsWeb) {
+      AdService.instance.recordGameCompleted();
+    }
   }
 
   void _playGameEndSound(bool isWinner) {
@@ -119,9 +124,9 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
   }
 
   Future<void> _newGame() async {
-    // Show interstitial ad before leaving (mobile only)
+    // Show interstitial ad if eligible based on frequency rules (mobile only)
     if (!kIsWeb) {
-      await AdService.instance.showInterstitialAd();
+      await AdService.instance.showInterstitialIfEligible();
     }
     ref.read(gameStateProvider.notifier).leave();
     // Refresh stats so profile screen shows updated data
@@ -130,9 +135,9 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
   }
 
   Future<void> _leaveGame() async {
-    // Show interstitial ad before leaving (mobile only)
+    // Show interstitial ad if eligible based on frequency rules (mobile only)
     if (!kIsWeb) {
-      await AdService.instance.showInterstitialAd();
+      await AdService.instance.showInterstitialIfEligible();
     }
     ref.read(gameStateProvider.notifier).leave();
     // Refresh stats so profile screen shows updated data

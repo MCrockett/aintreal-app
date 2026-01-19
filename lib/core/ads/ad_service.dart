@@ -2,27 +2,63 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-/// Service for managing AdMob ads.
+/// Service for managing AdMob ads with frequency control.
+///
+/// Interstitial ad frequency:
+/// - No ads for first 5 games (let users get hooked)
+/// - Show after 5th game
+/// - Then show every 3rd game after that
+/// - Maximum 1 ad per 5 minutes
+/// - Skip all ads if user purchased ad removal
 class AdService {
   AdService._();
 
   static final AdService instance = AdService._();
 
-  /// Test Ad Unit IDs (replace with real IDs for production)
+  // Storage keys
+  static const _gamesPlayedKey = 'ad_games_played';
+  static const _lastAdShownKey = 'ad_last_shown_timestamp';
+  static const _adRemovalKey = 'ad_removal_purchased';
+
+  // Frequency settings
+  static const _firstAdAfterGames = 5; // Show first ad after 5th game
+  static const _adEveryNGames = 3; // Then every 3rd game
+  static const _minSecondsBetweenAds = 300; // 5 minutes = 300 seconds
+
+  /// Test Ad Unit IDs (used in debug mode)
   static const _testBannerAdUnitId = 'ca-app-pub-3940256099942544/6300978111';
-  static const _testInterstitialAdUnitId = 'ca-app-pub-3940256099942544/1033173712';
+  static const _testInterstitialAdUnitId =
+      'ca-app-pub-3940256099942544/1033173712';
+
+  /// Production Ad Unit IDs
+  /// TODO: Replace these with your actual AdMob ad unit IDs from the console
+  static const _prodAndroidBannerAdUnitId =
+      'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX';
+  static const _prodAndroidInterstitialAdUnitId =
+      'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX';
+  static const _prodIosBannerAdUnitId = 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX';
+  static const _prodIosInterstitialAdUnitId =
+      'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX';
+
+  // State
+  InterstitialAd? _interstitialAd;
+  bool _isInterstitialLoading = false;
+  int _gamesPlayed = 0;
+  DateTime? _lastAdShown;
+  bool _adRemovalPurchased = false;
+  SharedPreferences? _prefs;
 
   /// Get the appropriate banner ad unit ID for the platform.
   String get bannerAdUnitId {
     if (kDebugMode) {
       return _testBannerAdUnitId;
     }
-    // TODO: Replace with production ad unit IDs
     if (Platform.isAndroid) {
-      return _testBannerAdUnitId; // Replace with Android production ID
+      return _prodAndroidBannerAdUnitId;
     } else if (Platform.isIOS) {
-      return _testBannerAdUnitId; // Replace with iOS production ID
+      return _prodIosBannerAdUnitId;
     }
     return _testBannerAdUnitId;
   }
@@ -32,28 +68,143 @@ class AdService {
     if (kDebugMode) {
       return _testInterstitialAdUnitId;
     }
-    // TODO: Replace with production ad unit IDs
     if (Platform.isAndroid) {
-      return _testInterstitialAdUnitId; // Replace with Android production ID
+      return _prodAndroidInterstitialAdUnitId;
     } else if (Platform.isIOS) {
-      return _testInterstitialAdUnitId; // Replace with iOS production ID
+      return _prodIosInterstitialAdUnitId;
     }
     return _testInterstitialAdUnitId;
   }
 
-  InterstitialAd? _interstitialAd;
-  bool _isInterstitialLoading = false;
+  /// Whether ads are enabled (not purchased ad removal).
+  bool get adsEnabled => !_adRemovalPurchased;
 
-  /// Initialize the Mobile Ads SDK.
+  /// Number of games played (for frequency tracking).
+  int get gamesPlayed => _gamesPlayed;
+
+  /// Initialize the Mobile Ads SDK and load state.
   Future<void> init() async {
     if (kIsWeb) return;
+
+    // Load persisted state
+    _prefs = await SharedPreferences.getInstance();
+    _gamesPlayed = _prefs?.getInt(_gamesPlayedKey) ?? 0;
+    _adRemovalPurchased = _prefs?.getBool(_adRemovalKey) ?? false;
+
+    final lastAdTimestamp = _prefs?.getInt(_lastAdShownKey);
+    if (lastAdTimestamp != null) {
+      _lastAdShown = DateTime.fromMillisecondsSinceEpoch(lastAdTimestamp);
+    }
+
+    debugPrint(
+        'AdService: games=$_gamesPlayed, adsEnabled=$adsEnabled, lastAd=$_lastAdShown');
 
     await MobileAds.instance.initialize();
     debugPrint('AdMob initialized');
 
-    // Pre-load interstitial ad
-    loadInterstitialAd();
+    // Pre-load interstitial ad if ads are enabled
+    if (adsEnabled) {
+      loadInterstitialAd();
+    }
   }
+
+  /// Record that a game was completed. Call this when a game ends.
+  Future<void> recordGameCompleted() async {
+    _gamesPlayed++;
+    await _prefs?.setInt(_gamesPlayedKey, _gamesPlayed);
+    debugPrint('AdService: Game completed, total=$_gamesPlayed');
+  }
+
+  /// Check if an interstitial ad should be shown based on frequency rules.
+  bool shouldShowInterstitial() {
+    // Never show if ads removed
+    if (_adRemovalPurchased) {
+      debugPrint('AdService: Ads removed, skipping');
+      return false;
+    }
+
+    // Never show if ad not ready
+    if (_interstitialAd == null) {
+      debugPrint('AdService: Ad not ready');
+      return false;
+    }
+
+    // Don't show for first N games
+    if (_gamesPlayed < _firstAdAfterGames) {
+      debugPrint(
+          'AdService: Only $_gamesPlayed games, need $_firstAdAfterGames');
+      return false;
+    }
+
+    // Check 5-minute frequency cap
+    if (_lastAdShown != null) {
+      final secondsSinceLastAd =
+          DateTime.now().difference(_lastAdShown!).inSeconds;
+      if (secondsSinceLastAd < _minSecondsBetweenAds) {
+        debugPrint(
+            'AdService: Only ${secondsSinceLastAd}s since last ad, need $_minSecondsBetweenAds');
+        return false;
+      }
+    }
+
+    // After first threshold, show every Nth game
+    // Games 5, 8, 11, 14... (5th, then every 3rd)
+    final gamesSinceFirstAd = _gamesPlayed - _firstAdAfterGames;
+    final shouldShow = gamesSinceFirstAd % _adEveryNGames == 0;
+
+    debugPrint(
+        'AdService: games=$_gamesPlayed, sinceFirst=$gamesSinceFirstAd, shouldShow=$shouldShow');
+    return shouldShow;
+  }
+
+  /// Show an interstitial ad if frequency rules allow.
+  /// Call this after game completion (e.g., when user clicks "New Game").
+  /// Returns true if the ad was shown, false otherwise.
+  Future<bool> showInterstitialIfEligible() async {
+    if (!shouldShowInterstitial()) {
+      return false;
+    }
+
+    return await _showInterstitialAd();
+  }
+
+  /// Force show an interstitial ad (bypasses frequency check).
+  /// Use sparingly - prefer showInterstitialIfEligible().
+  Future<bool> showInterstitialAd() async {
+    if (_adRemovalPurchased) return false;
+    return await _showInterstitialAd();
+  }
+
+  Future<bool> _showInterstitialAd() async {
+    if (_interstitialAd == null) {
+      debugPrint('Interstitial ad not ready');
+      loadInterstitialAd();
+      return false;
+    }
+
+    // Record ad shown time
+    _lastAdShown = DateTime.now();
+    await _prefs?.setInt(_lastAdShownKey, _lastAdShown!.millisecondsSinceEpoch);
+
+    await _interstitialAd!.show();
+    return true;
+  }
+
+  /// Set ad removal purchase state. Call when IAP completes.
+  Future<void> setAdRemovalPurchased(bool purchased) async {
+    _adRemovalPurchased = purchased;
+    await _prefs?.setBool(_adRemovalKey, purchased);
+    debugPrint('AdService: Ad removal purchased=$purchased');
+
+    // Dispose interstitial if ads removed
+    if (purchased) {
+      _interstitialAd?.dispose();
+      _interstitialAd = null;
+    }
+  }
+
+  /// Check if ad removal was purchased.
+  bool get isAdRemovalPurchased => _adRemovalPurchased;
 
   /// Create a banner ad.
   BannerAd createBannerAd({
@@ -76,6 +227,7 @@ class AdService {
   /// Load an interstitial ad.
   void loadInterstitialAd() {
     if (_isInterstitialLoading || _interstitialAd != null) return;
+    if (_adRemovalPurchased) return; // Don't load if ads removed
 
     _isInterstitialLoading = true;
 
@@ -110,19 +262,6 @@ class AdService {
         },
       ),
     );
-  }
-
-  /// Show an interstitial ad if available.
-  /// Returns true if the ad was shown, false otherwise.
-  Future<bool> showInterstitialAd() async {
-    if (_interstitialAd == null) {
-      debugPrint('Interstitial ad not ready');
-      loadInterstitialAd();
-      return false;
-    }
-
-    await _interstitialAd!.show();
-    return true;
   }
 
   /// Check if an interstitial ad is ready to show.

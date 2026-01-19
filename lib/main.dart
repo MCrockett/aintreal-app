@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app.dart';
 import 'core/ads/ad_service.dart';
 import 'core/audio/sound_service.dart';
+import 'core/purchases/purchase_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +17,9 @@ void main() async {
 
     // Initialize AdMob
     await AdService.instance.init();
+
+    // Initialize In-App Purchases (after AdService so restore can update it)
+    await PurchaseService.instance.init();
   }
 
   // Initialize sound service
