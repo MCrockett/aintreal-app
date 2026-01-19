@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -55,7 +55,6 @@ class SessionNotifier extends StateNotifier<SessionState> {
         }
       } catch (e) {
         // SharedPreferences might fail on web in some contexts
-        debugPrint('SharedPreferences error on web: $e');
       }
       // No stored guest name - go to sign-in screen
       state = const SessionNone();
@@ -64,16 +63,13 @@ class SessionNotifier extends StateNotifier<SessionState> {
 
     // Mobile: Set up auth listener FIRST to catch Firebase session restoration
     _ref.listen<AuthState>(authProvider, (previous, next) {
-      debugPrint('SessionNotifier: Auth changed from ${previous?.runtimeType} to ${next.runtimeType}');
       if (next is AuthStateAuthenticated) {
-        debugPrint('SessionNotifier: Setting SessionAuthenticated for ${next.displayName}');
         state = SessionAuthenticated(next.displayName);
         _clearGuestName();
       } else if (next is AuthStateUnauthenticated) {
         // Only clear session if we were previously authenticated
         // Don't clear guest sessions when auth becomes unauthenticated
         if (state is SessionAuthenticated) {
-          debugPrint('SessionNotifier: Clearing authenticated session, setting SessionNone');
           state = const SessionNone();
         } else if (state is SessionLoading) {
           // Auth finished loading as unauthenticated, check for guest
@@ -84,10 +80,8 @@ class SessionNotifier extends StateNotifier<SessionState> {
 
     // Check current auth state (might already be loaded)
     final authState = _ref.read(authProvider);
-    debugPrint('SessionNotifier: Initial auth state: ${authState.runtimeType}');
 
     if (authState is AuthStateAuthenticated) {
-      debugPrint('SessionNotifier: Already authenticated as ${authState.displayName}');
       state = SessionAuthenticated(authState.displayName);
       return;
     }
@@ -99,7 +93,6 @@ class SessionNotifier extends StateNotifier<SessionState> {
     }
 
     // Auth is still loading - stay in SessionLoading until listener fires
-    debugPrint('SessionNotifier: Auth still loading, waiting...');
   }
 
   /// Check for stored guest session or set SessionNone.
@@ -107,10 +100,8 @@ class SessionNotifier extends StateNotifier<SessionState> {
     final prefs = await SharedPreferences.getInstance();
     final storedGuestName = prefs.getString(_guestNameKey);
     if (storedGuestName != null) {
-      debugPrint('SessionNotifier: Found stored guest name: $storedGuestName');
       state = SessionGuest(storedGuestName);
     } else {
-      debugPrint('SessionNotifier: No guest name, setting SessionNone');
       state = const SessionNone();
     }
   }

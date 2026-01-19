@@ -1,5 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'firebase_auth_service.dart';
@@ -62,7 +62,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
         state = const AuthStateUnauthenticated();
       }
     }, onError: (error) {
-      debugPrint('Auth state error: $error');
       state = AuthStateError(error.toString());
     });
   }
@@ -70,19 +69,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
   /// Sign in with Google.
   Future<void> signInWithGoogle() async {
     if (_authService == null) return;
-    debugPrint('AuthNotifier: Starting Google sign-in');
     state = const AuthStateLoading();
     try {
       final credential = await _authService.signInWithGoogle();
-      debugPrint('AuthNotifier: Google sign-in success, user: ${credential.user?.uid}');
       state = AuthStateAuthenticated(credential.user!);
-      debugPrint('AuthNotifier: State set to AuthStateAuthenticated');
     } on AuthCancelledException {
-      debugPrint('AuthNotifier: Google sign-in cancelled');
       // User cancelled, go back to unauthenticated
       state = const AuthStateUnauthenticated();
     } catch (e) {
-      debugPrint('Google sign-in error: $e');
       state = const AuthStateUnauthenticated();
       rethrow;
     }
@@ -99,7 +93,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       // User cancelled, go back to unauthenticated
       state = const AuthStateUnauthenticated();
     } catch (e) {
-      debugPrint('Apple sign-in error: $e');
       state = const AuthStateUnauthenticated();
       rethrow;
     }
@@ -113,7 +106,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _authService.signOut();
       state = const AuthStateUnauthenticated();
     } catch (e) {
-      debugPrint('Sign out error: $e');
       state = AuthStateError('Failed to sign out');
     }
   }
@@ -142,7 +134,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       state = const AuthStateUnauthenticated();
     } catch (e) {
-      debugPrint('Delete account error: $e');
       // Restore previous state on error
       state = currentState;
       rethrow;

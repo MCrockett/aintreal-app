@@ -4,7 +4,6 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
@@ -60,8 +59,6 @@ class FirebaseAuthService {
     final rawNonce = _generateNonce();
     final nonce = _sha256ofString(rawNonce);
 
-    debugPrint('Apple Sign-In: Starting with nonce hash: ${nonce.substring(0, 10)}...');
-
     // Request Apple ID credential
     final appleCredential = await SignInWithApple.getAppleIDCredential(
       scopes: [
@@ -71,35 +68,11 @@ class FirebaseAuthService {
       nonce: nonce,
     );
 
-    debugPrint('Apple Sign-In: Got Apple credential');
-    debugPrint('Apple Sign-In: identityToken present: ${appleCredential.identityToken != null}');
-    debugPrint('Apple Sign-In: identityToken length: ${appleCredential.identityToken?.length ?? 0}');
-    debugPrint('Apple Sign-In: authorizationCode present: ${appleCredential.authorizationCode != null}');
-    debugPrint('Apple Sign-In: userIdentifier: ${appleCredential.userIdentifier}');
-    debugPrint('Apple Sign-In: email: ${appleCredential.email}');
-
-    // Decode JWT header to see audience/issuer
-    if (appleCredential.identityToken != null) {
-      final parts = appleCredential.identityToken!.split('.');
-      if (parts.length >= 2) {
-        try {
-          final payload = parts[1];
-          final normalized = base64Url.normalize(payload);
-          final decoded = utf8.decode(base64Url.decode(normalized));
-          debugPrint('Apple Sign-In: JWT payload: $decoded');
-        } catch (e) {
-          debugPrint('Apple Sign-In: Could not decode JWT: $e');
-        }
-      }
-    }
-
     // Create an OAuth credential from the Apple credential
     final oauthCredential = OAuthProvider('apple.com').credential(
       idToken: appleCredential.identityToken,
       rawNonce: rawNonce,
     );
-
-    debugPrint('Apple Sign-In: Created Firebase credential, attempting sign in...');
 
     // Sign in to Firebase with the Apple credential
     final userCredential = await _auth.signInWithCredential(oauthCredential);
@@ -125,30 +98,18 @@ class FirebaseAuthService {
   /// Sync user with backend after sign-in.
   /// Creates or updates the user record in our database.
   Future<void> _syncWithBackend(User? user) async {
-    debugPrint('FirebaseAuthService: _syncWithBackend called');
-    if (user == null) {
-      debugPrint('FirebaseAuthService: user is null, skipping sync');
-      return;
-    }
+    if (user == null) return;
 
     try {
-      debugPrint('FirebaseAuthService: Getting ID token for ${user.uid}');
       final idToken = await user.getIdToken();
-      if (idToken == null) {
-        debugPrint('FirebaseAuthService: Could not get ID token for backend sync');
-        return;
-      }
+      if (idToken == null) return;
 
-      debugPrint('FirebaseAuthService: Calling authenticateWithFirebase...');
-      final response = await AuthApi.instance.authenticateWithFirebase(
+      await AuthApi.instance.authenticateWithFirebase(
         idToken,
         displayName: user.displayName,
       );
-      debugPrint('FirebaseAuthService: User synced with backend - isNewUser: ${response.isNewUser}');
-    } catch (e, stack) {
+    } catch (_) {
       // Don't fail sign-in if backend sync fails
-      debugPrint('FirebaseAuthService: Backend sync failed: $e');
-      debugPrint('FirebaseAuthService: Stack: $stack');
     }
   }
 
@@ -186,8 +147,6 @@ class FirebaseAuthService {
     if (response.statusCode != 200) {
       throw Exception('Failed to delete account data: ${response.statusMessage}');
     }
-
-    debugPrint('Account data deleted from server');
   }
 
   /// Generate a random nonce string for Apple Sign-In.
