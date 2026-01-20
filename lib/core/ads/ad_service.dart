@@ -33,11 +33,11 @@ class AdService {
       'ca-app-pub-3940256099942544/1033173712';
 
   /// Production Ad Unit IDs
-  /// TODO: Replace these with your actual AdMob ad unit IDs from the console
+  /// Android IDs configured. iOS IDs needed for App Store launch.
   static const _prodAndroidBannerAdUnitId =
-      'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX';
+      'ca-app-pub-3930486883953215/8771045412';
   static const _prodAndroidInterstitialAdUnitId =
-      'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX';
+      'ca-app-pub-3930486883953215/1028480288';
   static const _prodIosBannerAdUnitId = 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX';
   static const _prodIosInterstitialAdUnitId =
       'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX';
