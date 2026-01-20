@@ -89,17 +89,25 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: 8),
               // Player info and profile
               if (session is SessionGuest || session is SessionAuthenticated)
-                TextButton.icon(
+                TextButton(
                   onPressed: () => context.push(AppRoutes.profile),
-                  icon: const Icon(Icons.person, size: 18),
-                  label: Text(
-                    session is SessionGuest
-                        ? session.guestName
-                        : (session as SessionAuthenticated).displayName,
-                    style: TextStyle(color: AppTheme.textMuted),
-                  ),
                   style: TextButton.styleFrom(
                     foregroundColor: AppTheme.textMuted,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.person, size: 18),
+                      const SizedBox(width: 8),
+                      Text(
+                        session is SessionGuest
+                            ? session.guestName
+                            : (session as SessionAuthenticated).displayName,
+                        style: TextStyle(color: AppTheme.textMuted),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.settings, size: 16),
+                    ],
                   ),
                 ),
               const Spacer(),
@@ -180,12 +188,15 @@ class _ModeCard extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Text(
-                            title,
-                            style: TextStyle(
-                              color: isParty ? Colors.white : AppTheme.textPrimary,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                          Flexible(
+                            child: Text(
+                              title,
+                              style: TextStyle(
+                                color: isParty ? Colors.white : AppTheme.textPrimary,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(width: 8),

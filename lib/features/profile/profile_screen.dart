@@ -123,7 +123,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (authState is AuthStateAuthenticated) {
       try {
         await authState.user.updateDisplayName(_nameController.text.trim());
-        await authState.user.reload();
+        // Refresh auth state to pick up new display name
+        await ref.read(authProvider.notifier).refreshUser();
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -279,32 +280,32 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              children: [
-                Icon(Icons.block, color: AppTheme.textSecondary, size: 20),
-                const SizedBox(width: 12),
-                const Text('Remove Ads'),
-              ],
-            ),
-            _isPurchasing
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : ElevatedButton(
-                    onPressed: _purchaseAdRemoval,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primary,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
+            Icon(Icons.block, color: AppTheme.textSecondary, size: 20),
+            const SizedBox(width: 12),
+            const Text('Remove Ads'),
+            const Spacer(),
+            if (_isPurchasing)
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else
+              SizedBox(
+                width: 80,
+                child: ElevatedButton(
+                  onPressed: _purchaseAdRemoval,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 8,
                     ),
-                    child: Text(price ?? '\$2.99'),
                   ),
+                  child: Text(price ?? '\$2.99'),
+                ),
+              ),
           ],
         ),
         const SizedBox(height: 8),
@@ -424,7 +425,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               setState(() => _soundEnabled = value);
                               SoundService.instance.setSoundEnabled(value);
                             },
-                            activeColor: AppTheme.primary,
+                            activeTrackColor: AppTheme.primary,
                           ),
                         ],
                       ),
@@ -445,7 +446,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               setState(() => _hapticEnabled = value);
                               SoundService.instance.setHapticEnabled(value);
                             },
-                            activeColor: AppTheme.primary,
+                            activeTrackColor: AppTheme.primary,
                           ),
                         ],
                       ),
@@ -602,9 +603,25 @@ class _ProfileHeader extends StatelessWidget {
             ],
           )
         else
-          Text(
-            displayName,
-            style: Theme.of(context).textTheme.headlineMedium,
+          GestureDetector(
+            onTap: isGuest ? null : onEditTap,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  displayName,
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                if (!isGuest) ...[
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.edit,
+                    size: 18,
+                    color: AppTheme.textMuted,
+                  ),
+                ],
+              ],
+            ),
           ),
 
         // Email for signed-in users

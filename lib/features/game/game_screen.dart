@@ -700,9 +700,7 @@ class _GameImage extends StatelessWidget {
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: isAi
-                                  ? AppTheme.wrongAnswer
-                                  : AppTheme.correctAnswer,
+                              color: AppTheme.imageLabel,
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(

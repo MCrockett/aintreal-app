@@ -79,7 +79,32 @@ dart run build_runner build
 # Build release
 flutter build apk --release
 flutter build ios --release
+flutter build appbundle --release  # For Google Play
 ```
+
+## Versioning
+
+Version is managed in `pubspec.yaml` using the format: `X.Y.Z+N`
+
+- **X.Y.Z** = Semantic version (e.g., `1.0.0`)
+  - X = Major (breaking changes)
+  - Y = Minor (new features)
+  - Z = Patch (bug fixes)
+- **+N** = Build number (must increment for each store upload)
+
+**Rules:**
+- ALWAYS increment build number (+N) before each Play Store / App Store upload
+- Build number must be unique and increasing (can't reuse or go backwards)
+- Semantic version can stay same for bug fixes (just increment build number)
+
+**Current:** Check `pubspec.yaml` for latest version
+
+**History:**
+| Build | Version | Date | Notes |
+|-------|---------|------|-------|
+| +1 | 1.0.0 | Dec 2025 | Initial internal test |
+| +2 | 1.0.0 | Dec 2025 | First Play Store submission |
+| +3 | 1.0.0 | Jan 2026 | Test fixes, UI polish, color scheme update |
 
 ## Theme-Epic-Task System
 

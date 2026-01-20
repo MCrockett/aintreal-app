@@ -21,8 +21,9 @@ class AppTheme {
   static const Color warning = Color(0xFFF39C12);
 
   // Game Answer Colors
-  static const Color correctAnswer = Color(0xFF27AE60); // Green for correct/real
-  static const Color wrongAnswer = Color(0xFFE74C3C); // Red for wrong/AI
+  static const Color correctAnswer = Color(0xFF27AE60); // Green for correct choice
+  static const Color wrongAnswer = Color(0xFFE74C3C); // Red for wrong choice
+  static const Color imageLabel = Color(0xFF6B7280); // Gray for Real/AI labels
 
   // Text Colors
   static const Color textPrimary = Color(0xFFEEEEEE);

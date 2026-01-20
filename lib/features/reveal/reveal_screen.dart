@@ -368,10 +368,10 @@ class _RevealImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Border color: selected images use result color, non-selected use AI/Real color
+    // Border color: selected images use result color (green correct, red wrong), non-selected use gray
     final borderColor = isSelected
         ? (isCorrect ? AppTheme.correctAnswer : AppTheme.wrongAnswer)
-        : (isAi ? AppTheme.wrongAnswer : AppTheme.correctAnswer);
+        : AppTheme.imageLabel;
 
     return AnimatedBuilder(
       animation: Listenable.merge([scaleAnimation, glowAnimation]),
@@ -447,9 +447,7 @@ class _RevealImage extends StatelessWidget {
                                 vertical: 10,
                               ),
                               decoration: BoxDecoration(
-                                color: isAi
-                                    ? AppTheme.wrongAnswer
-                                    : AppTheme.correctAnswer,
+                                color: AppTheme.imageLabel,
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Row(

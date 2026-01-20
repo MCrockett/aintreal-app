@@ -24,7 +24,7 @@ class AuthStateLoading extends AuthState {
 
 /// User is authenticated.
 class AuthStateAuthenticated extends AuthState {
-  const AuthStateAuthenticated(this.user);
+  AuthStateAuthenticated(this.user);
   final User user;
 
   String get displayName => user.displayName ?? user.email ?? 'Player';
@@ -114,6 +114,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
   void clearError() {
     if (state is AuthStateError) {
       state = const AuthStateUnauthenticated();
+    }
+  }
+
+  /// Refresh the current user's data from Firebase.
+  Future<void> refreshUser() async {
+    if (_authService == null) return;
+    final currentUser = _authService.currentUser;
+    if (currentUser != null) {
+      await currentUser.reload();
+      // Get the refreshed user and emit new state
+      final refreshedUser = _authService.currentUser;
+      if (refreshedUser != null) {
+        state = AuthStateAuthenticated(refreshedUser);
+      }
     }
   }
 
