@@ -105,6 +105,7 @@ Version is managed in `pubspec.yaml` using the format: `X.Y.Z+N`
 | +1 | 1.0.0 | Dec 2025 | Initial internal test |
 | +2 | 1.0.0 | Dec 2025 | First Play Store submission |
 | +3 | 1.0.0 | Jan 2026 | Test fixes, UI polish, color scheme update |
+| +4 | 1.0.0 | Jan 2026 | Banner ad hides immediately after purchase |
 
 ## Theme-Epic-Task System
 

@@ -50,6 +50,10 @@ class AdService {
   bool _adRemovalPurchased = false;
   SharedPreferences? _prefs;
 
+  /// Notifier for ads enabled state. Widgets can listen to this to react
+  /// immediately when ad removal is purchased.
+  final ValueNotifier<bool> adsEnabledNotifier = ValueNotifier(true);
+
   /// Get the appropriate banner ad unit ID for the platform.
   String get bannerAdUnitId {
     if (kDebugMode) {
@@ -90,6 +94,7 @@ class AdService {
     _prefs = await SharedPreferences.getInstance();
     _gamesPlayed = _prefs?.getInt(_gamesPlayedKey) ?? 0;
     _adRemovalPurchased = _prefs?.getBool(_adRemovalKey) ?? false;
+    adsEnabledNotifier.value = !_adRemovalPurchased;
 
     final lastAdTimestamp = _prefs?.getInt(_lastAdShownKey);
     if (lastAdTimestamp != null) {
@@ -195,6 +200,9 @@ class AdService {
     _adRemovalPurchased = purchased;
     await _prefs?.setBool(_adRemovalKey, purchased);
     debugPrint('AdService: Ad removal purchased=$purchased');
+
+    // Notify listeners immediately so UI can update
+    adsEnabledNotifier.value = !purchased;
 
     // Dispose interstitial if ads removed
     if (purchased) {

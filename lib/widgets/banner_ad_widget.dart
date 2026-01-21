@@ -21,6 +21,19 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
   void initState() {
     super.initState();
     _loadAd();
+    // Listen for ad removal purchase to hide banner immediately
+    AdService.instance.adsEnabledNotifier.addListener(_onAdsEnabledChanged);
+  }
+
+  void _onAdsEnabledChanged() {
+    if (!AdService.instance.adsEnabledNotifier.value) {
+      // Ads were disabled (user purchased removal)
+      _bannerAd?.dispose();
+      _bannerAd = null;
+      if (mounted) {
+        setState(() => _isLoaded = false);
+      }
+    }
   }
 
   void _loadAd() {
@@ -44,6 +57,7 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
 
   @override
   void dispose() {
+    AdService.instance.adsEnabledNotifier.removeListener(_onAdsEnabledChanged);
     _bannerAd?.dispose();
     super.dispose();
   }
