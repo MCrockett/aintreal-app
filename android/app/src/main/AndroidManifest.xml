@@ -33,12 +33,20 @@
                 <data android:scheme="aintreal" android:host="join"/>
             </intent-filter>
 
-            <!-- Deep link: Web URL https://aint-real.com/play/#/join/CODE -->
+            <!-- Deep link: Web URL https://aint-real.com/play/* -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="https" android:host="aint-real.com" android:pathPrefix="/play"/>
+            </intent-filter>
+
+            <!-- Deep link: Join URL https://aint-real.com/join/CODE -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="aint-real.com" android:pathPrefix="/join"/>
             </intent-filter>
         </activity>
         <!-- AdMob App ID -->

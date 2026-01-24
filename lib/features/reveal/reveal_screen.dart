@@ -459,59 +459,89 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
               ),
             ),
 
-            // Next button with countdown
-            if (_canAdvance)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: _advanceToNext,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primary,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(28),
+            // Countdown indicator (party mode) or Next button (solo modes)
+            if (_canAdvance) ...[
+              // Check if this is party mode (more than 1 player)
+              if (gameState.players.length > 1)
+                // Party mode: just show countdown, no button
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  child: Container(
+                    width: double.infinity,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: AppTheme.backgroundLight,
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(color: AppTheme.secondary, width: 2),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'Next round in $_countdownSeconds...',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textSecondary,
+                        ),
                       ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          'Next',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                  ),
+                )
+                    .animate()
+                    .fadeIn(duration: 300.ms)
+                    .slideY(begin: 0.3, end: 0, duration: 300.ms)
+              else
+                // Solo mode: show Next button
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: _advanceToNext,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(28),
                         ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            '$_countdownSeconds',
-                            style: const TextStyle(
-                              fontSize: 16,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            'Next',
+                            style: TextStyle(
+                              fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '$_countdownSeconds',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              )
-                  .animate()
-                  .fadeIn(duration: 300.ms)
-                  .slideY(begin: 0.3, end: 0, duration: 300.ms)
-            else
+                )
+                    .animate()
+                    .fadeIn(duration: 300.ms)
+                    .slideY(begin: 0.3, end: 0, duration: 300.ms),
+            ] else
               const SizedBox(height: 80), // Reserve space for button
           ],
         ),
