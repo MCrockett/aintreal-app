@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../config/env.dart';
 import '../../config/theme.dart';
+import '../../core/analytics/analytics_service.dart';
 import '../../core/audio/sound_service.dart';
 import '../../core/websocket/game_state_provider.dart';
 import '../../core/websocket/ws_messages.dart';
@@ -41,14 +43,26 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
   late Animation<double> _scaleAnimation;
   late Animation<double> _glowAnimation;
 
-  // Track sounds to avoid duplicate plays
+  // Track sounds and analytics to avoid duplicate plays/logs
   bool _revealSoundPlayed = false;
   bool _resultSoundPlayed = false;
   bool _bonusSoundPlayed = false;
+  bool _roundAnalyticsLogged = false;
+
+  // Auto-advance countdown
+  static const _autoAdvanceSeconds = 5;
+  int _countdownSeconds = _autoAdvanceSeconds;
+  Timer? _countdownTimer;
+  bool _canAdvance = false; // True once animations complete
+  bool _hasNavigated = false; // Prevent double navigation (only set when we actually navigate)
+  bool _wantsToAdvance = false; // User tapped or countdown ended, waiting for server
+  int? _currentRevealRound; // Track which round we're showing to detect changes
+  int _wrongPunIndex = 0; // Cached pun index to avoid changing on rebuild
 
   @override
   void initState() {
     super.initState();
+    _wrongPunIndex = Random().nextInt(_wrongAnswerPuns.length);
     _revealController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
@@ -73,6 +87,101 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
       if (mounted) {
         _revealController.forward();
         _playRevealSound();
+      }
+    });
+
+    // Start countdown after animations complete (~2 seconds)
+    Future.delayed(const Duration(milliseconds: 2000), () {
+      if (mounted) {
+        setState(() => _canAdvance = true);
+        _startCountdown();
+      }
+    });
+  }
+
+  void _startCountdown() {
+    _countdownTimer?.cancel();
+    _countdownSeconds = _autoAdvanceSeconds;
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        _countdownSeconds--;
+        if (_countdownSeconds <= 0) {
+          timer.cancel();
+          _advanceToNext();
+        }
+      });
+    });
+  }
+
+  void _advanceToNext() {
+    if (_hasNavigated || !mounted) return;
+
+    // Mark that user wants to advance (countdown ended or button tapped)
+    _wantsToAdvance = true;
+    _countdownTimer?.cancel();
+
+    // Tell server we're ready to advance
+    ref.read(gameStateProvider.notifier).readyForNext();
+
+    final gameState = ref.read(gameStateProvider);
+
+    // If game is finished, go to results
+    if (gameState.status == GameStatus.finished && gameState.gameOverData != null) {
+      _hasNavigated = true;
+      context.go('/results/${widget.gameCode}');
+      return;
+    }
+
+    // If next round is ready AND we're no longer in revealing status, go to game screen
+    // (If status is still revealing, the game screen would just redirect back to reveal)
+    if (gameState.roundData != null && gameState.status != GameStatus.revealing) {
+      _hasNavigated = true;
+      context.go('/game/${widget.gameCode}');
+      return;
+    }
+
+    // Otherwise wait for server - listener will call _tryNavigate when state changes
+    debugPrint('_advanceToNext: waiting for server (status still revealing or no roundData)');
+  }
+
+  /// Called by listener when state changes and we're waiting to advance
+  void _tryNavigate() {
+    if (_hasNavigated || !mounted || !_wantsToAdvance) return;
+
+    final gameState = ref.read(gameStateProvider);
+
+    // If game is finished, go to results
+    if (gameState.status == GameStatus.finished && gameState.gameOverData != null) {
+      _hasNavigated = true;
+      context.go('/results/${widget.gameCode}');
+      return;
+    }
+
+    // If next round is ready AND we're no longer in revealing status, go to game screen
+    if (gameState.roundData != null && gameState.status != GameStatus.revealing) {
+      _hasNavigated = true;
+      context.go('/game/${widget.gameCode}');
+      return;
+    }
+  }
+
+  void _resetCountdown() {
+    _countdownTimer?.cancel();
+    _countdownSeconds = _autoAdvanceSeconds;
+    _canAdvance = false;
+    _hasNavigated = false;
+    _wantsToAdvance = false;
+    _wrongPunIndex = Random().nextInt(_wrongAnswerPuns.length); // New pun for new round
+
+    // Restart countdown after animations
+    Future.delayed(const Duration(milliseconds: 2000), () {
+      if (mounted) {
+        setState(() => _canAdvance = true);
+        _startCountdown();
       }
     });
   }
@@ -116,10 +225,12 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
     _revealSoundPlayed = false;
     _resultSoundPlayed = false;
     _bonusSoundPlayed = false;
+    _roundAnalyticsLogged = false;
   }
 
   @override
   void dispose() {
+    _countdownTimer?.cancel();
     _revealController.dispose();
     super.dispose();
   }
@@ -134,37 +245,34 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
     final revealData = gameState.revealData;
     final playerId = gameState.playerId;
 
-    // Listen for state changes
+    // Initialize current reveal round tracking on first render with data
+    // This ensures the listener only triggers for SUBSEQUENT rounds, not initial load
+    if (revealData != null && _currentRevealRound == null) {
+      _currentRevealRound = revealData.round;
+      debugPrint('RevealScreen: initialized _currentRevealRound to ${revealData.round}');
+    }
+
+    // Listen for state changes - only react to NEW reveal rounds (not initial load)
     ref.listen<GameState>(gameStateProvider, (previous, next) {
       debugPrint(
-          'RevealScreen state change: status=${next.status}, revealRound=${next.revealData?.round}');
+          'RevealScreen state change: status=${next.status}, revealRound=${next.revealData?.round}, currentRound=$_currentRevealRound, wantsToAdvance=$_wantsToAdvance');
 
-      // Navigate to results when game is over
-      if (next.status == GameStatus.finished && next.gameOverData != null) {
-        debugPrint('Game finished! Navigating to results...');
-        // For marathon mode, add a delay so player can see the wrong answer
-        final isMarathon = next.config?.mode == 'marathon';
-        if (isMarathon) {
-          Future.delayed(const Duration(seconds: 3), () {
-            if (mounted) context.go('/results/${widget.gameCode}');
-          });
-        } else {
-          context.go('/results/${widget.gameCode}');
-        }
+      // If user wants to advance (countdown ended or button tapped), try to navigate
+      // This handles the case where user taps Next but server hasn't sent next round status yet
+      if (_wantsToAdvance && !_hasNavigated) {
+        _tryNavigate();
+        // Don't return - still need to check for new reveal rounds below
       }
 
-      // Navigate back to game screen when a new round starts
-      if (next.status == GameStatus.playing && next.roundData != null &&
-          previous?.status == GameStatus.revealing) {
-        debugPrint('New round starting, navigating back to game screen');
-        context.go('/game/${widget.gameCode}');
-      }
-
-      // New reveal round - restart animation and sounds
+      // New reveal round - only if we've already been showing a reveal and the round changed
+      // _currentRevealRound is set in build, so this only triggers for subsequent rounds
       if (next.revealData != null &&
-          previous?.revealData?.round != next.revealData?.round) {
-        debugPrint('New reveal round: ${next.revealData?.round}');
+          _currentRevealRound != null &&
+          _currentRevealRound != next.revealData!.round) {
+        debugPrint('New reveal round detected: ${next.revealData?.round} (was $_currentRevealRound)');
+        _currentRevealRound = next.revealData!.round;
         _resetSounds();
+        _resetCountdown();
         _revealController.reset();
         Future.delayed(const Duration(milliseconds: 300), () {
           if (mounted) {
@@ -207,9 +315,21 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
           orElse: () => null,
         );
 
-    // Play result sound for current player
+    // Play result sound for current player and log analytics
     if (myResult != null) {
       _playResultSound(myResult.correct);
+
+      // Log round completion analytics (once per round)
+      if (!_roundAnalyticsLogged) {
+        _roundAnalyticsLogged = true;
+        final mode = gameState.config?.mode ?? 'party';
+        AnalyticsService.instance.logRoundCompleted(
+          mode: mode,
+          roundNumber: revealData.round,
+          correct: myResult.correct,
+          responseTimeMs: myResult.responseTime,
+        );
+      }
     }
 
     // Play bonus sound if there's a bonus
@@ -294,7 +414,7 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
             if (myResult != null)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _YourResultCard(result: myResult)
+                child: _YourResultCard(result: myResult, wrongPunIndex: _wrongPunIndex)
                     .animate()
                     .fadeIn(duration: 400.ms, delay: 500.ms)
                     .slideY(begin: 0.3, end: 0, duration: 400.ms, delay: 500.ms),
@@ -339,7 +459,60 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
               ),
             ),
 
-            const SizedBox(height: 16),
+            // Next button with countdown
+            if (_canAdvance)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: _advanceToNext,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(28),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'Next',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '$_countdownSeconds',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              )
+                  .animate()
+                  .fadeIn(duration: 300.ms)
+                  .slideY(begin: 0.3, end: 0, duration: 300.ms)
+            else
+              const SizedBox(height: 80), // Reserve space for button
           ],
         ),
         ),
@@ -487,9 +660,10 @@ class _RevealImage extends StatelessWidget {
 
 /// Card showing the current player's result for this round.
 class _YourResultCard extends StatelessWidget {
-  const _YourResultCard({required this.result});
+  const _YourResultCard({required this.result, required this.wrongPunIndex});
 
   final PlayerResult result;
+  final int wrongPunIndex;
 
   /// Build rich text with "AI" styled in primary color
   Widget _buildStyledText(BuildContext context, String text, Color baseColor) {
@@ -593,10 +767,10 @@ class _YourResultCard extends StatelessWidget {
     final points = result.points;
     final timedOut = result.choice == null && !isCorrect;
 
-    // Pick a random pun for wrong answers (not timeout)
+    // Use cached pun for wrong answers (not timeout)
     final wrongText = timedOut
         ? "Time's up!"
-        : _wrongAnswerPuns[Random().nextInt(_wrongAnswerPuns.length)];
+        : _wrongAnswerPuns[wrongPunIndex];
 
     final bonusChips = _buildBonusChips(context);
 

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../config/env.dart';
@@ -131,6 +132,17 @@ class _ErrorInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     final exception = _mapException(err);
+
+    // Report to Crashlytics (non-fatal)
+    if (!kIsWeb) {
+      FirebaseCrashlytics.instance.recordError(
+        exception,
+        StackTrace.current,
+        reason: 'API error: ${err.requestOptions.method} ${err.requestOptions.path}',
+        fatal: false,
+      );
+    }
+
     handler.reject(
       DioException(
         requestOptions: err.requestOptions,

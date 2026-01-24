@@ -292,6 +292,11 @@ class GameStateNotifier extends StateNotifier<GameState> {
     _wsClient?.send(const PlayAgainMessage());
   }
 
+  /// Signal ready to advance during reveal phase.
+  void readyForNext() {
+    _wsClient?.send(const NextRoundMessage());
+  }
+
   /// Send leave command.
   void leave() {
     _wsClient?.send(const LeaveMessage());

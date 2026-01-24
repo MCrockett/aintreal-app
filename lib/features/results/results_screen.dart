@@ -1,6 +1,7 @@
 import 'package:confetti/confetti.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -9,6 +10,7 @@ import '../../config/env.dart';
 import '../../config/routes.dart';
 import '../../config/theme.dart';
 import '../../core/ads/ad_service.dart';
+import '../../core/analytics/analytics_service.dart';
 import '../../core/audio/sound_service.dart';
 import '../../core/sharing/share_service.dart';
 import '../../core/websocket/game_state_provider.dart';
@@ -48,6 +50,36 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
     // Record game completion for ad frequency tracking (mobile only)
     if (!kIsWeb) {
       AdService.instance.recordGameCompleted();
+    }
+
+    // Log analytics after frame so we have access to ref
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _logGameCompletion();
+    });
+  }
+
+  void _logGameCompletion() {
+    final gameState = ref.read(gameStateProvider);
+    final gameOverData = gameState.gameOverData;
+    final config = gameState.config;
+    final playerId = gameState.playerId;
+
+    if (gameOverData == null || config == null) return;
+
+    final myRanking = gameOverData.rankings.cast<FinalRanking?>().firstWhere(
+          (r) => r?.playerId == playerId,
+          orElse: () => null,
+        );
+
+    if (myRanking != null) {
+      AnalyticsService.instance.logGameCompleted(
+        mode: config.mode,
+        score: myRanking.score,
+        correctCount: myRanking.correctAnswers,
+        totalRounds: gameOverData.totalRounds,
+        rank: myRanking.rank,
+        playerCount: gameOverData.rankings.length,
+      );
     }
   }
 

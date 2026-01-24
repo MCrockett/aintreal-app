@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/routes.dart';
 import '../../config/theme.dart';
+import '../../core/analytics/analytics_service.dart';
 import '../../core/auth/session_provider.dart';
 import '../../models/game.dart';
 import '../../widgets/banner_ad_widget.dart';
@@ -43,35 +45,47 @@ class HomeScreen extends ConsumerWidget {
                 subtitle: '2-8 players',
                 description: 'Play with friends! Everyone guesses at once.',
                 icon: Icons.groups,
-                onTap: () => context.push(
-                  AppRoutes.createGame,
-                  extra: {'mode': GameMode.party},
-                ),
+                onTap: () {
+                  AnalyticsService.instance.logGameModeSelected('party');
+                  context.push(
+                    AppRoutes.createGame,
+                    extra: {'mode': GameMode.party},
+                  );
+                },
               ),
-              const SizedBox(height: 12),
-              _ModeCard(
-                mode: GameMode.classic,
-                title: 'Classic Solo',
-                subtitle: 'Single player',
-                description: 'Practice at your own pace.',
-                icon: Icons.person,
-                onTap: () => context.push(
-                  AppRoutes.createGame,
-                  extra: {'mode': GameMode.classic},
+              // Solo modes - app only (not available on web)
+              if (!kIsWeb) ...[
+                const SizedBox(height: 12),
+                _ModeCard(
+                  mode: GameMode.classic,
+                  title: 'Classic Solo',
+                  subtitle: 'Single player',
+                  description: 'Practice at your own pace.',
+                  icon: Icons.person,
+                  onTap: () {
+                    AnalyticsService.instance.logGameModeSelected('classic');
+                    context.push(
+                      AppRoutes.createGame,
+                      extra: {'mode': GameMode.classic},
+                    );
+                  },
                 ),
-              ),
-              const SizedBox(height: 12),
-              _ModeCard(
-                mode: GameMode.marathon,
-                title: 'Marathon',
-                subtitle: '26 rounds',
-                description: 'How far can you go? One miss and it\'s over!',
-                icon: Icons.emoji_events,
-                onTap: () => context.push(
-                  AppRoutes.createGame,
-                  extra: {'mode': GameMode.marathon},
+                const SizedBox(height: 12),
+                _ModeCard(
+                  mode: GameMode.marathon,
+                  title: 'Marathon',
+                  subtitle: '26 rounds',
+                  description: 'How far can you go? One miss and it\'s over!',
+                  icon: Icons.emoji_events,
+                  onTap: () {
+                    AnalyticsService.instance.logGameModeSelected('marathon');
+                    context.push(
+                      AppRoutes.createGame,
+                      extra: {'mode': GameMode.marathon},
+                    );
+                  },
                 ),
-              ),
+              ],
 
               const SizedBox(height: 24),
 

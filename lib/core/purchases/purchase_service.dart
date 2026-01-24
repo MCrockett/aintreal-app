@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 
@@ -27,6 +28,18 @@ class PurchaseService {
   /// Whether IAP is available on this device.
   bool get isAvailable => _isAvailable;
 
+  /// Record non-fatal error to Crashlytics.
+  void _recordError(dynamic error, StackTrace? stack, String reason) {
+    if (!kIsWeb) {
+      FirebaseCrashlytics.instance.recordError(
+        error,
+        stack ?? StackTrace.current,
+        reason: reason,
+        fatal: false,
+      );
+    }
+  }
+
   /// Whether a purchase is currently pending.
   bool get isPurchasePending => _purchasePending;
 
@@ -53,7 +66,10 @@ class PurchaseService {
     _subscription = _iap.purchaseStream.listen(
       _onPurchaseUpdate,
       onDone: () => _subscription?.cancel(),
-      onError: (error) => debugPrint('PurchaseService error: $error'),
+      onError: (error) {
+        debugPrint('PurchaseService error: $error');
+        _recordError(error, null, 'Purchase stream error');
+      },
     );
 
     // Load products
@@ -68,6 +84,11 @@ class PurchaseService {
 
     if (response.error != null) {
       debugPrint('PurchaseService: Error loading products: ${response.error}');
+      _recordError(
+        Exception(response.error!.message),
+        null,
+        'Failed to load IAP products',
+      );
       return;
     }
 
@@ -102,6 +123,11 @@ class PurchaseService {
         case PurchaseStatus.error:
           _purchasePending = false;
           debugPrint('PurchaseService: Purchase error: ${purchase.error}');
+          _recordError(
+            Exception(purchase.error?.message ?? 'Unknown purchase error'),
+            null,
+            'Purchase failed: ${purchase.productID}',
+          );
           break;
 
         case PurchaseStatus.canceled:

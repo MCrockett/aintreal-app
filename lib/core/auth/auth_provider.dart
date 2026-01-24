@@ -1,8 +1,22 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../analytics/analytics_service.dart';
 import 'firebase_auth_service.dart';
+
+/// Record non-fatal error to Crashlytics (mobile only).
+void _recordAuthError(dynamic error, StackTrace? stack, String reason) {
+  if (!kIsWeb) {
+    FirebaseCrashlytics.instance.recordError(
+      error,
+      stack ?? StackTrace.current,
+      reason: reason,
+      fatal: false,
+    );
+  }
+}
 
 /// Whether auth is available (mobile only, not web)
 const bool _isAuthAvailable = !kIsWeb;
@@ -61,7 +75,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       } else {
         state = const AuthStateUnauthenticated();
       }
-    }, onError: (error) {
+    }, onError: (error, stack) {
+      _recordAuthError(error, stack, 'Auth state stream error');
       state = AuthStateError(error.toString());
     });
   }
@@ -73,10 +88,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final credential = await _authService.signInWithGoogle();
       state = AuthStateAuthenticated(credential.user!);
+      AnalyticsService.instance.logSignIn('google');
     } on AuthCancelledException {
       // User cancelled, go back to unauthenticated
       state = const AuthStateUnauthenticated();
-    } catch (e) {
+    } catch (e, stack) {
+      _recordAuthError(e, stack, 'Google Sign-In failed');
       state = const AuthStateUnauthenticated();
       rethrow;
     }
@@ -89,10 +106,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final credential = await _authService.signInWithApple();
       state = AuthStateAuthenticated(credential.user!);
+      AnalyticsService.instance.logSignIn('apple');
     } on AuthCancelledException {
       // User cancelled, go back to unauthenticated
       state = const AuthStateUnauthenticated();
-    } catch (e) {
+    } catch (e, stack) {
+      _recordAuthError(e, stack, 'Apple Sign-In failed');
       state = const AuthStateUnauthenticated();
       rethrow;
     }
@@ -105,7 +124,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       await _authService.signOut();
       state = const AuthStateUnauthenticated();
-    } catch (e) {
+      AnalyticsService.instance.logSignOut();
+    } catch (e, stack) {
+      _recordAuthError(e, stack, 'Sign out failed');
       state = AuthStateError('Failed to sign out');
     }
   }
@@ -147,7 +168,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await currentState.user.delete();
 
       state = const AuthStateUnauthenticated();
-    } catch (e) {
+    } catch (e, stack) {
+      _recordAuthError(e, stack, 'Account deletion failed');
       // Restore previous state on error
       state = currentState;
       rethrow;

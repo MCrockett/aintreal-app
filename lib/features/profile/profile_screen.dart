@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -486,6 +487,36 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       label: const Text('Delete Account'),
                       style: TextButton.styleFrom(
                         foregroundColor: AppTheme.textMuted,
+                      ),
+                    ),
+                  ),
+                ],
+
+                // DEBUG: Test crash button (only in debug mode, remove before release)
+                if (kDebugMode && !kIsWeb) ...[
+                  const SizedBox(height: 32),
+                  const Divider(),
+                  const SizedBox(height: 8),
+                  Text(
+                    'DEBUG OPTIONS',
+                    style: TextStyle(
+                      color: AppTheme.textMuted,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        FirebaseCrashlytics.instance.crash();
+                      },
+                      icon: const Icon(Icons.bug_report),
+                      label: const Text('Test Crash'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.orange,
+                        side: const BorderSide(color: Colors.orange),
                       ),
                     ),
                   ),
