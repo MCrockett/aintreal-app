@@ -16,6 +16,8 @@ class BannerAdWidget extends StatefulWidget {
 class _BannerAdWidgetState extends State<BannerAdWidget> {
   BannerAd? _bannerAd;
   bool _isLoaded = false;
+  bool _isLoading = false;
+  bool _isDisposed = false;
 
   @override
   void initState() {
@@ -40,15 +42,32 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
     // Skip on web or if ads are disabled (user purchased removal)
     if (kIsWeb || !AdService.instance.adsEnabled) return;
 
+    // Don't load if already loading or loaded
+    if (_isLoading || _bannerAd != null) return;
+
+    _isLoading = true;
+
     _bannerAd = AdService.instance.createBannerAd(
       onAdLoaded: (ad) {
+        _isLoading = false;
+        if (_isDisposed) {
+          ad.dispose();
+          return;
+        }
         if (mounted) {
           setState(() => _isLoaded = true);
         }
       },
       onAdFailedToLoad: (ad, error) {
+        _isLoading = false;
         debugPrint('Banner ad failed to load: $error');
         ad.dispose();
+        // Clear reference so we don't try to use disposed ad
+        if (mounted) {
+          setState(() => _bannerAd = null);
+        } else {
+          _bannerAd = null;
+        }
       },
     );
 
@@ -57,15 +76,31 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
 
   @override
   void dispose() {
+    _isDisposed = true;
     AdService.instance.adsEnabledNotifier.removeListener(_onAdsEnabledChanged);
     _bannerAd?.dispose();
+    _bannerAd = null;
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (kIsWeb || !_isLoaded || _bannerAd == null) {
+    // Don't show anything on web
+    if (kIsWeb) {
       return const SizedBox.shrink();
+    }
+
+    // If ads are disabled (purchased removal), don't reserve space
+    if (!AdService.instance.adsEnabled) {
+      return const SizedBox.shrink();
+    }
+
+    // Standard banner height is 50px - always reserve this space to prevent layout jump
+    const bannerHeight = 50.0;
+
+    if (!_isLoaded || _bannerAd == null) {
+      // Reserve space while loading to prevent layout shift
+      return const SizedBox(height: bannerHeight);
     }
 
     return SizedBox(

@@ -38,9 +38,9 @@ class AdService {
       'ca-app-pub-3930486883953215/8771045412';
   static const _prodAndroidInterstitialAdUnitId =
       'ca-app-pub-3930486883953215/1028480288';
-  static const _prodIosBannerAdUnitId = 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX';
+  static const _prodIosBannerAdUnitId = 'ca-app-pub-3930486883953215/7654589037';
   static const _prodIosInterstitialAdUnitId =
-      'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX';
+      'ca-app-pub-3930486883953215/9191866130';
 
   // State
   InterstitialAd? _interstitialAd;
@@ -117,7 +117,7 @@ class AdService {
   Future<void> recordGameCompleted() async {
     _gamesPlayed++;
     await _prefs?.setInt(_gamesPlayedKey, _gamesPlayed);
-    debugPrint('AdService: Game completed, total=$_gamesPlayed');
+    debugPrint('AdService: Game completed, total=$_gamesPlayed, interstitialReady=$isInterstitialReady');
   }
 
   /// Check if an interstitial ad should be shown based on frequency rules.
@@ -166,6 +166,7 @@ class AdService {
   /// Call this after game completion (e.g., when user clicks "New Game").
   /// Returns true if the ad was shown, false otherwise.
   Future<bool> showInterstitialIfEligible() async {
+    debugPrint('AdService: showInterstitialIfEligible called, games=$_gamesPlayed');
     if (!shouldShowInterstitial()) {
       return false;
     }

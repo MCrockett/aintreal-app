@@ -45,7 +45,7 @@ class AnalyticsService {
 
   /// User joined an existing game.
   Future<void> logGameJoined({required bool asHost}) async {
-    await _logEvent('game_joined', {'as_host': asHost});
+    await _logEvent('game_joined', {'as_host': asHost ? 1 : 0});
   }
 
   /// Game started.
@@ -71,7 +71,7 @@ class AnalyticsService {
     await _logEvent('round_completed', {
       'mode': mode,
       'round': roundNumber,
-      'correct': correct,
+      'correct': correct ? 1 : 0,
       'response_time_ms': responseTimeMs,
     });
   }
