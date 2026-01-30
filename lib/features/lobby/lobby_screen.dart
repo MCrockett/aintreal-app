@@ -6,6 +6,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../config/env.dart';
 import '../../config/theme.dart';
+import '../../core/analytics/analytics_service.dart';
 import '../../core/sharing/share_service.dart';
 import '../../core/websocket/game_state_provider.dart';
 import '../../core/websocket/ws_client.dart';
@@ -126,6 +127,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
       gameCode: widget.gameCode,
       playerName: gameState.playerName,
     );
+    AnalyticsService.instance.logPartyInviteShared();
   }
 
   void _showQrCode() {
@@ -185,12 +187,62 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
     }
 
     setState(() => _isStarting = true);
+
+    // Log game started
+    AnalyticsService.instance.logGameStarted(
+      mode: gameState.config?.mode ?? 'party',
+      playerCount: gameState.players.length,
+      rounds: gameState.config?.rounds ?? 6,
+    );
+
     ref.read(gameStateProvider.notifier).startGame();
   }
 
   void _leaveGame() {
     ref.read(gameStateProvider.notifier).leave();
     context.go('/');
+  }
+
+  void _showHostLeftDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Game Ended'),
+        content: const Text('The host has left the game.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              ref.read(gameStateProvider.notifier).disconnect();
+              this.context.go('/');
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showConnectionLostDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Connection Lost'),
+        content: const Text('The connection to the game was lost.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              ref.read(gameStateProvider.notifier).disconnect();
+              this.context.go('/');
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -202,6 +254,28 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
       if (next.status == GameStatus.playing && next.roundData != null) {
         context.go('/game/${widget.gameCode}');
       }
+
+      // Track when a new player joins the party
+      final previousPlayerCount = previous?.players.length ?? 0;
+      final nextPlayerCount = next.players.length;
+      if (nextPlayerCount > previousPlayerCount && !_isSoloMode) {
+        AnalyticsService.instance.logPlayerJoinedParty(playerCount: nextPlayerCount);
+      }
+
+      // Handle host leaving - navigate non-host players back home
+      if (next.error == 'Host left the game' && !next.isHost) {
+        ref.read(gameStateProvider.notifier).clearError();
+        _showHostLeftDialog();
+        return;
+      }
+
+      // Handle connection lost while in lobby
+      if (previous?.connectionState == WsConnectionState.connected &&
+          next.connectionState == WsConnectionState.disconnected) {
+        _showConnectionLostDialog();
+        return;
+      }
+
       if (next.error != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(next.error!)),
@@ -759,21 +833,11 @@ class _SoloModeLoadingScreen extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Mode icon
-                    Container(
+                    // App logo
+                    Image.asset(
+                      'assets/icons/app_icon.png',
                       width: 100,
                       height: 100,
-                      decoration: BoxDecoration(
-                        gradient: AppTheme.primaryGradient,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        config?.mode == 'marathon'
-                            ? Icons.emoji_events
-                            : Icons.person,
-                        size: 48,
-                        color: Colors.white,
-                      ),
                     ),
                     const SizedBox(height: 32),
 

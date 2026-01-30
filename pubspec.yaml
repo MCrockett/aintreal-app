@@ -1,7 +1,7 @@
 name: aintreal_app
 description: "AIn't Real - Spot the AI image game for iOS and Android"
 publish_to: 'none'
-version: 1.0.0+2
+version: 1.0.0+6
 
 environment:
   sdk: ^3.10.3
@@ -49,9 +49,14 @@ dependencies:
   # Firebase
   firebase_core: ^3.8.1
   firebase_auth: ^5.3.4
+  firebase_analytics: ^11.3.6
+  firebase_crashlytics: ^4.1.6
 
   # Ads
   google_mobile_ads: ^5.2.0
+
+  # In-App Purchases
+  in_app_purchase: ^3.2.0
 
   # Authentication
   google_sign_in: ^6.2.2

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/theme.dart';
+import '../../core/analytics/analytics_service.dart';
 import '../../core/api/api_exceptions.dart';
 import '../../core/api/game_api.dart';
 import '../../core/auth/session_provider.dart';
@@ -149,6 +150,13 @@ class _CreateGameScreenState extends ConsumerState<CreateGameScreen> {
       );
 
       if (!mounted) return;
+
+      // Log game creation
+      AnalyticsService.instance.logGameCreated(
+        mode: widget.mode.name,
+        rounds: effectiveRounds,
+        timeLimit: _timePerRound,
+      );
 
       // Navigate to lobby with game code from API
       context.go('/lobby/${response.code}', extra: {

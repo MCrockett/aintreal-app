@@ -1,8 +1,22 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../analytics/analytics_service.dart';
 import 'firebase_auth_service.dart';
+
+/// Record non-fatal error to Crashlytics (mobile only).
+void _recordAuthError(dynamic error, StackTrace? stack, String reason) {
+  if (!kIsWeb) {
+    FirebaseCrashlytics.instance.recordError(
+      error,
+      stack ?? StackTrace.current,
+      reason: reason,
+      fatal: false,
+    );
+  }
+}
 
 /// Whether auth is available (mobile only, not web)
 const bool _isAuthAvailable = !kIsWeb;
@@ -24,7 +38,7 @@ class AuthStateLoading extends AuthState {
 
 /// User is authenticated.
 class AuthStateAuthenticated extends AuthState {
-  const AuthStateAuthenticated(this.user);
+  AuthStateAuthenticated(this.user);
   final User user;
 
   String get displayName => user.displayName ?? user.email ?? 'Player';
@@ -61,8 +75,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       } else {
         state = const AuthStateUnauthenticated();
       }
-    }, onError: (error) {
-      debugPrint('Auth state error: $error');
+    }, onError: (error, stack) {
+      _recordAuthError(error, stack, 'Auth state stream error');
       state = AuthStateError(error.toString());
     });
   }
@@ -70,19 +84,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
   /// Sign in with Google.
   Future<void> signInWithGoogle() async {
     if (_authService == null) return;
-    debugPrint('AuthNotifier: Starting Google sign-in');
     state = const AuthStateLoading();
     try {
       final credential = await _authService.signInWithGoogle();
-      debugPrint('AuthNotifier: Google sign-in success, user: ${credential.user?.uid}');
       state = AuthStateAuthenticated(credential.user!);
-      debugPrint('AuthNotifier: State set to AuthStateAuthenticated');
+      AnalyticsService.instance.logSignIn('google');
     } on AuthCancelledException {
-      debugPrint('AuthNotifier: Google sign-in cancelled');
       // User cancelled, go back to unauthenticated
       state = const AuthStateUnauthenticated();
-    } catch (e) {
-      debugPrint('Google sign-in error: $e');
+    } catch (e, stack) {
+      _recordAuthError(e, stack, 'Google Sign-In failed');
       state = const AuthStateUnauthenticated();
       rethrow;
     }
@@ -95,11 +106,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final credential = await _authService.signInWithApple();
       state = AuthStateAuthenticated(credential.user!);
+      AnalyticsService.instance.logSignIn('apple');
     } on AuthCancelledException {
       // User cancelled, go back to unauthenticated
       state = const AuthStateUnauthenticated();
-    } catch (e) {
-      debugPrint('Apple sign-in error: $e');
+    } catch (e, stack) {
+      _recordAuthError(e, stack, 'Apple Sign-In failed');
       state = const AuthStateUnauthenticated();
       rethrow;
     }
@@ -112,8 +124,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       await _authService.signOut();
       state = const AuthStateUnauthenticated();
-    } catch (e) {
-      debugPrint('Sign out error: $e');
+      AnalyticsService.instance.logSignOut();
+    } catch (e, stack) {
+      _recordAuthError(e, stack, 'Sign out failed');
       state = AuthStateError('Failed to sign out');
     }
   }
@@ -122,6 +135,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
   void clearError() {
     if (state is AuthStateError) {
       state = const AuthStateUnauthenticated();
+    }
+  }
+
+  /// Refresh the current user's data from Firebase.
+  Future<void> refreshUser() async {
+    if (_authService == null) return;
+    final currentUser = _authService.currentUser;
+    if (currentUser != null) {
+      await currentUser.reload();
+      // Get the refreshed user and emit new state
+      final refreshedUser = _authService.currentUser;
+      if (refreshedUser != null) {
+        state = AuthStateAuthenticated(refreshedUser);
+      }
     }
   }
 
@@ -141,8 +168,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await currentState.user.delete();
 
       state = const AuthStateUnauthenticated();
-    } catch (e) {
-      debugPrint('Delete account error: $e');
+    } catch (e, stack) {
+      _recordAuthError(e, stack, 'Account deletion failed');
       // Restore previous state on error
       state = currentState;
       rethrow;

@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import 'ws_messages.dart';
@@ -77,8 +78,9 @@ class WsClient {
 
       _startPingTimer();
       debugPrint('WS fully connected and listening');
-    } catch (e) {
+    } catch (e, stack) {
       debugPrint('WebSocket connect error: $e');
+      _recordError(e, stack, 'WebSocket connection failed');
       _setConnectionState(WsConnectionState.disconnected);
       onError?.call('Failed to connect: $e');
       _scheduleReconnect();
@@ -101,8 +103,9 @@ class WsClient {
 
     try {
       _channel!.sink.add(message.encode());
-    } catch (e) {
+    } catch (e, stack) {
       debugPrint('WebSocket send error: $e');
+      _recordError(e, stack, 'WebSocket send failed');
       onError?.call('Failed to send message: $e');
     }
   }
@@ -122,6 +125,7 @@ class WsClient {
 
   void _handleError(dynamic error) {
     debugPrint('WebSocket error: $error');
+    _recordError(error, null, 'WebSocket stream error');
     onError?.call('WebSocket error: $error');
   }
 
@@ -141,6 +145,11 @@ class WsClient {
     if (_intentionalDisconnect) return;
     if (_reconnectAttempts >= _maxReconnectAttempts) {
       debugPrint('Max reconnect attempts reached');
+      _recordError(
+        Exception('Max WebSocket reconnect attempts ($_maxReconnectAttempts) reached'),
+        null,
+        'WebSocket reconnection exhausted',
+      );
       onError?.call('Connection lost. Please try again.');
       _setConnectionState(WsConnectionState.disconnected);
       return;
@@ -205,5 +214,17 @@ class WsClient {
   /// Dispose of resources.
   void dispose() {
     disconnect();
+  }
+
+  /// Record non-fatal error to Crashlytics (mobile only).
+  void _recordError(dynamic error, StackTrace? stack, String reason) {
+    if (!kIsWeb) {
+      FirebaseCrashlytics.instance.recordError(
+        error,
+        stack ?? StackTrace.current,
+        reason: reason,
+        fatal: false,
+      );
+    }
   }
 }

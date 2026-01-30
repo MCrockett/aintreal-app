@@ -1,6 +1,7 @@
 import 'package:confetti/confetti.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -9,12 +10,14 @@ import '../../config/env.dart';
 import '../../config/routes.dart';
 import '../../config/theme.dart';
 import '../../core/ads/ad_service.dart';
+import '../../core/analytics/analytics_service.dart';
 import '../../core/audio/sound_service.dart';
 import '../../core/sharing/share_service.dart';
 import '../../core/websocket/game_state_provider.dart';
 import '../profile/widgets/stats_card.dart';
 import '../../core/websocket/ws_messages.dart';
 import '../../models/game.dart' hide GameState, GameStatus;
+import '../../widgets/banner_ad_widget.dart';
 import '../../widgets/cross_platform_image.dart';
 import '../../widgets/gradient_background.dart';
 
@@ -44,6 +47,44 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
     Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) _confettiController.play();
     });
+
+    // Record game completion for ad frequency tracking (mobile only)
+    if (!kIsWeb) {
+      debugPrint('ResultsScreen: Recording game completion (not web)');
+      AdService.instance.recordGameCompleted();
+    } else {
+      debugPrint('ResultsScreen: Skipping ad tracking (is web)');
+    }
+
+    // Log analytics after frame so we have access to ref
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _logGameCompletion();
+    });
+  }
+
+  void _logGameCompletion() {
+    final gameState = ref.read(gameStateProvider);
+    final gameOverData = gameState.gameOverData;
+    final config = gameState.config;
+    final playerId = gameState.playerId;
+
+    if (gameOverData == null || config == null) return;
+
+    final myRanking = gameOverData.rankings.cast<FinalRanking?>().firstWhere(
+          (r) => r?.playerId == playerId,
+          orElse: () => null,
+        );
+
+    if (myRanking != null) {
+      AnalyticsService.instance.logGameCompleted(
+        mode: config.mode,
+        score: myRanking.score,
+        correctCount: myRanking.correctAnswers,
+        totalRounds: gameOverData.totalRounds,
+        rank: myRanking.rank,
+        playerCount: gameOverData.rankings.length,
+      );
+    }
   }
 
   void _playGameEndSound(bool isWinner) {
@@ -81,7 +122,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
     };
   }
 
-  void _playAgain() {
+  Future<void> _playAgain() async {
     final gameState = ref.read(gameStateProvider);
     final config = gameState.config;
 
@@ -95,23 +136,30 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
       final speedBonus = config.speedBonus;
       final randomBonuses = config.randomBonuses;
 
+      // Show interstitial ad if eligible based on frequency rules (mobile only)
+      if (!kIsWeb) {
+        await AdService.instance.showInterstitialIfEligible();
+      }
+
       // Disconnect and clear state
       ref.read(gameStateProvider.notifier).leave();
       // Refresh stats so profile screen shows updated data
       ref.invalidate(userStatsProvider);
 
       // Use go() to replace navigation stack (not push which keeps old screens)
-      context.go(
-        AppRoutes.createGame,
-        extra: {
-          'mode': mode,
-          'playerName': playerName,
-          'rounds': rounds,
-          'timePerRound': timePerRound,
-          'speedBonus': speedBonus,
-          'randomBonuses': randomBonuses,
-        },
-      );
+      if (mounted) {
+        context.go(
+          AppRoutes.createGame,
+          extra: {
+            'mode': mode,
+            'playerName': playerName,
+            'rounds': rounds,
+            'timePerRound': timePerRound,
+            'speedBonus': speedBonus,
+            'randomBonuses': randomBonuses,
+          },
+        );
+      }
     } else {
       // For party mode, request play again through server
       ref.read(gameStateProvider.notifier).playAgain();
@@ -119,9 +167,9 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
   }
 
   Future<void> _newGame() async {
-    // Show interstitial ad before leaving (mobile only)
+    // Show interstitial ad if eligible based on frequency rules (mobile only)
     if (!kIsWeb) {
-      await AdService.instance.showInterstitialAd();
+      await AdService.instance.showInterstitialIfEligible();
     }
     ref.read(gameStateProvider.notifier).leave();
     // Refresh stats so profile screen shows updated data
@@ -130,9 +178,9 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
   }
 
   Future<void> _leaveGame() async {
-    // Show interstitial ad before leaving (mobile only)
+    // Show interstitial ad if eligible based on frequency rules (mobile only)
     if (!kIsWeb) {
-      await AdService.instance.showInterstitialAd();
+      await AdService.instance.showInterstitialIfEligible();
     }
     ref.read(gameStateProvider.notifier).leave();
     // Refresh stats so profile screen shows updated data
@@ -432,6 +480,10 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                           ],
                         ),
                       ),
+
+                      // Banner ad at bottom
+                      const BannerAdWidget(),
+                      const SizedBox(height: 8),
                     ],
                   ),
                 ),

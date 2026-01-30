@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Feature Graphic</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      width: 1024px;
+      height: 500px;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 60px;
+      padding: 40px;
+      font-family: 'Inter', sans-serif;
+    }
+    .logo-container {
+      flex-shrink: 0;
+    }
+    .logo {
+      width: 280px;
+      height: 280px;
+      border-radius: 56px;
+      object-fit: cover;
+    }
+    .text-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .title {
+      font-size: 72px;
+      font-weight: 700;
+      color: white;
+      display: flex;
+      align-items: baseline;
+      gap: 0;
+    }
+    .title .ai {
+      font-family: 'JetBrains Mono', monospace;
+      background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .title .rest {
+      color: #ffffff;
+    }
+    .tagline {
+      font-size: 32px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.7);
+      letter-spacing: 2px;
+    }
+    .tagline .highlight {
+      font-family: 'JetBrains Mono', monospace;
+      color: #e94560;
+    }
+  </style>
+</head>
+<body>
+  <div class="logo-container">
+    <img class="logo" src="../assets/icons/app_icon.png" alt="Logo">
+  </div>
+  <div class="text-container">
+    <div class="title">
+      <span class="ai">AI</span><span class="rest">n't Real</span>
+    </div>
+    <div class="tagline">Can you spot the <span class="highlight">fake</span>?</div>
+  </div>
+</body>
+</html>

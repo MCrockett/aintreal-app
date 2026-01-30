@@ -8,7 +8,7 @@ Spot the AI! Race to identify which image is AI-generated in this party game.
 
 ## Full Description
 
-Can you spot the fake? In AIn't Real, you'll see two images side-by-side — one is a real photograph, the other is AI-generated. Your mission: figure out which one AIn't Real!
+Can you spot the fake? In AIn't Real, you'll see two images side-by-side. One is a real photograph, the other is AI-generated. Your mission: figure out which one AIn't Real!
 
 🎮 THREE GAME MODES
 
@@ -20,7 +20,7 @@ Can you spot the fake? In AIn't Real, you'll see two images side-by-side — one
 
 ⚡ FAST-PACED FUN
 
-Each round gives you just seconds to decide. Trust your instincts — is that sunset a bit too perfect? Does that smile look slightly off? The clock is ticking!
+Each round gives you just seconds to decide. Trust your instincts. Is that sunset a bit too perfect? Does that smile look slightly off? The clock is ticking!
 
 🏆 COMPETE & CLIMB
 
@@ -41,7 +41,7 @@ Our image pairs feature genuine stock photos alongside AI-generated recreations.
 • Sound effects and haptic feedback
 • Works offline for solo play
 
-Whether you're testing your eye for detail, hosting a party game night, or just curious about AI image generation — AIn't Real is your new favorite challenge.
+Whether you're testing your eye for detail, hosting a party game night, or just curious about AI image generation, AIn't Real is your new favorite challenge.
 
 Download now and prove you can spot the fake!
 

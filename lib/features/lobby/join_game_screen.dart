@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/theme.dart';
+import '../../core/analytics/analytics_service.dart';
 import '../../core/api/api_exceptions.dart';
 import '../../core/api/game_api.dart';
 import '../../core/auth/session_provider.dart';
@@ -90,6 +91,9 @@ class _JoinGameScreenState extends ConsumerState<JoinGameScreen> {
       );
 
       if (!mounted) return;
+
+      // Log game join
+      AnalyticsService.instance.logGameJoined(asHost: false);
 
       // Navigate to lobby with data from API
       context.go('/lobby/$code', extra: {
