@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -54,9 +54,10 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       await ref.read(authProvider.notifier).signInWithApple();
       // Router redirect will handle navigation
     } catch (e) {
+      debugPrint('Apple Sign-In error: $e');
       if (mounted) {
         setState(() {
-          _error = 'Failed to sign in with Apple';
+          _error = 'Apple Sign-In failed: $e';
         });
       }
     } finally {

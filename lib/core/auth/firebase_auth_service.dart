@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
@@ -60,6 +61,7 @@ class FirebaseAuthService {
     final nonce = _sha256ofString(rawNonce);
 
     // Request Apple ID credential
+    debugPrint('Apple Sign-In: requesting credential...');
     final appleCredential = await SignInWithApple.getAppleIDCredential(
       scopes: [
         AppleIDAuthorizationScopes.email,
@@ -68,14 +70,24 @@ class FirebaseAuthService {
       nonce: nonce,
     );
 
+    debugPrint('Apple Sign-In: got credential, identityToken=${appleCredential.identityToken != null ? 'present' : 'NULL'}');
+    debugPrint('Apple Sign-In: authorizationCode=${appleCredential.authorizationCode.isNotEmpty ? 'present' : 'empty'}');
+
+    if (appleCredential.identityToken == null) {
+      throw Exception('Apple Sign-In returned null identity token');
+    }
+
     // Create an OAuth credential from the Apple credential
     final oauthCredential = OAuthProvider('apple.com').credential(
       idToken: appleCredential.identityToken,
+      accessToken: appleCredential.authorizationCode,
       rawNonce: rawNonce,
     );
 
     // Sign in to Firebase with the Apple credential
+    debugPrint('Apple Sign-In: signing in to Firebase...');
     final userCredential = await _auth.signInWithCredential(oauthCredential);
+    debugPrint('Apple Sign-In: Firebase sign-in successful');
 
     // Apple only provides name on first sign-in, so update profile if available
     if (appleCredential.givenName != null || appleCredential.familyName != null) {
