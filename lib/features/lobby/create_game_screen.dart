@@ -80,12 +80,14 @@ class _CreateGameScreenState extends ConsumerState<CreateGameScreen> {
     super.initState();
 
     // Get name from session (guest or authenticated)
+    // playerNameProvider adds ~ prefix when test mode is enabled
     final session = ref.read(sessionProvider);
+    final playerName = ref.read(playerNameProvider);
     if (session is SessionGuest) {
-      _nameController.text = session.guestName;
+      _nameController.text = playerName ?? session.guestName;
       _isGuest = true;
     } else if (session is SessionAuthenticated) {
-      _nameController.text = session.displayName;
+      _nameController.text = playerName ?? session.displayName;
     }
 
     // Override with initial values if provided (e.g., from Play Again)

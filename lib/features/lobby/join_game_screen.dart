@@ -36,12 +36,14 @@ class _JoinGameScreenState extends ConsumerState<JoinGameScreen> {
   void initState() {
     super.initState();
     // Get name from session
+    // playerNameProvider adds ~ prefix when test mode is enabled
     final session = ref.read(sessionProvider);
+    final playerName = ref.read(playerNameProvider);
     if (session is SessionGuest) {
-      _nameController.text = session.guestName;
+      _nameController.text = playerName ?? session.guestName;
       _isGuest = true;
     } else if (session is SessionAuthenticated) {
-      _nameController.text = session.displayName;
+      _nameController.text = playerName ?? session.displayName;
     }
 
     // Pre-fill code from deep link or notification

@@ -33,6 +33,29 @@ class SessionAuthenticated extends SessionState {
 }
 
 const _guestNameKey = 'guest_name';
+const _testModeKey = 'test_mode';
+
+/// Test mode provider - when enabled, player name is prefixed with ~ to exclude from stats.
+class TestModeNotifier extends StateNotifier<bool> {
+  TestModeNotifier() : super(false) {
+    _load();
+  }
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    state = prefs.getBool(_testModeKey) ?? false;
+  }
+
+  Future<void> toggle() async {
+    final prefs = await SharedPreferences.getInstance();
+    state = !state;
+    await prefs.setBool(_testModeKey, state);
+  }
+}
+
+final testModeProvider = StateNotifierProvider<TestModeNotifier, bool>((ref) {
+  return TestModeNotifier();
+});
 
 /// Notifier for managing session state.
 class SessionNotifier extends StateNotifier<SessionState> {
@@ -150,9 +173,13 @@ final hasSessionProvider = Provider<bool>((ref) {
 });
 
 /// Convenience provider for getting the current player name.
+/// Prepends ~ when test mode is enabled.
 final playerNameProvider = Provider<String?>((ref) {
   final session = ref.watch(sessionProvider);
-  if (session is SessionGuest) return session.guestName;
-  if (session is SessionAuthenticated) return session.displayName;
-  return null;
+  final testMode = ref.watch(testModeProvider);
+  String? name;
+  if (session is SessionGuest) name = session.guestName;
+  if (session is SessionAuthenticated) name = session.displayName;
+  if (name != null && testMode) return '~$name';
+  return name;
 });

@@ -14,12 +14,35 @@ import '../../widgets/how_to_play_dialog.dart';
 import '../../widgets/logo.dart';
 
 /// Home screen with game mode selection.
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  int _tapCount = 0;
+
+  void _handleSubtitleTap() {
+    _tapCount++;
+    if (_tapCount >= 5) {
+      _tapCount = 0;
+      final wasOn = ref.read(testModeProvider);
+      ref.read(testModeProvider.notifier).toggle();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(wasOn ? 'Test mode OFF' : 'Test mode ON'),
+          duration: const Duration(seconds: 1),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final session = ref.watch(sessionProvider);
+    final testMode = ref.watch(testModeProvider);
     return GradientBackground(
       child: SafeArea(
         child: Padding(
@@ -30,11 +53,14 @@ class HomeScreen extends ConsumerWidget {
               const Spacer(flex: 2),
               const Logo(),
               const SizedBox(height: 8),
-              Text(
-                'Spot the AI',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: AppTheme.textSecondary,
-                    ),
+              GestureDetector(
+                onTap: _handleSubtitleTap,
+                child: Text(
+                  testMode ? 'Test Mode' : 'Spot the AI',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: testMode ? Colors.orange : AppTheme.textSecondary,
+                      ),
+                ),
               ),
               const Spacer(flex: 2),
 
