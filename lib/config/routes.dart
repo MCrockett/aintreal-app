@@ -54,12 +54,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       final hasSession = sessionState is SessionGuest || sessionState is SessionAuthenticated;
       final isOnSignIn = state.matchedLocation == AppRoutes.signIn;
       final isJoinRoute = state.matchedLocation.startsWith('/join');
+      final isGameRoute = state.matchedLocation.startsWith('/lobby') ||
+          state.matchedLocation.startsWith('/game') ||
+          state.matchedLocation.startsWith('/reveal') ||
+          state.matchedLocation.startsWith('/results');
 
       // Still loading - stay where we are
       if (isLoading) return null;
 
-      // Allow join routes without session (will prompt for name on join page)
-      if (isJoinRoute) return null;
+      // Allow join and active game routes without session — web guests
+      // enter through /join/:code and proceed through lobby/game/reveal/results
+      // without needing to sign in first.
+      if (isJoinRoute || isGameRoute) return null;
 
       // No session and not on sign-in -> redirect to sign-in
       if (!hasSession && !isOnSignIn) {
