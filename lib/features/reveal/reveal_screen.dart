@@ -11,7 +11,9 @@ import '../../config/theme.dart';
 import '../../core/analytics/analytics_service.dart';
 import '../../core/audio/sound_service.dart';
 import '../../core/websocket/game_state_provider.dart';
+import '../../core/websocket/ws_client.dart';
 import '../../core/websocket/ws_messages.dart';
+import '../../widgets/connection_overlay.dart';
 import '../../widgets/cross_platform_image.dart';
 import '../../widgets/gradient_background.dart';
 
@@ -228,6 +230,34 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
     _roundAnalyticsLogged = false;
   }
 
+  void _pauseCountdownForReconnect() {
+    _countdownTimer?.cancel();
+  }
+
+  void _resumeCountdownAfterReconnect() {
+    if (_canAdvance && _countdownSeconds > 0 && !_wantsToAdvance) {
+      _countdownTimer?.cancel();
+      _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (!mounted) {
+          timer.cancel();
+          return;
+        }
+        setState(() {
+          _countdownSeconds--;
+          if (_countdownSeconds <= 0) {
+            timer.cancel();
+            _advanceToNext();
+          }
+        });
+      });
+    }
+  }
+
+  void _returnHome() {
+    ref.read(gameStateProvider.notifier).disconnect();
+    context.go('/');
+  }
+
   @override
   void dispose() {
     _countdownTimer?.cancel();
@@ -256,6 +286,16 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
     ref.listen<GameState>(gameStateProvider, (previous, next) {
       debugPrint(
           'RevealScreen state change: status=${next.status}, revealRound=${next.revealData?.round}, currentRound=$_currentRevealRound, wantsToAdvance=$_wantsToAdvance');
+
+      // Handle connection state changes - pause/resume countdown
+      if (next.connectionState == WsConnectionState.reconnecting &&
+          previous?.connectionState != WsConnectionState.reconnecting) {
+        _pauseCountdownForReconnect();
+      }
+      if (next.connectionState == WsConnectionState.connected &&
+          previous?.connectionState == WsConnectionState.reconnecting) {
+        _resumeCountdownAfterReconnect();
+      }
 
       // If user wants to advance (countdown ended or button tapped), try to navigate
       // This handles the case where user taps Next but server hasn't sent next round status yet
@@ -345,7 +385,9 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
       canPop: false,
       child: GradientBackground(
         child: SafeArea(
-          child: Column(
+          child: Stack(
+            children: [
+              Column(
             children: [
               // Header
               Padding(
@@ -545,6 +587,13 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
               const SizedBox(height: 80), // Reserve space for button
           ],
         ),
+              // Connection loss overlay (topmost layer)
+              ConnectionLostOverlay(
+                connectionState: gameState.connectionState,
+                onReturnHome: _returnHome,
+              ),
+            ],
+          ),
         ),
       ),
     );

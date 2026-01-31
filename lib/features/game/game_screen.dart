@@ -9,6 +9,8 @@ import '../../config/env.dart';
 import '../../config/theme.dart';
 import '../../core/audio/sound_service.dart';
 import '../../core/websocket/game_state_provider.dart';
+import '../../core/websocket/ws_client.dart';
+import '../../widgets/connection_overlay.dart';
 import '../../widgets/cross_platform_image.dart';
 import '../../widgets/gradient_background.dart';
 
@@ -68,6 +70,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
   bool _showGetReady = true;
   int _getReadyCount = 3;
   Timer? _getReadyTimer;
+
+  // Connection loss tracking
+  bool _timerPausedForReconnect = false;
 
   @override
   void initState() {
@@ -184,6 +189,64 @@ class _GameScreenState extends ConsumerState<GameScreen>
     _timerController?.stop();
   }
 
+  void _pauseTimerForReconnect() {
+    if (_timerPausedForReconnect) return;
+    _timerPausedForReconnect = true;
+    _roundTimer?.cancel();
+    _timerController?.stop();
+    _getReadyTimer?.cancel();
+  }
+
+  void _resumeTimerAfterReconnect() {
+    if (!_timerPausedForReconnect) return;
+    _timerPausedForReconnect = false;
+
+    // Resume Get Ready countdown if it was active
+    if (_showGetReady) {
+      _getReadyTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (_getReadyCount > 1) {
+          setState(() => _getReadyCount--);
+          SoundService.instance.playTick();
+        } else {
+          timer.cancel();
+          setState(() => _showGetReady = false);
+          SoundService.instance.playRoundStart();
+          _startRoundTimer();
+        }
+      });
+      return;
+    }
+
+    // Resume round timer if there's time remaining
+    if (_remainingSeconds > 0) {
+      final config = ref.read(gameStateProvider).config;
+      final totalSeconds = config?.timePerRound ?? 5;
+      final elapsed = totalSeconds - _remainingSeconds;
+      _timerController?.value = elapsed / totalSeconds;
+      _timerController?.forward();
+
+      _roundTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (_remainingSeconds > 0) {
+          setState(() => _remainingSeconds--);
+          if (_remainingSeconds <= 3 && _remainingSeconds > 0) {
+            SoundService.instance.playTick();
+          }
+          if (_remainingSeconds == 0) {
+            SoundService.instance.playTimeUp();
+            _onTimeExpired();
+          }
+        } else {
+          timer.cancel();
+        }
+      });
+    }
+  }
+
+  void _returnHome() {
+    ref.read(gameStateProvider.notifier).disconnect();
+    context.go('/');
+  }
+
   void _onImageTap(String choice) {
     // Block clicks during Get Ready countdown
     if (_showGetReady) return;
@@ -233,6 +296,16 @@ class _GameScreenState extends ConsumerState<GameScreen>
     // Listen for state changes
     ref.listen<GameState>(gameStateProvider, (previous, next) {
       debugPrint('GameScreen state change: status=${next.status}, round=${next.roundData?.round}, prevRound=${previous?.roundData?.round}');
+
+      // Handle connection state changes - pause/resume timer
+      if (next.connectionState == WsConnectionState.reconnecting &&
+          previous?.connectionState != WsConnectionState.reconnecting) {
+        _pauseTimerForReconnect();
+      }
+      if (next.connectionState == WsConnectionState.connected &&
+          previous?.connectionState == WsConnectionState.reconnecting) {
+        _resumeTimerAfterReconnect();
+      }
 
       // New round started
       if (next.roundData != null &&
@@ -479,6 +552,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
                         ),
                       ),
                     ),
+
+                  // Connection loss overlay (topmost layer)
+                  ConnectionLostOverlay(
+                    connectionState: gameState.connectionState,
+                    onReturnHome: _returnHome,
+                  ),
 
                 ],
               ),

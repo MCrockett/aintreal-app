@@ -81,9 +81,17 @@ class WsClient {
     } catch (e, stack) {
       debugPrint('WebSocket connect error: $e');
       _recordError(e, stack, 'WebSocket connection failed');
-      _setConnectionState(WsConnectionState.disconnected);
-      onError?.call('Failed to connect: $e');
-      _scheduleReconnect();
+
+      // If we're reconnecting, stay in reconnecting state and keep trying
+      // rather than transitioning to disconnected on each failed attempt.
+      if (_reconnectAttempts > 0) {
+        _setConnectionState(WsConnectionState.reconnecting);
+        _scheduleReconnect();
+      } else {
+        _setConnectionState(WsConnectionState.disconnected);
+        onError?.call('Failed to connect: $e');
+        _scheduleReconnect();
+      }
     }
   }
 

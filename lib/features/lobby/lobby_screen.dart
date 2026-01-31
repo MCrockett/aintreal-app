@@ -269,9 +269,13 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
         return;
       }
 
-      // Handle connection lost while in lobby
-      if (previous?.connectionState == WsConnectionState.connected &&
-          next.connectionState == WsConnectionState.disconnected) {
+      // Handle connection lost while in lobby. Only show the fatal dialog
+      // when state transitions to disconnected (reconnection gave up or
+      // intentional). While reconnecting, the header shows "Reconnecting..."
+      // so no dialog is needed.
+      if (next.connectionState == WsConnectionState.disconnected &&
+          previous?.connectionState != null &&
+          previous?.connectionState != WsConnectionState.disconnected) {
         _showConnectionLostDialog();
         return;
       }
