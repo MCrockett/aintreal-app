@@ -1,111 +1,62 @@
 # AIn't Real App - TODO
 
-**Last Updated:** January 19, 2026
+**Last Updated:** January 30, 2026
 
 ## Current Status
 
 - **Platform:** Flutter 3.38.4 (stable)
 - **Package:** `com.aintreal.app`
-- **Phase:** M1-M5 Complete, M6 Google Play Launch Prep
-- **Next:** Production AdMob setup + content generation + Google Play submission
+- **Version:** 1.0.0+8
+- **Google Play:** PUBLISHED - https://play.google.com/store/apps/details?id=com.aintreal.app
+- **iOS App Store:** In Review
+- **Next:** Social media campaign, iOS approval, content expansion
 
-See [DONE.md](DONE.md) for completed milestones (M1-M5) and [CLAUDE.md](CLAUDE.md) for development workflow.
+See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.md) for development workflow.
 
 ---
 
-## Phase 1: Google Play Launch (PRIORITY 1) 🚀
+## v8 Pre-Launch Fixes
 
-### Pre-Launch: Content Generation
-**Goal:** Reach 250 base image pairs before launch (currently 169)
+### Completed
+- [x] Connection loss resilience: WsClient stays in reconnecting state during retries
+- [x] Connection loss resilience: Lobby only shows fatal dialog on disconnected (not reconnecting)
+- [x] Connection loss resilience: ConnectionLostOverlay widget for game + reveal screens
+- [x] Account deletion: Delete user_pair_results on account delete (App Store compliance)
+- [x] iOS ATT: Added NSUserTrackingUsageDescription to Info.plist
+- [x] iOS SKAdNetwork: Expanded from 1 to 19 network identifiers for AdMob
 
-- [ ] Generate 80+ new base image pairs (~2.5-3 hours total)
-  - Target: 250-270 total base pairs
-  - Mix of quality AI + some funny failures (AI imperfection is part of the charm)
+### Deferred (post-launch)
+- [ ] Firebase token signature verification (currently validates claims only)
+- [ ] Rotate/harden Turnstile mobile bypass secret
+- [ ] Server-side config validation (rounds/timePerRound bounds)
+- [ ] Timeout UX normalization (choice='timeout' vs null)
+- [ ] Host disconnect: promote another player mid-game
+- [ ] Leaderboard integrity (authenticated user IDs)
 
-### Pre-Launch: Production AdMob Setup
-**Goal:** Replace test ad unit IDs with production IDs
+---
 
-- [ ] Create production AdMob account (if not exists)
-- [ ] Link AdMob to Firebase project "aintreal"
-- [ ] Register Android app (com.aintreal) in AdMob
-- [ ] Register iOS app (com.aintreal) in AdMob (for future)
-- [ ] Generate production ad unit IDs:
-  - Banner ad (home screen)
-  - Interstitial ad (post-game)
-  - Rewarded ad (future use)
-- [ ] Replace test ad unit IDs in code:
-  - Update `lib/core/ads/ad_service.dart`
-  - Update Android manifest
-  - Update iOS Info.plist (when ready)
-- [ ] Document production ad unit IDs in project docs
+## Immediate: Post-Launch
 
-### Pre-Launch: Ad Placement Implementation
-**Goal:** Implement smart interstitial frequency
+### iOS App Store
+- [ ] Await App Store review approval
+- [ ] Update website (index.html, download.html) with App Store link
+- [ ] Test iOS build from App Store on real device
 
-- [x] Implement interstitial trigger logic:
-  - No interstitials for first 5 games (let users get hooked)
-  - Show after 5th game completion
-  - Then show every 3rd game after that
-  - Frequency cap: Max 1 per 5 minutes
-  - Skip if user has purchased ad removal
-- [x] Add interstitial call after game results screen
-- [ ] Test ad flow doesn't break game experience
-- [x] Ensure proper loading states (game continues if ad fails)
-- [ ] Test frequency capping works correctly
+### Social Media Campaign
+- [ ] Create TikTok/Reels gameplay clips ("Can you spot the AI?")
+- [ ] Post to Reddit (r/gaming, r/artificial, r/AndroidGaming, r/iosgaming)
+- [ ] Set up UTM tracking for install attribution
+- [ ] Monitor reviews and respond to feedback
 
-### Pre-Launch: IAP - Ad Removal
-**Goal:** Launch with one IAP product (Ad Removal $2.99)
+### Content Expansion
+- [ ] Generate more base image pairs (currently 169)
+- [ ] Target 250+ total base pairs
 
-- [x] Add `in_app_purchase` Flutter package to pubspec.yaml
-- [ ] Configure Google Play Console product:
-  - Product ID: `com.aintreal.remove_ads`
-  - Type: Non-consumable (one-time purchase)
-  - Price: $2.99 USD
-- [x] Create purchase flow UI:
-  - "Remove Ads" button in settings
-  - Clear benefit messaging ("Play ad-free forever!")
-  - Handle purchase states (pending, success, error, already owned)
-- [x] Implement entitlement check:
-  - Store purchase state locally (shared_preferences)
-  - Verify with Play Billing Library
-  - Skip all ad loading when entitlement active
-  - ~~Sync entitlement via Firebase~~ (deferred - local storage sufficient for launch)
-- [x] Implement "Restore Purchases" functionality
-- [ ] Test with Google Play test accounts (sandbox environment)
-
-### Pre-Launch: Limit Web Version
-**Goal:** Make web a demo/guest-only experience to drive app downloads
-
+### Web Limiting (Drive App Downloads)
 - [ ] Remove Solo Mode from web (redirect to download page)
 - [ ] Remove Marathon Mode from web (redirect to download page)
 - [ ] Remove Party Hosting from web (show "Download app to host" message)
-- [ ] Keep Try Mode functional (basic demo with limited images)
-- [ ] Keep Party Guest joining functional (join via link, no account needed)
-- [ ] Add prominent download CTAs on all web pages
-- [ ] Update homepage messaging: "Try the game on web, play for real in the app"
-- [ ] Test party guest flow: app user hosts → web user joins as guest
-- [ ] Add post-game CTA for web guests: "Host your own party - Download app"
-
-### Pre-Launch: Google Play Store Submission
-**Goal:** Submit to Play Store within 1-2 weeks
-
-- [ ] Update privacy policy to include AdMob data collection disclosures
-- [ ] Publish privacy policy at aint-real.com/privacy (or host on GitHub Pages)
-- [ ] Complete Data Safety form in Play Console:
-  - Declare AdMob SDK (advertising data collection)
-  - Declare Firebase Analytics (usage/diagnostics)
-  - Declare Firebase Auth (account data)
-- [ ] Complete age rating questionnaire (likely E for Everyone or E10+)
-- [ ] Review and finalize store screenshots (already in store/ folder)
-- [ ] Review store listing copy (description, short description, title)
-- [ ] Finalize reviewer instructions (store/REVIEWER_INSTRUCTIONS.md)
-- [ ] Ensure app signing key secured and documented
-- [ ] Build signed APK/AAB with production ad unit IDs:
-  - `flutter build appbundle --release`
-- [ ] Submit to Internal Testing track first
-- [ ] Install and test from Play Store on real Android device
-- [ ] Validate ads show correctly and IAP purchase works
-- [ ] Promote to Production track when validated
+- [ ] Keep Try Mode and Party Guest joining functional
 
 ---
 

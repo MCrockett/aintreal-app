@@ -10,6 +10,13 @@ This document archives all completed work for the aintreal-app project.
 |-------|-------------|--------|
 | Setup | Project creation, repo setup | Completed |
 | Design | Architecture decisions, tech stack | Completed |
+| M1 | Core game loop (Party, Classic, Marathon) | Completed Dec 2025 |
+| M2 | Polish (reveal, sounds, confetti) | Completed Dec 2025 |
+| M3 | Authentication (Firebase, Google Sign-In) | Completed Dec 2025 |
+| M4 | Mobile features (haptics, deep links, sharing) | Completed Dec 2025 |
+| M5 | Monetization (AdMob, IAP) | Completed Dec 2025 |
+| M6 | Google Play Release | Completed Jan 2026 |
+| M6b | iOS App Store Submission | Submitted Jan 2026 |
 
 ---
 
@@ -326,6 +333,43 @@ Push notifications removed from scope. Deep linking works via URL schemes instea
 
 ---
 
+## M6: Google Play Release - January 2026
+
+**Status:** PUBLISHED - https://play.google.com/store/apps/details?id=com.aintreal.app
+
+### Completed
+- [x] Production AdMob setup (banner + interstitial, Android + iOS ad unit IDs)
+- [x] Interstitial frequency logic (5 game grace period, every 3rd after, 5-min cap)
+- [x] Interstitial retry on load failure (60s delay + load on each game complete)
+- [x] In-app purchase for ad removal ($2.99) - works for both signed-in and guest users
+- [x] Privacy policy, Data Safety form, age rating
+- [x] Store listing, screenshots, reviewer instructions
+- [x] Signed AAB, internal testing, production promotion
+- [x] Android 15 edge-to-edge fix (removed deprecated windowFullscreen styles)
+- [x] Google Play published and live
+
+### iOS App Store Submission
+- [x] Apple Developer account setup
+- [x] Sign in with Apple implemented
+- [x] iOS AdMob ad unit IDs configured
+- [x] iOS IAP product configured
+- [x] Submitted to App Store review
+
+### Bug Fixes (January 2026)
+- [x] Marathon personal best display on results screen (replaces redundant "Best Streak")
+- [x] Interstitial ad not showing after 5+ games (added retry + load on game complete)
+- [x] Edge-to-edge warnings fixed (all 4 styles.xml variants)
+
+### v8 Pre-Launch Fixes (January 2026)
+- [x] Connection loss resilience: WsClient stays in reconnecting state during retry attempts
+- [x] Connection loss resilience: Lobby only shows fatal dialog on transition to disconnected
+- [x] Connection loss resilience: New ConnectionLostOverlay widget for game + reveal screens
+- [x] Account deletion completeness: Delete user_pair_results on account delete (compliance)
+- [x] iOS ATT: Added NSUserTrackingUsageDescription to Info.plist for AdMob
+- [x] iOS SKAdNetwork: Expanded from 1 to 19 network identifiers for better ad fill
+
+---
+
 ## Milestone Summary
 
 | Milestone | Status | Date |
@@ -335,10 +379,11 @@ Push notifications removed from scope. Deep linking works via URL schemes instea
 | M3: Authentication | Complete | Dec 2025 |
 | M4: Mobile Features | Complete | Dec 2025 |
 | M5: Monetization | Complete | Dec 2025 |
-| M6: Release | In Progress | - |
+| M6: Google Play Release | Complete | Jan 2026 |
+| M6b: iOS Submission | In Review | Jan 2026 |
 
 ---
 
 ## Document Last Updated
 
-January 6, 2026
+January 30, 2026
