@@ -258,6 +258,32 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
     context.go('/');
   }
 
+  void _confirmLeaveGame() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Leave Game?'),
+        content: const Text('You will lose your progress in this game.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Stay'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _returnHome();
+            },
+            child: Text(
+              'Leave',
+              style: TextStyle(color: AppTheme.wrongAnswer),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _countdownTimer?.cancel();
@@ -383,6 +409,9 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
 
     return PopScope(
       canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _confirmLeaveGame();
+      },
       child: GradientBackground(
         child: SafeArea(
           child: Stack(

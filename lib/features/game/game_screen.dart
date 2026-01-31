@@ -247,6 +247,32 @@ class _GameScreenState extends ConsumerState<GameScreen>
     context.go('/');
   }
 
+  void _confirmLeaveGame() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Leave Game?'),
+        content: const Text('You will lose your progress in this game.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Stay'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _returnHome();
+            },
+            child: Text(
+              'Leave',
+              style: TextStyle(color: AppTheme.wrongAnswer),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _onImageTap(String choice) {
     // Block clicks during Get Ready countdown
     if (_showGetReady) return;
@@ -339,18 +365,31 @@ class _GameScreenState extends ConsumerState<GameScreen>
     if (roundData == null) {
       return GradientBackground(
         child: SafeArea(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: 16),
-                Text(
-                  'Loading round...',
-                  style: Theme.of(context).textTheme.bodyLarge,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 8, 16, 0),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: _confirmLeaveGame,
+                  ),
                 ),
-              ],
-            ),
+              ),
+              const Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Loading round...'),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       );
@@ -365,6 +404,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
     return PopScope(
       canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _confirmLeaveGame();
+      },
       child: GradientBackground(
         child: SafeArea(
           child: Column(
@@ -378,6 +420,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
               timerProgress: _timerController?.value ?? 0,
               answeredCount: roundData.answeredCount,
               totalPlayers: roundData.totalPlayers,
+              onLeave: _confirmLeaveGame,
             ),
 
             // Main game area
@@ -580,6 +623,7 @@ class _GameHeader extends StatelessWidget {
     required this.timerProgress,
     required this.answeredCount,
     required this.totalPlayers,
+    this.onLeave,
   });
 
   final int currentRound;
@@ -589,6 +633,7 @@ class _GameHeader extends StatelessWidget {
   final double timerProgress;
   final int answeredCount;
   final int totalPlayers;
+  final VoidCallback? onLeave;
 
   @override
   Widget build(BuildContext context) {
@@ -600,6 +645,18 @@ class _GameHeader extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              // Leave button
+              if (onLeave != null)
+                SizedBox(
+                  width: 32,
+                  height: 32,
+                  child: IconButton(
+                    icon: const Icon(Icons.close, size: 18),
+                    padding: EdgeInsets.zero,
+                    onPressed: onLeave,
+                    color: AppTheme.textMuted,
+                  ),
+                ),
               // Round counter
               Container(
                 padding:
