@@ -547,7 +547,7 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
                     ),
                     child: Center(
                       child: Text(
-                        'Next round in $_countdownSeconds...',
+                        '$_countdownSeconds',
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
