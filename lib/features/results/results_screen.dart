@@ -343,6 +343,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                             ? _SoloResultBanner(
                                 ranking: rankings.first,
                                 totalRounds: totalRounds,
+                                isMarathon: isMarathon,
                                 isMarathonPerfect: isMarathon &&
                                     rankings.first.correctAnswers >= totalRounds,
                               )
@@ -588,11 +589,13 @@ class _SoloResultBanner extends StatelessWidget {
   const _SoloResultBanner({
     required this.ranking,
     required this.totalRounds,
+    this.isMarathon = false,
     this.isMarathonPerfect = false,
   });
 
   final FinalRanking ranking;
   final int totalRounds;
+  final bool isMarathon;
   final bool isMarathonPerfect;
 
   @override
@@ -701,8 +704,8 @@ class _SoloResultBanner extends StatelessWidget {
                   value: '${displayAvgTime}s',
                   label: 'Avg Response',
                 ),
-              // Best streak
-              if (ranking.bestStreak > 0)
+              // Best streak (hidden in marathon - always equals score)
+              if (ranking.bestStreak > 0 && !isMarathon)
                 _StatItem(
                   icon: Icons.local_fire_department,
                   value: '${ranking.bestStreak}',
