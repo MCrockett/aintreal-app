@@ -346,6 +346,11 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                                 isMarathon: isMarathon,
                                 isMarathonPerfect: isMarathon &&
                                     rankings.first.correctAnswers >= totalRounds,
+                                marathonPersonalBest: isMarathon
+                                    ? ref.watch(userStatsProvider).whenOrNull(
+                                          data: (stats) => stats.marathon.bestStreak,
+                                        )
+                                    : null,
                               )
                             : _WinnerBanner(winner: rankings.first),
 
@@ -591,12 +596,14 @@ class _SoloResultBanner extends StatelessWidget {
     required this.totalRounds,
     this.isMarathon = false,
     this.isMarathonPerfect = false,
+    this.marathonPersonalBest,
   });
 
   final FinalRanking ranking;
   final int totalRounds;
   final bool isMarathon;
   final bool isMarathonPerfect;
+  final int? marathonPersonalBest;
 
   @override
   Widget build(BuildContext context) {
@@ -604,6 +611,13 @@ class _SoloResultBanner extends StatelessWidget {
     final avgResponseMs = ranking.avgResponseTime;
     final displayAvgTime = avgResponseMs != null
         ? ((avgResponseMs - 3000).clamp(0, 999999) / 1000).toStringAsFixed(1)
+        : null;
+
+    // Marathon personal best: max of server value and current streak
+    final marathonPB = marathonPersonalBest != null
+        ? (ranking.correctAnswers > marathonPersonalBest!
+            ? ranking.correctAnswers
+            : marathonPersonalBest!)
         : null;
 
     // Special golden theme for marathon perfect
@@ -711,6 +725,18 @@ class _SoloResultBanner extends StatelessWidget {
                   value: '${ranking.bestStreak}',
                   label: 'Best Streak',
                   color: Colors.orange,
+                ),
+              // Marathon: show personal best
+              if (isMarathon && marathonPB != null)
+                _StatItem(
+                  icon: Icons.emoji_events,
+                  value: '$marathonPB/26',
+                  label: ranking.correctAnswers > marathonPersonalBest!
+                      ? 'New PB!'
+                      : 'Personal Best',
+                  color: ranking.correctAnswers > marathonPersonalBest!
+                      ? AppTheme.success
+                      : Colors.orange,
                 ),
             ],
           ),
