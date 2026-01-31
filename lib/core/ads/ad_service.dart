@@ -118,6 +118,11 @@ class AdService {
     _gamesPlayed++;
     await _prefs?.setInt(_gamesPlayedKey, _gamesPlayed);
     debugPrint('AdService: Game completed, total=$_gamesPlayed, interstitialReady=$isInterstitialReady');
+
+    // Ensure an interstitial is loaded for when we need it
+    if (adsEnabled && _interstitialAd == null && !_isInterstitialLoading) {
+      loadInterstitialAd();
+    }
   }
 
   /// Check if an interstitial ad should be shown based on frequency rules.
@@ -268,6 +273,12 @@ class AdService {
         onAdFailedToLoad: (error) {
           debugPrint('Interstitial ad failed to load: $error');
           _isInterstitialLoading = false;
+          // Retry after 60 seconds
+          Future.delayed(const Duration(seconds: 60), () {
+            if (_interstitialAd == null && !_isInterstitialLoading && adsEnabled) {
+              loadInterstitialAd();
+            }
+          });
         },
       ),
     );
