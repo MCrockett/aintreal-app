@@ -275,9 +275,27 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
       // so no dialog is needed.
       if (next.connectionState == WsConnectionState.disconnected &&
           previous?.connectionState != null &&
-          previous?.connectionState != WsConnectionState.disconnected) {
+          previous?.connectionState != WsConnectionState.disconnected &&
+          next.error != 'Host left the game') {
         _showConnectionLostDialog();
         return;
+      }
+
+      // Notify host when a guest disconnects in the lobby
+      if (previous != null && !_isSoloMode) {
+        for (final player in next.players) {
+          final prev = previous.players
+              .where((p) => p.id == player.id)
+              .firstOrNull;
+          if (prev != null && prev.connected && !player.connected) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('${player.name} disconnected'),
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+        }
       }
 
       if (next.error != null) {

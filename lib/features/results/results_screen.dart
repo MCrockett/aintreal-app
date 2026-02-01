@@ -477,6 +477,28 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                                 ),
                               ),
                               const SizedBox(height: 12),
+                              // Back to Lobby button (non-host)
+                              OutlinedButton(
+                                onPressed: () {
+                                  final gs = ref.read(gameStateProvider);
+                                  context.go('/lobby/${widget.gameCode}', extra: {
+                                    'playerName': gs.playerName,
+                                    'playerId': gs.playerId,
+                                    'isHost': gs.isHost,
+                                    'config': gs.config != null
+                                        ? {
+                                            'rounds': gs.config!.rounds,
+                                            'timePerRound': gs.config!.timePerRound,
+                                            'speedBonus': gs.config!.speedBonus,
+                                            'randomBonuses': gs.config!.randomBonuses,
+                                            'mode': gs.config!.mode,
+                                          }
+                                        : null,
+                                  });
+                                },
+                                child: const Text('Back to Lobby'),
+                              ),
+                              const SizedBox(height: 12),
                               // Leave button (non-host)
                               OutlinedButton(
                                 onPressed: _leaveGame,

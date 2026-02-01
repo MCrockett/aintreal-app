@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../config/routes.dart';
 import '../../config/theme.dart';
@@ -23,6 +24,17 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _tapCount = 0;
+  String _version = '';
+
+  @override
+  void initState() {
+    super.initState();
+    PackageInfo.fromPlatform().then((info) {
+      if (mounted) {
+        setState(() => _version = 'v${info.version}+${info.buildNumber}');
+      }
+    });
+  }
 
   void _handleSubtitleTap() {
     _tapCount++;
@@ -151,6 +163,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
               const Spacer(),
+
+              // Version number
+              if (_version.isNotEmpty)
+                Text(
+                  _version,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.textMuted,
+                      ),
+                ),
+              const SizedBox(height: 4),
 
               // Banner ad at bottom
               const BannerAdWidget(),
