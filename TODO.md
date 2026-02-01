@@ -49,8 +49,8 @@ See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.m
 - [ ] Monitor reviews and respond to feedback
 
 ### Content Expansion
-- [ ] Generate more base image pairs (currently 169)
-- [ ] Target 250+ total base pairs
+- [ ] Continue generating base image pairs (currently 262)
+- [ ] Target 300+ total base pairs
 
 ### Web Limiting (Drive App Downloads)
 - [ ] Remove Solo Mode from web (redirect to download page)
@@ -453,7 +453,7 @@ See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.m
 - ✅ Ultimate Bundle: $7.99 (includes ad removal + all packs + Weekly Challenge)
 
 **Content Strategy:**
-- ✅ Launch with 250 base pairs (currently 169, need +81)
+- ✅ Launch with 262 base pairs
 - ✅ AI imperfection is part of the charm (some funny failures are okay)
 - ✅ First three packs: Animals, Travel, Space
 
@@ -509,7 +509,7 @@ See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.m
 ---
 
 **Priority Summary:**
-1. **This week:** Content generation (80 pairs) + AdMob setup + Google Play submission
+1. **This week:** v8 launch (Android + iOS), social media campaign
 2. **Week 2-4:** Theme packs (Animals, Travel, Space)
 3. **Week 5-6:** Ultimate Bundle + Weekly Challenge
 4. **Week 7-8+:** iOS launch

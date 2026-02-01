@@ -221,27 +221,20 @@ See [aintreal-game/GAMEFLOW.md](../aintreal-game/GAMEFLOW.md) for WebSocket mess
 
 ## Current State (January 2026)
 
-**Status**: M1-M5 Complete, Google Play submission in progress
+**Status**: Published on Google Play, iOS in App Store Review
+
+**Google Play:** https://play.google.com/store/apps/details?id=com.aintreal.app
+**Version:** 1.0.0+8
 
 **Completed Milestones:**
 - M1: Core game loop (Party, Classic, Marathon modes)
 - M2: Polish & parity (reveal animations, sounds, confetti)
-- M3: Authentication (Firebase, Google Sign-In)
+- M3: Authentication (Firebase, Google Sign-In, Sign in with Apple)
 - M4: Mobile features (haptics, deep links, sharing)
-- M5: Monetization
-  - AdMob banner ads (home screen)
-  - AdMob interstitial ads with smart frequency (5 game grace, then every 3rd, 5-min cap)
-  - In-app purchase for ad removal ($2.99)
-  - Restore purchases functionality
+- M5: Monetization (AdMob banner + interstitial, IAP ad removal $2.99)
+- M6: Google Play published, iOS submitted
 
-**In Progress:**
-- M6: App store release (Epic 8)
-  - App icon and splash screen complete
-  - Release signing configured
-  - Store description drafted
-  - Account deletion implemented
-
-**Next**: Upload AAB to Google Play Console
+**Next**: Social media campaign, iOS approval, content expansion
 
 ## Questions?
 
