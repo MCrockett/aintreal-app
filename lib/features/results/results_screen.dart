@@ -222,7 +222,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
     final isHost = gameState.isHost;
     final playerId = gameState.playerId;
 
-    // Listen for return to lobby
+    // Listen for return to lobby and host-left
     ref.listen<GameState>(gameStateProvider, (previous, next) {
       if (next.status == GameStatus.lobby) {
         context.go('/lobby/${widget.gameCode}', extra: {
@@ -239,6 +239,30 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                 }
               : null,
         });
+      }
+
+      // Handle host leaving while guest is on results screen
+      if (next.error == 'Host left the game' && !next.isHost) {
+        ref.read(gameStateProvider.notifier).clearError();
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Game Ended'),
+            content: const Text('The host has left the game.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  ref.read(gameStateProvider.notifier).disconnect();
+                  context.go('/');
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+        return;
       }
     });
 
@@ -302,6 +326,9 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
         child: Stack(
         children: [
           SafeArea(
+            child: Column(
+            children: [
+            Expanded(
             child: CustomScrollView(
               slivers: [
                 SliverToBoxAdapter(
@@ -509,13 +536,16 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                         ),
                       ),
 
-                      // Banner ad at bottom
-                      const BannerAdWidget(),
-                      const SizedBox(height: 8),
                     ],
                   ),
                 ),
               ],
+            ),
+            ),
+            // Banner ad pinned at bottom
+            const BannerAdWidget(),
+            const SizedBox(height: 8),
+            ],
             ),
           ),
 

@@ -73,7 +73,7 @@ class ShareService {
 
     buffer.writeln();
     buffer.writeln('Can you spot the AI? Play now:');
-    buffer.writeln('$_baseUrl/play/');
+    buffer.writeln(_baseUrl);
 
     await Share.share(
       buffer.toString(),
