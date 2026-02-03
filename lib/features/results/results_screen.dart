@@ -14,6 +14,7 @@ import '../../core/analytics/analytics_service.dart';
 import '../../core/audio/sound_service.dart';
 import '../../core/sharing/share_service.dart';
 import '../../core/websocket/game_state_provider.dart';
+import '../../core/websocket/ws_client.dart';
 import '../profile/widgets/stats_card.dart';
 import '../../core/websocket/ws_messages.dart';
 import '../../models/game.dart' hide GameState, GameStatus;
@@ -241,9 +242,19 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
         });
       }
 
-      // Handle host leaving while guest is on results screen
-      if (next.error == 'Host left the game' && !next.isHost) {
-        ref.read(gameStateProvider.notifier).clearError();
+      // Handle host leaving while guest is on results screen.
+      // Either via the host_left message, or via WebSocket disconnect
+      // (server may close the connection before the message arrives).
+      final hostLeft = next.error == 'Host left the game' && !next.isHost;
+      final disconnected = !next.isHost &&
+          next.connectionState == WsConnectionState.disconnected &&
+          previous?.connectionState != null &&
+          previous?.connectionState != WsConnectionState.disconnected;
+
+      if (hostLeft || disconnected) {
+        if (next.error != null) {
+          ref.read(gameStateProvider.notifier).clearError();
+        }
         showDialog(
           context: context,
           barrierDismissible: false,

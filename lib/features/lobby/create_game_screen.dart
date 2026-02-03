@@ -81,14 +81,14 @@ class _CreateGameScreenState extends ConsumerState<CreateGameScreen> {
 
     // Get name from session (guest or authenticated)
     // playerNameProvider adds ~ prefix when test mode is enabled
-    final session = ref.read(sessionProvider);
-    final playerName = ref.read(playerNameProvider);
-    if (session is SessionGuest) {
-      _nameController.text = playerName ?? session.guestName;
-      _isGuest = true;
-    } else if (session is SessionAuthenticated) {
-      _nameController.text = playerName ?? session.displayName;
-    }
+    _populateNameFromSession();
+
+    // If session is still loading, listen for it to resolve
+    ref.listenManual<SessionState>(sessionProvider, (previous, next) {
+      if (_nameController.text.isEmpty && widget.initialName == null) {
+        _populateNameFromSession();
+      }
+    });
 
     // Override with initial values if provided (e.g., from Play Again)
     if (widget.initialName != null) {
@@ -105,6 +105,17 @@ class _CreateGameScreenState extends ConsumerState<CreateGameScreen> {
     }
     if (widget.initialRandomBonuses != null) {
       _randomBonuses = widget.initialRandomBonuses!;
+    }
+  }
+
+  void _populateNameFromSession() {
+    final session = ref.read(sessionProvider);
+    final playerName = ref.read(playerNameProvider);
+    if (session is SessionGuest) {
+      _nameController.text = playerName ?? session.guestName;
+      _isGuest = true;
+    } else if (session is SessionAuthenticated) {
+      _nameController.text = playerName ?? session.displayName;
     }
   }
 

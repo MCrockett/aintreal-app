@@ -37,6 +37,22 @@ class _JoinGameScreenState extends ConsumerState<JoinGameScreen> {
     super.initState();
     // Get name from session
     // playerNameProvider adds ~ prefix when test mode is enabled
+    _populateNameFromSession();
+
+    // If session is still loading, listen for it to resolve
+    ref.listenManual<SessionState>(sessionProvider, (previous, next) {
+      if (_nameController.text.isEmpty) {
+        _populateNameFromSession();
+      }
+    });
+
+    // Pre-fill code from deep link or notification
+    if (widget.initialCode != null && widget.initialCode!.isNotEmpty) {
+      _codeController.text = widget.initialCode!.toUpperCase();
+    }
+  }
+
+  void _populateNameFromSession() {
     final session = ref.read(sessionProvider);
     final playerName = ref.read(playerNameProvider);
     if (session is SessionGuest) {
@@ -44,11 +60,6 @@ class _JoinGameScreenState extends ConsumerState<JoinGameScreen> {
       _isGuest = true;
     } else if (session is SessionAuthenticated) {
       _nameController.text = playerName ?? session.displayName;
-    }
-
-    // Pre-fill code from deep link or notification
-    if (widget.initialCode != null && widget.initialCode!.isNotEmpty) {
-      _codeController.text = widget.initialCode!.toUpperCase();
     }
   }
 
@@ -74,16 +85,24 @@ class _JoinGameScreenState extends ConsumerState<JoinGameScreen> {
     // Create guest session if user doesn't have one (e.g., from deep link)
     final session = ref.read(sessionProvider);
     if (session is! SessionGuest && session is! SessionAuthenticated) {
-      await ref.read(sessionProvider.notifier).startGuestSession(playerName);
+      try {
+        await ref.read(sessionProvider.notifier).startGuestSession(playerName);
+      } catch (e) {
+        debugPrint('JoinGameScreen: Failed to create guest session (non-fatal): $e');
+      }
     }
 
     try {
       // Get ID token if authenticated (for stats tracking)
       String? idToken;
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser != null) {
-        idToken = await currentUser.getIdToken();
-        debugPrint('JoinGameScreen: Got idToken for user ${currentUser.uid}');
+      try {
+        final currentUser = FirebaseAuth.instance.currentUser;
+        if (currentUser != null) {
+          idToken = await currentUser.getIdToken();
+          debugPrint('JoinGameScreen: Got idToken for user ${currentUser.uid}');
+        }
+      } catch (e) {
+        debugPrint('JoinGameScreen: Failed to get idToken (non-fatal): $e');
       }
 
       final response = await GameApi.instance.joinGame(
