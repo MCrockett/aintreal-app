@@ -84,7 +84,9 @@ class SessionNotifier extends StateNotifier<SessionState> {
       return;
     }
 
-    // Mobile: Set up auth listener FIRST to catch Firebase session restoration
+    // Mobile: Set up auth listener to catch Firebase session restoration.
+    // fireImmediately ensures we process the current auth state even if
+    // it was already resolved before this listener was registered.
     _ref.listen<AuthState>(authProvider, (previous, next) {
       if (next is AuthStateAuthenticated) {
         state = SessionAuthenticated(next.displayName);
@@ -99,23 +101,7 @@ class SessionNotifier extends StateNotifier<SessionState> {
           _checkGuestSession();
         }
       }
-    });
-
-    // Check current auth state (might already be loaded)
-    final authState = _ref.read(authProvider);
-
-    if (authState is AuthStateAuthenticated) {
-      state = SessionAuthenticated(authState.displayName);
-      return;
-    }
-
-    if (authState is AuthStateUnauthenticated) {
-      // Auth already loaded and user not signed in - check for guest
-      await _checkGuestSession();
-      return;
-    }
-
-    // Auth is still loading - stay in SessionLoading until listener fires
+    }, fireImmediately: true);
   }
 
   /// Check for stored guest session or set SessionNone.

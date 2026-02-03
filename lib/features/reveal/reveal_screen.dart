@@ -323,6 +323,38 @@ class _RevealScreenState extends ConsumerState<RevealScreen>
         _resumeCountdownAfterReconnect();
       }
 
+      // Host left detection (guests only)
+      final hostLeft = next.error == 'Host left the game' && !next.isHost;
+      final hostDisconnected = !next.isHost &&
+          next.connectionState == WsConnectionState.disconnected &&
+          previous?.connectionState != null &&
+          previous?.connectionState != WsConnectionState.disconnected;
+
+      if (hostLeft || hostDisconnected) {
+        if (next.error != null) {
+          ref.read(gameStateProvider.notifier).clearError();
+        }
+        _countdownTimer?.cancel();
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Game Ended'),
+            content: const Text('The host has left the game.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  _returnHome();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+
       // If user wants to advance (countdown ended or button tapped), try to navigate
       // This handles the case where user taps Next but server hasn't sent next round status yet
       if (_wantsToAdvance && !_hasNavigated) {

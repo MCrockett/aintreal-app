@@ -515,4 +515,125 @@ void main() {
       expect(GameStatus.values.contains(GameStatus.finished), true);
     });
   });
+
+  group('Host-left detection conditions', () {
+    // These test the exact conditions used in game_screen, reveal_screen,
+    // and results_screen ref.listen callbacks to detect when host leaves.
+
+    bool shouldShowHostLeftDialog(GameState previous, GameState next) {
+      final hostLeft = next.error == 'Host left the game' && !next.isHost;
+      final hostDisconnected = !next.isHost &&
+          next.connectionState == WsConnectionState.disconnected &&
+          previous.connectionState != WsConnectionState.disconnected;
+      return hostLeft || hostDisconnected;
+    }
+
+    test('detects host_left error for guest', () {
+      const previous = GameState(
+        playerId: 'guest-1',
+        hostId: 'host-1',
+        connectionState: WsConnectionState.connected,
+      );
+      const next = GameState(
+        playerId: 'guest-1',
+        hostId: 'host-1',
+        error: 'Host left the game',
+        connectionState: WsConnectionState.connected,
+      );
+
+      expect(shouldShowHostLeftDialog(previous, next), isTrue);
+    });
+
+    test('does not trigger for host seeing own error', () {
+      const previous = GameState(
+        playerId: 'host-1',
+        hostId: 'host-1',
+        connectionState: WsConnectionState.connected,
+      );
+      const next = GameState(
+        playerId: 'host-1',
+        hostId: 'host-1',
+        error: 'Host left the game',
+        connectionState: WsConnectionState.connected,
+      );
+
+      expect(shouldShowHostLeftDialog(previous, next), isFalse);
+    });
+
+    test('detects disconnect for guest when previously connected', () {
+      const previous = GameState(
+        playerId: 'guest-1',
+        hostId: 'host-1',
+        connectionState: WsConnectionState.connected,
+      );
+      const next = GameState(
+        playerId: 'guest-1',
+        hostId: 'host-1',
+        connectionState: WsConnectionState.disconnected,
+      );
+
+      expect(shouldShowHostLeftDialog(previous, next), isTrue);
+    });
+
+    test('does not trigger disconnect for host', () {
+      const previous = GameState(
+        playerId: 'host-1',
+        hostId: 'host-1',
+        connectionState: WsConnectionState.connected,
+      );
+      const next = GameState(
+        playerId: 'host-1',
+        hostId: 'host-1',
+        connectionState: WsConnectionState.disconnected,
+      );
+
+      expect(shouldShowHostLeftDialog(previous, next), isFalse);
+    });
+
+    test('does not trigger when already disconnected', () {
+      const previous = GameState(
+        playerId: 'guest-1',
+        hostId: 'host-1',
+        connectionState: WsConnectionState.disconnected,
+      );
+      const next = GameState(
+        playerId: 'guest-1',
+        hostId: 'host-1',
+        connectionState: WsConnectionState.disconnected,
+      );
+
+      expect(shouldShowHostLeftDialog(previous, next), isFalse);
+    });
+
+    test('detects disconnect from reconnecting state', () {
+      const previous = GameState(
+        playerId: 'guest-1',
+        hostId: 'host-1',
+        connectionState: WsConnectionState.reconnecting,
+      );
+      const next = GameState(
+        playerId: 'guest-1',
+        hostId: 'host-1',
+        connectionState: WsConnectionState.disconnected,
+      );
+
+      expect(shouldShowHostLeftDialog(previous, next), isTrue);
+    });
+
+    test('does not trigger for unrelated errors', () {
+      const previous = GameState(
+        playerId: 'guest-1',
+        hostId: 'host-1',
+        connectionState: WsConnectionState.connected,
+      );
+      const next = GameState(
+        playerId: 'guest-1',
+        hostId: 'host-1',
+        error: 'Some other error',
+        connectionState: WsConnectionState.connected,
+      );
+
+      expect(shouldShowHostLeftDialog(previous, next), isFalse);
+    });
+  });
 }

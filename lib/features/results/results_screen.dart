@@ -483,61 +483,48 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                                 child: const Text('New Game'),
                               ),
                             ] else ...[
-                              // Non-host waiting message
+                              // Guest: primary action is Back to Lobby
                               Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.backgroundLight,
+                                  gradient: AppTheme.primaryGradient,
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: AppTheme.secondary,
-                                    width: 2,
+                                ),
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    final gs = ref.read(gameStateProvider);
+                                    context.go('/lobby/${widget.gameCode}', extra: {
+                                      'playerName': gs.playerName,
+                                      'playerId': gs.playerId,
+                                      'isHost': gs.isHost,
+                                      'config': gs.config != null
+                                          ? {
+                                              'rounds': gs.config!.rounds,
+                                              'timePerRound': gs.config!.timePerRound,
+                                              'speedBonus': gs.config!.speedBonus,
+                                              'randomBonuses': gs.config!.randomBonuses,
+                                              'mode': gs.config!.mode,
+                                            }
+                                          : null,
+                                    });
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.transparent,
                                   ),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: AppTheme.primary,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      'Waiting for host to start next game...',
-                                      style: Theme.of(context).textTheme.bodyMedium,
-                                    ),
-                                  ],
+                                  child: const Text('Back to Lobby'),
                                 ),
                               ),
-                              const SizedBox(height: 12),
-                              // Back to Lobby button (non-host)
-                              OutlinedButton(
-                                onPressed: () {
-                                  final gs = ref.read(gameStateProvider);
-                                  context.go('/lobby/${widget.gameCode}', extra: {
-                                    'playerName': gs.playerName,
-                                    'playerId': gs.playerId,
-                                    'isHost': gs.isHost,
-                                    'config': gs.config != null
-                                        ? {
-                                            'rounds': gs.config!.rounds,
-                                            'timePerRound': gs.config!.timePerRound,
-                                            'speedBonus': gs.config!.speedBonus,
-                                            'randomBonuses': gs.config!.randomBonuses,
-                                            'mode': gs.config!.mode,
-                                          }
-                                        : null,
-                                  });
-                                },
-                                child: const Text('Back to Lobby'),
+                              const SizedBox(height: 8),
+                              // Subtle waiting message
+                              Text(
+                                'Waiting for host to start next game...',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: AppTheme.textMuted,
+                                    ),
+                                textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 12),
-                              // Leave button (non-host)
+                              // Leave Game as secondary
                               OutlinedButton(
                                 onPressed: _leaveGame,
                                 child: const Text('Leave Game'),

@@ -333,6 +333,40 @@ class _GameScreenState extends ConsumerState<GameScreen>
         _resumeTimerAfterReconnect();
       }
 
+      // Host left detection (guests only)
+      final hostLeft = next.error == 'Host left the game' && !next.isHost;
+      final hostDisconnected = !next.isHost &&
+          next.connectionState == WsConnectionState.disconnected &&
+          previous?.connectionState != null &&
+          previous?.connectionState != WsConnectionState.disconnected;
+
+      if (hostLeft || hostDisconnected) {
+        if (next.error != null) {
+          ref.read(gameStateProvider.notifier).clearError();
+        }
+        _roundTimer?.cancel();
+        _getReadyTimer?.cancel();
+        _timerController?.stop();
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Game Ended'),
+            content: const Text('The host has left the game.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  _returnHome();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+
       // New round started
       if (next.roundData != null &&
           previous?.roundData?.round != next.roundData?.round) {

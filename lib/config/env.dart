@@ -37,8 +37,9 @@ class Env {
   /// Base URL for the web frontend (for sharing links).
   static const String webBase = 'https://aint-real.com';
 
-  /// App version displayed in the UI.
-  static const String appVersion = '1.0.0';
+  /// App version displayed in the UI (fallback for web where PackageInfo is unavailable).
+  /// Keep in sync with pubspec.yaml version.
+  static const String appVersion = '1.0.0+9';
 
   /// Mobile app secret for bypassing Turnstile verification.
   /// This is passed in the X-Mobile-App header.

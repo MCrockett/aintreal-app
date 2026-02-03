@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../../config/env.dart';
 import '../../config/routes.dart';
 import '../../config/theme.dart';
 import '../../core/analytics/analytics_service.dart';
@@ -31,7 +32,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
     PackageInfo.fromPlatform().then((info) {
       if (mounted) {
-        setState(() => _version = 'v${info.version}+${info.buildNumber}');
+        final v = info.version;
+        final b = info.buildNumber;
+        if (v.isNotEmpty && b.isNotEmpty) {
+          setState(() => _version = 'v$v+$b');
+        } else {
+          // Web fallback: PackageInfo returns empty on web
+          setState(() => _version = 'v${Env.appVersion}');
+        }
+      }
+    }).catchError((_) {
+      if (mounted) {
+        setState(() => _version = 'v${Env.appVersion}');
       }
     });
   }
