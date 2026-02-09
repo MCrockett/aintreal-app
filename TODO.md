@@ -52,6 +52,9 @@ See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.m
 - [ ] Continue generating base image pairs (currently 262)
 - [ ] Target 300+ total base pairs
 
+### Guest Name Readability
+- [ ] Rework guest name generator (`lib/utils/guest_name_generator.dart`) — current AI-embedded names (BrAINyToaster42) are hard to read
+
 ### Web Limiting (Drive App Downloads)
 - [ ] Remove Solo Mode from web (redirect to download page)
 - [ ] Remove Marathon Mode from web (redirect to download page)
@@ -122,82 +125,95 @@ See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.m
 
 ---
 
-## Phase 3: Ultimate Bundle + Weekly Challenge (Week 5-6) 🏆
+## Phase 3: Daily Challenge + Ultimate Bundle (Week 5-6) 🏆
 
-### Weekly Challenge Mode: Technical Implementation
-**Goal:** Exclusive competitive mode for Ultimate Bundle owners
+### Daily Challenge Mode
+**Goal:** Free engagement hook that drives daily app opens and sign-ins
 
-- [ ] Design Weekly Challenge UI/UX:
-  - "Weekly Challenge" button on home screen with distinctive styling
-  - Lock icon overlay if user doesn't own Ultimate Bundle
-  - Challenge info screen (10 rounds, one attempt, global leaderboard)
-  - Live leaderboard display during challenge
-  - Final leaderboard after challenge closes
-  - "One attempt only" prominent messaging
-  - Score breakdown display (accuracy + speed components)
-- [ ] Database schema additions (D1 or Firestore):
-  - **weekly_challenges** table:
-    - challenge_id (UUID)
-    - week_start_date (timestamp)
-    - week_end_date (timestamp)
-    - challenge_pair_ids[] (array of 10 pair IDs)
-    - active (boolean)
-  - **challenge_leaderboard** table:
-    - challenge_id (FK)
-    - user_id (FK)
-    - score (int, calculated: correct × 100 - seconds ÷ 2)
-    - correct_answers (int)
-    - total_time_seconds (int)
-    - completion_timestamp (timestamp)
-    - rank (int, computed)
-  - **challenge_attempts** table:
-    - user_id (FK)
-    - challenge_id (FK)
-    - has_attempted (boolean)
-    - Unique constraint on (user_id, challenge_id)
-- [ ] Implement challenge game flow:
-  - Check entitlement (Ultimate Bundle ownership)
-  - Load current week's 10 pairs
+**Design:**
+- Free to play, requires app + sign-in (drives account creation)
+- 5 rounds per challenge, one attempt per challenge
+- 3x per week (specific days TBD, e.g. MWF or TuThSa)
+- Curated content, queued ahead of time via admin tooling
+- Track and display both accuracy and speed
+- Challenge pairs migrate to main pool after challenge expires
+
+#### App UI
+- [ ] "Daily Challenge" card on home screen (prominent, distinctive styling)
+  - Show availability state: "Live now", "Next challenge in Xh", "Completed"
+  - Require sign-in to play (prompt if guest)
+- [ ] Challenge game flow:
+  - Load today's 5 pairs
   - Track time per round and cumulative time
   - Prevent skipping or going back
-  - Calculate final score: (Correct × 100) - (Total Seconds ÷ 2)
-  - Submit score to leaderboard (server-side)
-  - Mark user as attempted (prevent replay)
-  - Display user's rank + top 10 global leaderboard
-- [ ] Implement leaderboard functionality:
-  - Live updates during 48-hour window (poll or WebSocket)
-  - Show top 10 players with scores
-  - Highlight current user's rank prominently
-  - Final leaderboard display when challenge closes
-  - Leaderboard history (view past week challenges)
-- [ ] Anti-cheat measures:
-  - Server-side validation: Flag perfect scores under 30 seconds (impossible)
-  - Validate timing patterns (e.g., all rounds same speed = suspicious)
-  - Admin dashboard to review flagged scores
-  - Manual review capability for top 10 final leaderboard
-- [ ] Challenge scheduling automation:
-  - Cron job or scheduled function:
-    - Saturday 12:00 AM: Activate new challenge (set active=true)
-    - Monday 12:00 AM: Deactivate challenge (set active=false)
-    - Monday: Migrate challenge pairs to main pool (update pack_id to "base")
-- [ ] Push notification integration:
-  - Send Firebase Cloud Messaging notification Saturday morning: "Weekend Challenge is LIVE!"
-  - Only send to Ultimate Bundle owners
-- [ ] Test full challenge lifecycle (creation → play → leaderboard → close → migration)
+  - Submit results to server on completion
+  - Mark as attempted (prevent replay)
+- [ ] Results screen:
+  - Score breakdown (accuracy + speed)
+  - Personal stats (streak, best score, avg accuracy)
+  - Global leaderboard position
+  - Friends leaderboard (see Friends System below)
+- [ ] Challenge history: view past challenges and personal results
 
-### Weekly Challenge: Content Pipeline
-**Goal:** Sustainable weekly content generation
+#### Backend (aintreal-game)
+- [ ] Database schema:
+  - **daily_challenges** table:
+    - challenge_id (UUID)
+    - challenge_date (DATE)
+    - pair_ids (JSON array of 5 pair IDs)
+    - active (boolean)
+  - **challenge_results** table:
+    - challenge_id (FK)
+    - user_id (FK)
+    - score (int)
+    - correct_answers (int)
+    - total_time_ms (int)
+    - completed_at (timestamp)
+    - Unique constraint on (user_id, challenge_id)
+- [ ] API endpoints:
+  - `GET /api/challenge/today` — return active challenge (pairs + metadata)
+  - `POST /api/challenge/:id/submit` — submit results (server-side validation)
+  - `GET /api/challenge/:id/leaderboard` — global leaderboard
+  - `GET /api/challenge/:id/leaderboard/friends` — friends leaderboard
+  - `GET /api/challenge/history` — user's past results + streaks
+- [ ] Challenge scheduling:
+  - Cron or scheduled function to activate queued challenges on release day
+  - Auto-deactivate previous challenge
+  - Migrate expired challenge pairs to main pool
+- [ ] Anti-cheat:
+  - Server-side timing validation (flag impossibly fast completions)
+  - One attempt enforcement via DB unique constraint
 
-- [ ] Generate first 10-pair challenge set (~20 minutes)
-- [ ] Document weekly content generation workflow
-- [ ] Set up Friday evening calendar reminder to generate next week's pairs
-- [ ] Create admin script/tool to:
-  - Upload 10 pairs to R2
-  - Insert pairs into D1 with challenge_id
-  - Activate challenge for upcoming Saturday
+#### Content Pipeline
+- [ ] Admin tool to queue challenge sets (5 curated pairs each)
+  - Batch upload to R2 + insert into D1 with challenge_id
+  - Set release date (queued ahead of time)
+- [ ] Target: queue 2-4 weeks of challenges at a time (~30-60 pairs)
+
+#### Push Notifications
+- [ ] Firebase Cloud Messaging on challenge days ("Today's challenge is live!")
+- [ ] Configurable notification preferences
+
+### Friends System (Prerequisite)
+**Goal:** Enable friends leaderboard for Daily Challenge and future social features
+
+- [ ] Design friend data model:
+  - Friend relationships (bidirectional or follow-based?)
+  - Storage: Firebase, D1, or both?
+- [ ] Friend invite flow:
+  - Share invite link / code
+  - In-app friend search (by display name or ID)
+  - Accept/decline/block
+- [ ] Friends list UI in profile/settings
+- [ ] API endpoints:
+  - `POST /api/friends/invite` — send friend request
+  - `POST /api/friends/accept` — accept request
+  - `GET /api/friends` — list friends
+  - `DELETE /api/friends/:id` — remove friend
+- [ ] Privacy considerations: what stats are visible to friends?
 
 ### Ultimate Bundle IAP
-**Goal:** Premium tier with best value and exclusive access
+**Goal:** Premium tier with best value
 
 - [ ] Configure Play Console IAP:
   - Product ID: `com.aintreal.ultimate_bundle`
@@ -209,25 +225,14 @@ See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.m
     - Ad removal (skip all ad loading)
     - All current theme packs (animals, travel, space)
     - All future theme packs (auto-unlock when released)
-    - Weekly Challenge access
   - Ensure bundle supersedes individual purchases
 - [ ] Create bundle marketing UI:
   - Dedicated bundle screen or modal
-  - Value proposition: "Get everything forever, including Weekly Challenges!"
-  - Show included items:
-    - "Ad-Free Experience ($2.99 value)"
-    - "All Theme Packs ($2.97+ value)"
-    - "Exclusive Weekly Challenges"
-    - "All Future Content Included"
-  - Total value display vs. bundle price
+  - Value proposition: "Get everything forever!"
+  - Show included items with value breakdown
   - "Best Value!" badge
-- [ ] Update pack purchase flows:
-  - Show "Included in Ultimate Bundle" for bundle owners
-  - Prevent redundant pack purchases if bundle owned
-- [ ] Update ad removal purchase flow:
-  - Suggest bundle upgrade if user viewing ad removal
+- [ ] Update pack/ad-removal purchase flows for bundle owners
 - [ ] Test bundle purchase grants all entitlements correctly
-- [ ] Build and ship app update with Ultimate Bundle + Weekly Challenge mode
 
 ---
 
@@ -314,10 +319,6 @@ See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.m
   - Time trial with fastest completions
   - Global leaderboard
   - Could be free or premium ($1.99)
-- [ ] Daily Challenge:
-  - One curated game per day (5-10 rounds)
-  - Global leaderboard resets daily
-  - Free feature to drive daily engagement
 - [ ] Versus Mode:
   - Real-time 1v1 head-to-head matches
   - Ranked matchmaking
@@ -475,14 +476,15 @@ See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.m
 - ✅ iOS second (after Google Play is stable)
 - ✅ IAP rollout: Ad removal first → theme packs → Ultimate Bundle (create FOMO)
 
-**Weekly Challenge:**
-- ✅ Ultimate Bundle exclusive feature
-- ✅ 48-hour window (Saturday 12am - Monday 12am)
-- ✅ 10 new pairs per week
+**Daily Challenge:**
+- ✅ Free, requires app + sign-in
+- ✅ 3x per week (specific days TBD)
+- ✅ 5 rounds per challenge, curated content queued ahead of time
 - ✅ One attempt per player
-- ✅ Score = (Correct × 100) - (Seconds ÷ 2) (rewards speed + accuracy)
-- ✅ Pairs migrate to main pool after challenge ends
-- ✅ Anti-cheat: Auto-flag impossibly fast perfect scores (<30 sec)
+- ✅ Track and display both accuracy and speed
+- ✅ Leaderboards: global, friends, personal stats/streaks
+- ✅ Pairs migrate to main pool after challenge expires
+- ✅ Friends system needed as prerequisite for friends leaderboard
 
 ---
 
@@ -490,7 +492,9 @@ See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.m
 
 - ❓ Ultimate Bundle pricing: $7.99 confirmed or test $9.99?
 - ❓ Rewarded ads: What should the reward be? (Hints? Bonus points? Free mode trial?)
-- ❓ Weekly Challenge: Is current anti-cheat sufficient or need stronger measures (randomized pairs)?
+- ❓ Daily Challenge: Which 3 days per week? (MWF, TuThSa, other?)
+- ❓ Daily Challenge: Scoring formula — (Correct × 100) - (Seconds ÷ 2), or simpler?
+- ❓ Friends system: Bidirectional (mutual accept) or follow-based (one-way)?
 - ❓ Should base pack grow over time (e.g., 250 → 300 → 350) to keep free players engaged?
 
 ---
