@@ -166,7 +166,17 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
     errorBuilder: (context, state) => Scaffold(
       body: Center(
-        child: Text('Page not found: ${state.uri.path}'),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Page not found: ${state.uri.path}'),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => context.go(AppRoutes.home),
+              child: const Text('Go Home'),
+            ),
+          ],
+        ),
       ),
     ),
   );

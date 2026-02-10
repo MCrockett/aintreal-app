@@ -178,7 +178,13 @@ class _JoinGameScreenState extends ConsumerState<JoinGameScreen> {
                     children: [
                       IconButton(
                         icon: const Icon(Icons.arrow_back),
-                        onPressed: () => context.pop(),
+                        onPressed: () {
+                          if (Navigator.of(context).canPop()) {
+                            context.pop();
+                          } else {
+                            context.go('/');
+                          }
+                        },
                       ),
                       const SizedBox(width: 8),
                       Text(
