@@ -48,7 +48,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     initialLocation: AppRoutes.signIn,
-    debugLogDiagnostics: true,
+    debugLogDiagnostics: kDebugMode,
     redirect: (context, state) {
       final isLoading = sessionState is SessionLoading;
       final hasSession = sessionState is SessionGuest || sessionState is SessionAuthenticated;
