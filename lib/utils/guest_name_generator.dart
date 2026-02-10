@@ -1,23 +1,23 @@
 import 'dart:math';
 
-/// Generates AI-themed guest names like "BrAINyToaster42" or "ChAInedLlama07"
+/// Generates fun guest names like "SwiftPenguin42" or "BoldNoodle07"
 class GuestNameGenerator {
   static final _random = Random();
 
-  // Adjectives with "AI" naturally embedded
+  // Simple, readable adjectives
   static const _adjectives = [
-    'BrAINy',
-    'GrAINy',
-    'TrAIned',
-    'ChAIned',
-    'UnchAIned',
-    'PAInted',
-    'DetAIled',
-    'ContAIned',
-    'SustAIned',
-    'CertAIn',
-    'QuAInt',
-    'MAIntAIned',
+    'Swift',
+    'Bold',
+    'Brave',
+    'Clever',
+    'Lucky',
+    'Sneaky',
+    'Zippy',
+    'Mighty',
+    'Fuzzy',
+    'Witty',
+    'Jolly',
+    'Crafty',
   ];
 
   // Funny/fun nouns
@@ -46,7 +46,7 @@ class GuestNameGenerator {
 
   /// Generate a random guest name.
   /// Format: {Adjective}{Noun}{2-digit number}
-  /// Example: "BrAINyToaster42", "ChAInedLlama07"
+  /// Example: "SwiftPenguin42", "BoldNoodle07"
   static String generate() {
     final adjective = _adjectives[_random.nextInt(_adjectives.length)];
     final noun = _nouns[_random.nextInt(_nouns.length)];
