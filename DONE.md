@@ -12,7 +12,7 @@ This document archives all completed work for the aintreal-app project.
 | Design | Architecture decisions, tech stack | Completed |
 | M1 | Core game loop (Party, Classic, Marathon) | Completed Dec 2025 |
 | M2 | Polish (reveal, sounds, confetti) | Completed Dec 2025 |
-| M3 | Authentication (Firebase, Google Sign-In) | Completed Dec 2025 |
+| M3 | Authentication (Firebase, Google Sign-In, Sign in with Apple) | Completed Dec 2025 |
 | M4 | Mobile features (haptics, deep links, sharing) | Completed Dec 2025 |
 | M5 | Monetization (AdMob, IAP) | Completed Dec 2025 |
 | M6 | Google Play Release | Completed Jan 2026 |
@@ -240,12 +240,12 @@ This document archives all completed work for the aintreal-app project.
 ---
 
 ## Epic 4.2: Auth Integration (AU-AUTH) - December 2025
-**Status:** Partial (Apple blocked)
+**Status:** Complete
 
 - [x] 4.2.1 Created firebase_auth.dart service
 - [x] 4.2.2 Created auth_provider.dart Riverpod provider
 - [x] 4.2.3 Implemented Google Sign-In
-- [~] 4.2.4 Sign in with Apple - blocked pending developer account
+- [x] 4.2.4 Sign in with Apple (completed Jan 2026)
 - [x] 4.2.5 Created sign-in screen with platform buttons
 - [x] 4.2.6 Implemented Guest mode
 
@@ -384,6 +384,21 @@ Push notifications removed from scope. Deep linking works via URL schemes instea
 
 ---
 
+---
+
+## February 2026
+
+### Guest Name Picker (2026-02-10)
+- Replaced text input with 3-choice name picker + shuffle button on join screen
+- Same `{Adjective}{Noun}{Number}` format as readable guest names from +11
+- Same word lists shared with web party client
+
+### Debug Logging Fix (2026-02-10)
+- Changed `debugLogDiagnostics: true` to `kDebugMode` in GoRouter config
+- Prevents verbose route logging in release builds
+
+---
+
 ## Document Last Updated
 
-January 30, 2026
+February 10, 2026

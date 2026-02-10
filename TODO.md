@@ -1,12 +1,12 @@
 # AIn't Real App - TODO
 
-**Last Updated:** January 30, 2026
+**Last Updated:** February 10, 2026
 
 ## Current Status
 
 - **Platform:** Flutter 3.38.4 (stable)
 - **Package:** `com.aintreal.app`
-- **Version:** 1.0.0+8
+- **Version:** 1.0.0+11
 - **Google Play:** PUBLISHED - https://play.google.com/store/apps/details?id=com.aintreal.app
 - **iOS App Store:** In Review
 - **Next:** Social media campaign, iOS approval, content expansion
@@ -28,7 +28,7 @@ See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.m
 ### Deferred (post-launch)
 - [ ] Firebase token signature verification (currently validates claims only)
 - [ ] Rotate/harden Turnstile mobile bypass secret
-- [ ] Server-side config validation (rounds/timePerRound bounds)
+- [x] Server-side config validation (rounds/timePerRound bounds)
 - [ ] Timeout UX normalization (choice='timeout' vs null)
 - [ ] Host disconnect: promote another player mid-game
 - [ ] Leaderboard integrity (authenticated user IDs)
@@ -53,7 +53,8 @@ See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.m
 - [ ] Target 300+ total base pairs
 
 ### Guest Name Readability
-- [ ] Rework guest name generator (`lib/utils/guest_name_generator.dart`) — current AI-embedded names (BrAINyToaster42) are hard to read
+- [x] Rework guest name generator — readable `{Adjective}{Noun}{Number}` format (SwiftPixel42)
+- [x] Replace text input with 3-choice name picker + shuffle button
 
 ### Web Limiting (Drive App Downloads)
 - [ ] Remove Solo Mode from web (redirect to download page)
@@ -236,66 +237,33 @@ See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.m
 
 ---
 
-## Phase 4: iOS Launch (Week 7-8+) 🍎
+## Phase 4: iOS Launch ✅ (Submitted)
 
-### Apple Developer Setup
-**Goal:** Get iOS app ready for App Store
+### Apple Developer Setup — Complete
+- [x] Apple Developer Program membership
+- [x] App Store Connect app record
+- [x] Bundle ID, capabilities, certificates, provisioning profiles
 
-- [ ] Purchase Apple Developer Program membership ($99/year)
-- [ ] Complete Apple Developer enrollment (can take a few days)
-- [ ] Create App Store Connect app record for "AIn't Real"
-- [ ] Configure bundle ID: com.aintreal
-- [ ] Set up required capabilities (Sign in with Apple, Push Notifications, etc.)
-- [ ] Generate and install code signing certificates
-- [ ] Create provisioning profiles (development, distribution)
+### iOS AdMob — Complete
+- [x] iOS-specific ad unit IDs configured
+- [x] Info.plist AdMob App ID
+- [x] ATT consent dialog
+- [x] SKAdNetwork identifiers (19 networks)
 
-### iOS AdMob Configuration
-**Goal:** Enable ads on iOS
+### iOS IAP — Complete (Ad Removal)
+- [x] Ad Removal - $2.99 (com.aintreal.remove_ads)
+- [ ] Theme pack IAPs (deferred to Phase 2)
 
-- [ ] Configure iOS-specific ad unit IDs in AdMob console
-- [ ] Update iOS Info.plist with AdMob App ID
-- [ ] Test ads on physical iOS device (simulators don't show real ads)
+### iOS-Specific Features — Complete
+- [x] Sign in with Apple (Firebase provider + UI)
+- [x] Universal links configured
+- [x] Edge-to-edge layout fixes
 
-### iOS IAP Configuration
-**Goal:** Mirror Android IAP products to iOS
-
-- [ ] Create App Store Connect IAP products (mirror Google Play):
-  - Ad Removal - $2.99 (Product ID: com.aintreal.remove_ads)
-  - Animals Pack - $0.99 (Product ID: com.aintreal.pack_animals)
-  - Travel Pack - $0.99 (Product ID: com.aintreal.pack_travel)
-  - Space Pack - $0.99 (Product ID: com.aintreal.pack_space)
-  - Ultimate Bundle - $7.99 (Product ID: com.aintreal.ultimate_bundle)
-- [ ] Match product IDs exactly to Android (simplifies code)
-- [ ] Set pricing for all regions (App Store Connect auto-converts)
-- [ ] Test IAP purchases via TestFlight with sandbox accounts
-
-### iOS-Specific Features
-**Goal:** Meet Apple requirements
-
-- [ ] Implement Sign in with Apple:
-  - Required by Apple if offering third-party sign-in (Google)
-  - Configure Firebase Apple Sign-In provider
-  - Add Apple Sign-In button to auth screen
-  - Test authentication flow
-- [ ] Update UI for iOS design conventions (if needed)
-- [ ] Test haptic feedback on physical devices
-
-### iOS App Store Submission
-**Goal:** Publish to App Store
-
-- [ ] Build iOS release archive:
-  - `flutter build ipa --release`
-- [ ] Upload to App Store Connect via Xcode or Transporter
-- [ ] Prepare iOS-specific screenshots (required sizes differ from Android)
-- [ ] Prepare App Preview video (optional but recommended)
-- [ ] Complete App Store privacy "nutrition labels":
-  - Data collected: Account info, usage data, identifiers
-  - Data linked to user vs. not linked
-  - Similar to Android Data Safety form
-- [ ] Submit for App Review
-- [ ] Monitor review status (Apple reviews typically 24-48 hours)
-- [ ] Respond to any App Review feedback or rejections
-- [ ] Release to App Store when approved
+### iOS App Store Submission — In Review
+- [x] Built and uploaded IPA
+- [x] Screenshots, privacy labels, reviewer instructions
+- [x] Submitted to App Review
+- [ ] Await approval and release
 
 ---
 
@@ -439,7 +407,7 @@ See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.m
 
 ### Remaining
 - [x] Remove debug logging from auth_provider.dart and session_provider.dart (before production release)
-- [ ] iOS build configuration needs testing (per TRIAGE.md)
+- [x] iOS build configuration (submitted to App Store)
 - [ ] Consider haptic feedback patterns for different events
 - [ ] Evaluate animation performance on older devices
 
@@ -513,7 +481,6 @@ See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.m
 ---
 
 **Priority Summary:**
-1. **This week:** v8 launch (Android + iOS), social media campaign
+1. **Now:** iOS approval, social media campaign, web limiting
 2. **Week 2-4:** Theme packs (Animals, Travel, Space)
-3. **Week 5-6:** Ultimate Bundle + Weekly Challenge
-4. **Week 7-8+:** iOS launch
+3. **Week 5-6:** Ultimate Bundle + Daily Challenge

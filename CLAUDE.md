@@ -106,6 +106,10 @@ Version is managed in `pubspec.yaml` using the format: `X.Y.Z+N`
 | +2 | 1.0.0 | Dec 2025 | First Play Store submission |
 | +3 | 1.0.0 | Jan 2026 | Test fixes, UI polish, color scheme update |
 | +4 | 1.0.0 | Jan 2026 | Banner ad hides immediately after purchase |
+| +5-7 | 1.0.0 | Jan 2026 | Pre-launch fixes, connection resilience, account deletion |
+| +8 | 1.0.0 | Jan 2026 | Google Play production release |
+| +9-10 | 1.0.0 | Jan 2026 | iOS fixes (ATT, SKAdNetwork, edge-to-edge) |
+| +11 | 1.0.0 | Feb 2026 | iOS submission (universal links, readable guest names) |
 
 ## Theme-Epic-Task System
 
@@ -219,12 +223,12 @@ GET  /api/images/:path       - Serve images from R2
 
 See [aintreal-game/GAMEFLOW.md](../aintreal-game/GAMEFLOW.md) for WebSocket message format.
 
-## Current State (January 2026)
+## Current State (February 2026)
 
 **Status**: Published on Google Play, iOS in App Store Review
 
 **Google Play:** https://play.google.com/store/apps/details?id=com.aintreal.app
-**Version:** 1.0.0+8
+**Version:** 1.0.0+11
 
 **Completed Milestones:**
 - M1: Core game loop (Party, Classic, Marathon modes)

@@ -18,7 +18,6 @@ Collection point for bugs, ideas, and issues for the AIn't Real mobile app.
 
 *Items deferred for later consideration.*
 
-- iOS build configuration needs testing
 - Consider haptic feedback patterns for different events
 - Evaluate animation performance on older devices
 
@@ -30,3 +29,4 @@ Collection point for bugs, ideas, and issues for the AIn't Real mobile app.
 
 - Fixed reveal message parsing for round_reveal
 - Fixed Play Again flow resetting properly
+- iOS build configuration — submitted to App Store successfully (+9, +10, +11)
