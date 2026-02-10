@@ -9,6 +9,7 @@ import '../../core/analytics/analytics_service.dart';
 import '../../core/api/api_exceptions.dart';
 import '../../core/api/game_api.dart';
 import '../../core/auth/session_provider.dart';
+import '../../utils/guest_name_generator.dart';
 import '../../widgets/gradient_background.dart';
 
 /// Screen for joining an existing game with a code.
@@ -23,30 +24,28 @@ class JoinGameScreen extends ConsumerStatefulWidget {
 }
 
 class _JoinGameScreenState extends ConsumerState<JoinGameScreen> {
-  final _nameController = TextEditingController();
   final _codeController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   final _codeFocusNode = FocusNode();
 
   bool _isJoining = false;
   bool _isGuest = false;
+  String? _selectedName;
+  String? _authenticatedName;
+  List<String> _nameChoices = [];
   String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    // Get name from session
-    // playerNameProvider adds ~ prefix when test mode is enabled
     _populateNameFromSession();
 
-    // If session is still loading, listen for it to resolve
     ref.listenManual<SessionState>(sessionProvider, (previous, next) {
-      if (_nameController.text.isEmpty) {
+      if (_selectedName == null && _nameChoices.isEmpty) {
         _populateNameFromSession();
       }
     });
 
-    // Pre-fill code from deep link or notification
     if (widget.initialCode != null && widget.initialCode!.isNotEmpty) {
       _codeController.text = widget.initialCode!.toUpperCase();
     }
@@ -56,22 +55,40 @@ class _JoinGameScreenState extends ConsumerState<JoinGameScreen> {
     final session = ref.read(sessionProvider);
     final playerName = ref.read(playerNameProvider);
     if (session is SessionGuest) {
-      _nameController.text = playerName ?? session.guestName;
       _isGuest = true;
+      _generateNameChoices();
     } else if (session is SessionAuthenticated) {
-      _nameController.text = playerName ?? session.displayName;
+      _authenticatedName = playerName ?? session.displayName;
+      _selectedName = _authenticatedName;
     }
+  }
+
+  void _generateNameChoices() {
+    final names = <String>{};
+    while (names.length < 3) {
+      names.add(GuestNameGenerator.generate());
+    }
+    setState(() {
+      _nameChoices = names.toList();
+      _selectedName = null;
+    });
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
     _codeController.dispose();
     _codeFocusNode.dispose();
     super.dispose();
   }
 
   Future<void> _joinGame() async {
+    if (_selectedName == null || _selectedName!.trim().isEmpty) {
+      setState(() => _errorMessage = null);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pick a name first')),
+      );
+      return;
+    }
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -80,9 +97,8 @@ class _JoinGameScreenState extends ConsumerState<JoinGameScreen> {
     });
 
     final code = _codeController.text.trim().toUpperCase();
-    final playerName = _nameController.text.trim();
+    final playerName = _selectedName!.trim();
 
-    // Create guest session if user doesn't have one (e.g., from deep link)
     final session = ref.read(sessionProvider);
     if (session is! SessionGuest && session is! SessionAuthenticated) {
       try {
@@ -93,7 +109,6 @@ class _JoinGameScreenState extends ConsumerState<JoinGameScreen> {
     }
 
     try {
-      // Get ID token if authenticated (for stats tracking)
       String? idToken;
       try {
         final currentUser = FirebaseAuth.instance.currentUser;
@@ -113,10 +128,8 @@ class _JoinGameScreenState extends ConsumerState<JoinGameScreen> {
 
       if (!mounted) return;
 
-      // Log game join
       AnalyticsService.instance.logGameJoined(asHost: false);
 
-      // Navigate to lobby with data from API
       context.go('/lobby/$code', extra: {
         'playerName': playerName,
         'playerId': response.playerId,
@@ -203,63 +216,87 @@ class _JoinGameScreenState extends ConsumerState<JoinGameScreen> {
                   delegate: SliverChildListDelegate([
                     const SizedBox(height: 20),
 
-                    // Name display (read-only for guests)
+                    // Name section
                     Text(
                       'Your Name',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 8),
                     if (_isGuest) ...[
+                      // 3-choice name picker for guests
+                      ..._nameChoices.map((name) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: GestureDetector(
+                          onTap: () => setState(() => _selectedName = name),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            decoration: BoxDecoration(
+                              color: AppTheme.backgroundLight,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: _selectedName == name
+                                    ? AppTheme.primary
+                                    : AppTheme.secondary,
+                                width: 2,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    name,
+                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                          color: _selectedName == name
+                                              ? AppTheme.textPrimary
+                                              : AppTheme.textSecondary,
+                                        ),
+                                  ),
+                                ),
+                                if (_selectedName == name)
+                                  const Icon(
+                                    Icons.check_circle,
+                                    size: 20,
+                                    color: AppTheme.primary,
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      )),
+                      const SizedBox(height: 4),
+                      Center(
+                        child: TextButton.icon(
+                          onPressed: _generateNameChoices,
+                          icon: const Icon(Icons.refresh, size: 18),
+                          label: const Text('Shuffle'),
+                        ),
+                      ),
+                    ] else ...[
+                      // Authenticated user - show their display name
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: AppTheme.backgroundLight,
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppTheme.secondary, width: 2),
+                          border: Border.all(color: AppTheme.primary, width: 2),
                         ),
                         child: Row(
                           children: [
                             Expanded(
                               child: Text(
-                                _nameController.text,
+                                _authenticatedName ?? '',
                                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                       color: AppTheme.textPrimary,
                                     ),
                               ),
                             ),
-                            Icon(
-                              Icons.lock_outline,
-                              size: 18,
-                              color: AppTheme.textMuted,
+                            const Icon(
+                              Icons.check_circle,
+                              size: 20,
+                              color: AppTheme.primary,
                             ),
                           ],
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Playing as guest',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppTheme.textMuted,
-                            ),
-                      ),
-                    ] else ...[
-                      TextFormField(
-                        controller: _nameController,
-                        decoration: const InputDecoration(
-                          hintText: 'Enter your name',
-                        ),
-                        textCapitalization: TextCapitalization.words,
-                        maxLength: 20,
-                        textInputAction: TextInputAction.next,
-                        onFieldSubmitted: (_) {
-                          _codeFocusNode.requestFocus();
-                        },
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter your name';
-                          }
-                          return null;
-                        },
                       ),
                     ],
 
@@ -302,7 +339,6 @@ class _JoinGameScreenState extends ConsumerState<JoinGameScreen> {
 
                     const SizedBox(height: 8),
 
-                    // Help text
                     Text(
                       'Ask the host for the 4-character game code',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
