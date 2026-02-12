@@ -110,6 +110,7 @@ Version is managed in `pubspec.yaml` using the format: `X.Y.Z+N`
 | +8 | 1.0.0 | Jan 2026 | Google Play production release |
 | +9-10 | 1.0.0 | Jan 2026 | iOS fixes (ATT, SKAdNetwork, edge-to-edge) |
 | +11 | 1.0.0 | Feb 2026 | iOS submission (universal links, readable guest names) |
+| +12 | 1.0.0 | Feb 2026 | iOS resubmission (tappable Terms/Privacy, ATT, Privacy Manifest) |
 
 ## Theme-Epic-Task System
 
