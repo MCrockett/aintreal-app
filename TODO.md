@@ -410,6 +410,7 @@ See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.m
 - [x] iOS build configuration (submitted to App Store)
 - [ ] Consider haptic feedback patterns for different events
 - [ ] Evaluate animation performance on older devices
+- [ ] Skip ATT prompt if ad removal already purchased (currently fires for all iOS users on every launch)
 
 ---
 

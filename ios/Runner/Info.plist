@@ -149,6 +149,8 @@
 				<string>22mmun2rn5.skadnetwork</string>
 			</dict>
 		</array>
+		<key>NSUserTrackingUsageDescription</key>
+		<string>This allows us to show you relevant ads and support the free version of the game.</string>
 		<key>UIStatusBarHidden</key>
 		<false/>
 	</dict>

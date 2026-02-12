@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -103,6 +104,12 @@ class AdService {
 
     debugPrint(
         'AdService: games=$_gamesPlayed, adsEnabled=$adsEnabled, lastAd=$_lastAdShown');
+
+    // Request App Tracking Transparency authorization on iOS
+    if (Platform.isIOS) {
+      final status = await AppTrackingTransparency.requestTrackingAuthorization();
+      debugPrint('ATT status: $status');
+    }
 
     await MobileAds.instance.initialize();
     debugPrint('AdMob initialized');

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../config/theme.dart';
 import '../../core/ads/ad_service.dart';
@@ -492,6 +493,37 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ],
 
+                // Legal links
+                const SizedBox(height: 24),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.backgroundLight,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Legal',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 4),
+                      _LegalLinkRow(
+                        icon: Icons.description_outlined,
+                        label: 'Terms of Service',
+                        url: 'https://aint-real.com/terms',
+                      ),
+                      _LegalLinkRow(
+                        icon: Icons.privacy_tip_outlined,
+                        label: 'Privacy Policy',
+                        url: 'https://aint-real.com/privacy',
+                      ),
+                    ],
+                  ),
+                ),
+
                 // DEBUG: Test crash button (only in debug mode, remove before release)
                 if (kDebugMode && !kIsWeb) ...[
                   const SizedBox(height: 32),
@@ -684,6 +716,40 @@ class _ProfileHeader extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// Tappable row for legal links (Terms, Privacy).
+class _LegalLinkRow extends StatelessWidget {
+  const _LegalLinkRow({
+    required this.icon,
+    required this.label,
+    required this.url,
+  });
+
+  final IconData icon;
+  final String label;
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => launchUrl(
+        Uri.parse(url),
+        mode: LaunchMode.inAppBrowserView,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            Icon(icon, color: AppTheme.textSecondary, size: 20),
+            const SizedBox(width: 12),
+            Expanded(child: Text(label)),
+            Icon(Icons.chevron_right, color: AppTheme.textMuted, size: 20),
+          ],
+        ),
+      ),
     );
   }
 }

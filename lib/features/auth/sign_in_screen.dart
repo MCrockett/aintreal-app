@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb, defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../config/theme.dart';
 import '../../core/auth/auth_provider.dart';
@@ -222,12 +224,41 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               // Terms text
               Padding(
                 padding: const EdgeInsets.only(bottom: 24),
-                child: Text(
-                  'By continuing, you agree to our Terms of Service\nand Privacy Policy',
+                child: RichText(
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textMuted,
+                  text: TextSpan(
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.textMuted,
+                        ),
+                    children: [
+                      const TextSpan(text: 'By continuing, you agree to our '),
+                      TextSpan(
+                        text: 'Terms of Service',
+                        style: const TextStyle(
+                          decoration: TextDecoration.underline,
+                          color: AppTheme.textSecondary,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () => launchUrl(
+                                Uri.parse('https://aint-real.com/terms'),
+                                mode: LaunchMode.inAppBrowserView,
+                              ),
                       ),
+                      const TextSpan(text: '\nand '),
+                      TextSpan(
+                        text: 'Privacy Policy',
+                        style: const TextStyle(
+                          decoration: TextDecoration.underline,
+                          color: AppTheme.textSecondary,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () => launchUrl(
+                                Uri.parse('https://aint-real.com/privacy'),
+                                mode: LaunchMode.inAppBrowserView,
+                              ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
