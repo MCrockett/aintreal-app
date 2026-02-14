@@ -261,24 +261,29 @@ class GameStateNotifier extends StateNotifier<GameState> {
     _wsClient?.send(const StartGameMessage());
   }
 
-  /// Submit answer for current round.
-  void submitAnswer(String choice, int responseTimeMs) {
-    if (state.roundData?.hasAnswered == true) return;
+  /// Submit answer for current round. Returns true if sent successfully.
+  bool submitAnswer(String choice, int responseTimeMs) {
+    if (state.roundData?.hasAnswered == true) return true;
 
-    _wsClient?.send(AnswerMessage(
+    final sent = _wsClient?.send(AnswerMessage(
       choice: choice,
       responseTime: responseTimeMs,
-    ));
+    )) ?? false;
 
-    // Optimistically update local state
-    if (state.roundData != null) {
-      state = state.copyWith(
-        roundData: state.roundData!.copyWith(
-          hasAnswered: true,
-          playerChoice: choice,
-        ),
-      );
+    if (sent) {
+      if (state.roundData != null) {
+        state = state.copyWith(
+          roundData: state.roundData!.copyWith(
+            hasAnswered: true,
+            playerChoice: choice,
+          ),
+        );
+      }
+    } else {
+      state = state.copyWith(error: 'Answer not sent — check your connection');
     }
+
+    return sent;
   }
 
   /// Send play again command (host only).
