@@ -106,7 +106,8 @@ class AdService {
         'AdService: games=$_gamesPlayed, adsEnabled=$adsEnabled, lastAd=$_lastAdShown');
 
     // Request App Tracking Transparency authorization on iOS
-    if (Platform.isIOS) {
+    // Skip if user already purchased ad removal — no ads means no tracking needed
+    if (Platform.isIOS && !_adRemovalPurchased) {
       final status = await AppTrackingTransparency.requestTrackingAuthorization();
       debugPrint('ATT status: $status');
     }
