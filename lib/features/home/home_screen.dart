@@ -10,7 +10,6 @@ import '../../config/theme.dart';
 import '../../core/analytics/analytics_service.dart';
 import '../../core/auth/session_provider.dart';
 import '../../models/game.dart';
-import '../../widgets/banner_ad_widget.dart';
 import '../../widgets/gradient_background.dart';
 import '../../widgets/how_to_play_dialog.dart';
 import '../../widgets/logo.dart';
@@ -185,10 +184,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                 ),
               const SizedBox(height: 4),
-
-              // Banner ad at bottom
-              const BannerAdWidget(),
-              const SizedBox(height: 8),
             ],
           ),
         ),

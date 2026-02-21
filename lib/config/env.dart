@@ -39,7 +39,7 @@ class Env {
 
   /// App version displayed in the UI (fallback for web where PackageInfo is unavailable).
   /// Keep in sync with pubspec.yaml version.
-  static const String appVersion = '1.0.1+13';
+  static const String appVersion = '1.0.1+14';
 
   /// Mobile app secret for bypassing Turnstile verification.
   /// This is passed in the X-Mobile-App header.
