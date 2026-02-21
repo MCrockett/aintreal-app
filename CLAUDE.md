@@ -226,7 +226,9 @@ See [aintreal-game/GAMEFLOW.md](../aintreal-game/GAMEFLOW.md) for WebSocket mess
 
 ## Current State (February 2026)
 
-**Status**: Published on Google Play, iOS in App Store Review
+**Status**: Published on Google Play and App Store
+
+**App Store:** https://apps.apple.com/us/app/aint-real/id6758273529
 
 **Google Play:** https://play.google.com/store/apps/details?id=com.aintreal.app
 **Version:** 1.0.0+11

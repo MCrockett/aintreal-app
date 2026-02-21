@@ -8,8 +8,8 @@
 - **Package:** `com.aintreal.app`
 - **Version:** 1.0.0+11
 - **Google Play:** PUBLISHED - https://play.google.com/store/apps/details?id=com.aintreal.app
-- **iOS App Store:** In Review
-- **Next:** Social media campaign, iOS approval, content expansion
+- **iOS App Store:** PUBLISHED - https://apps.apple.com/us/app/aint-real/id6758273529
+- **Next:** Social media campaign, content expansion
 
 See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.md) for development workflow.
 
