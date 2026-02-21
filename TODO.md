@@ -27,11 +27,13 @@ See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.m
 
 ### Deferred (post-launch)
 - [ ] Firebase token signature verification (currently validates claims only)
-- [ ] Rotate/harden Turnstile mobile bypass secret
+- [ ] Rotate/harden Turnstile mobile bypass secret (replace static app secret with Play Integrity / DeviceCheck attestation)
 - [x] Server-side config validation (rounds/timePerRound bounds)
 - [ ] Timeout UX normalization (choice='timeout' vs null)
-- [ ] Host disconnect: promote another player mid-game
+- [ ] Host disconnect: promote another player or end game cleanly mid-round
 - [ ] Leaderboard integrity (authenticated user IDs)
+- [ ] Don't send aiPosition in round_start; defer to round_reveal (prevents DevTools cheating in party web)
+- [ ] Add demo_eligible column to schema.sql (exists in prod DB, missing from base schema)
 
 ---
 
