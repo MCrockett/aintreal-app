@@ -224,14 +224,15 @@ GET  /api/images/:path       - Serve images from R2
 
 See [aintreal-game/GAMEFLOW.md](../aintreal-game/GAMEFLOW.md) for WebSocket message format.
 
-## Current State (February 2026)
+## Current State (May 2026)
 
 **Status**: Published on Google Play and App Store
 
 **App Store:** https://apps.apple.com/us/app/aint-real/id6758273529
 
 **Google Play:** https://play.google.com/store/apps/details?id=com.aintreal.app
-**Version:** 1.0.0+11
+
+**Version:** 1.0.1+13
 
 **Completed Milestones:**
 - M1: Core game loop (Party, Classic, Marathon modes)
@@ -239,9 +240,9 @@ See [aintreal-game/GAMEFLOW.md](../aintreal-game/GAMEFLOW.md) for WebSocket mess
 - M3: Authentication (Firebase, Google Sign-In, Sign in with Apple)
 - M4: Mobile features (haptics, deep links, sharing)
 - M5: Monetization (AdMob banner + interstitial, IAP ad removal $2.99)
-- M6: Google Play published, iOS submitted
+- M6: Google Play + App Store published
 
-**Next**: Social media campaign, iOS approval, content expansion
+**Next**: Content expansion, social media campaign, post-2.0 Reddit / mobile cross-promotion once Devvit Web migration ships
 
 ## Questions?
 
