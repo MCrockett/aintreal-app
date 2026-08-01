@@ -45,6 +45,10 @@ void main() {
         expect(parseMessageType('player_answered'), WsMessageType.playerAnswered);
       });
 
+      test('parses answer_result message', () {
+        expect(parseMessageType('answer_result'), WsMessageType.answerResult);
+      });
+
       test('parses early_click_warning message', () {
         expect(parseMessageType('early_click_warning'), WsMessageType.earlyClickWarning);
       });
@@ -122,7 +126,7 @@ void main() {
     });
 
     group('RoundStartMessage', () {
-      test('parses from JSON correctly', () {
+      test('parses from JSON correctly (old server contract)', () {
         final json = {
           'type': 'round_start',
           'round': 1,
@@ -138,6 +142,121 @@ void main() {
         expect(message.bottomUrl, '/api/images/pairs/abc/ai.webp');
         expect(message.aiPosition, 'bottom');
         expect(message.totalRounds, 6);
+      });
+
+      test('parses without aiPosition (new server contract)', () {
+        final json = {
+          'type': 'round_start',
+          'round': 2,
+          'topUrl': '/api/images/pairs/abc/0.webp',
+          'bottomUrl': '/api/images/pairs/abc/1.webp',
+          'totalRounds': 6,
+        };
+
+        final message = WsMessage.fromJson(json) as RoundStartMessage;
+        expect(message.round, 2);
+        expect(message.aiPosition, isNull);
+      });
+    });
+
+    group('AnswerResultMessage', () {
+      test('parses answered result', () {
+        final json = {
+          'type': 'answer_result',
+          'round': 3,
+          'choice': 'top',
+          'correct': true,
+          'aiPosition': 'top',
+        };
+
+        final message = WsMessage.fromJson(json) as AnswerResultMessage;
+        expect(message.round, 3);
+        expect(message.choice, 'top');
+        expect(message.correct, true);
+        expect(message.aiPosition, 'top');
+        expect(message.timedOut, false);
+      });
+
+      test('parses timed-out result with null choice', () {
+        final json = {
+          'type': 'answer_result',
+          'round': 4,
+          'choice': null,
+          'correct': false,
+          'timedOut': true,
+          'aiPosition': 'bottom',
+        };
+
+        final message = WsMessage.fromJson(json) as AnswerResultMessage;
+        expect(message.round, 4);
+        expect(message.choice, isNull);
+        expect(message.correct, false);
+        expect(message.timedOut, true);
+        expect(message.aiPosition, 'bottom');
+      });
+    });
+
+    group('ConnectionEstablishedMessage roundState', () {
+      test('parses mid-round resync state', () {
+        final json = {
+          'type': 'connected',
+          'playerId': 'player-123',
+          'gameState': {
+            'code': 'ABCD',
+            'status': 'playing',
+            'config': {
+              'rounds': 6,
+              'timePerRound': 5,
+              'speedBonus': true,
+              'randomBonuses': true,
+              'mode': 'party',
+            },
+            'players': [],
+            'currentRound': 2,
+          },
+          'roundState': {
+            'round': 3,
+            'totalRounds': 6,
+            'topUrl': '/api/images/pairs/abc/0.webp',
+            'bottomUrl': '/api/images/pairs/abc/1.webp',
+            'timeSeconds': 5,
+            'elapsedMs': 4200,
+            'streak': 2,
+            'mode': 'party',
+            'answered': true,
+            'answerResult': {
+              'type': 'answer_result',
+              'round': 3,
+              'choice': 'bottom',
+              'correct': false,
+              'aiPosition': 'top',
+            },
+          },
+        };
+
+        final message = WsMessage.fromJson(json) as ConnectionEstablishedMessage;
+        expect(message.roundState, isNotNull);
+        final rs = message.roundState!;
+        expect(rs.round, 3);
+        expect(rs.totalRounds, 6);
+        expect(rs.topUrl, '/api/images/pairs/abc/0.webp');
+        expect(rs.bottomUrl, '/api/images/pairs/abc/1.webp');
+        expect(rs.elapsedMs, 4200);
+        expect(rs.answered, true);
+        expect(rs.answerResult, isNotNull);
+        expect(rs.answerResult!.correct, false);
+        expect(rs.answerResult!.aiPosition, 'top');
+      });
+
+      test('roundState null when absent or between rounds', () {
+        final json = {
+          'type': 'connected',
+          'playerId': 'player-123',
+          'roundState': null,
+        };
+
+        final message = WsMessage.fromJson(json) as ConnectionEstablishedMessage;
+        expect(message.roundState, isNull);
       });
     });
 

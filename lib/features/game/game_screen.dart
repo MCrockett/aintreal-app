@@ -89,12 +89,20 @@ class _GameScreenState extends ConsumerState<GameScreen>
   }
 
   void _startGetReadyCountdown() {
-    _getReadyCount = 3;
+    // A round restored from a mid-round resync arrives already in progress —
+    // fast-forward instead of replaying Get Ready + a full timer.
+    final elapsedMs = ref.read(gameStateProvider).roundData?.elapsedMs ?? 0;
+    if (elapsedMs >= _getReadyMs) {
+      _resumeRoundFromElapsed(elapsedMs);
+      return;
+    }
+
+    _getReadyCount = 3 - elapsedMs ~/ 1000;
     _showGetReady = true;
 
     // Start tracking response time from round start (before Get Ready ends)
     // This allows server to detect early clicks (responseTime < 3000ms)
-    _roundStartTime = DateTime.now();
+    _roundStartTime = DateTime.now().subtract(Duration(milliseconds: elapsedMs));
 
     // Play tick sound for initial count
     SoundService.instance.playTick();
@@ -160,6 +168,66 @@ class _GameScreenState extends ConsumerState<GameScreen>
         if (_remainingSeconds == 0) {
           SoundService.instance.playTimeUp();
           // Auto-submit timeout when timer expires (for solo games this is critical)
+          _onTimeExpired();
+        }
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  /// Get Ready countdown duration — must match the server's
+  /// clientGetReadyDelay so resync elapsed math lines up.
+  static const int _getReadyMs = 3000;
+
+  /// Resume a round that was already in progress when we (re)joined it —
+  /// mid-round resync via the connected message's roundState.
+  void _resumeRoundFromElapsed(int elapsedMs) {
+    final gameState = ref.read(gameStateProvider);
+    final totalSeconds = gameState.config?.timePerRound ?? 5;
+    final playElapsedMs = elapsedMs - _getReadyMs;
+    final remaining = totalSeconds - (playElapsedMs / 1000).floor();
+
+    // Direct field assignment (no setState) — callers run from initState or a
+    // provider listener whose state change already triggers a rebuild.
+    _showGetReady = false;
+    _roundStartTime =
+        DateTime.now().subtract(Duration(milliseconds: elapsedMs));
+    _remainingSeconds = remaining.clamp(0, totalSeconds);
+
+    _preloadCurrentRoundImages();
+
+    if (gameState.roundData?.hasAnswered == true) return;
+
+    if (_remainingSeconds <= 0) {
+      // Round effectively over for us — the server sends a timed-out
+      // answer_result at round end; submitting keeps old servers consistent.
+      // Post-frame: this can run from initState, where provider writes throw.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _onTimeExpired();
+      });
+      return;
+    }
+
+    // Fast-forward the timer bar and resume the countdown
+    _timerController?.dispose();
+    _timerController = AnimationController(
+      vsync: this,
+      duration: Duration(seconds: totalSeconds),
+    );
+    _timerController!.value =
+        ((totalSeconds - _remainingSeconds) / totalSeconds).clamp(0.0, 1.0);
+    _timerController!.forward();
+
+    _roundTimer?.cancel();
+    _roundTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_remainingSeconds > 0) {
+        setState(() => _remainingSeconds--);
+        if (_remainingSeconds <= 3 && _remainingSeconds > 0) {
+          SoundService.instance.playTick();
+        }
+        if (_remainingSeconds == 0) {
+          SoundService.instance.playTimeUp();
           _onTimeExpired();
         }
       } else {
@@ -431,10 +499,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
     final hasAnswered = roundData.hasAnswered;
     final playerChoice = roundData.playerChoice;
-    final aiPosition = roundData.aiPosition;
-    // Player is correct if they picked the AI image (playerChoice == aiPosition)
-    final isCorrect =
-        hasAnswered && playerChoice != null && playerChoice == aiPosition;
+    // Where the AI is — from answer_result (new server) or round_start (old
+    // server). Null until the verdict arrives, so nothing pre-answer can leak.
+    final aiPosition = roundData.revealedAiPosition;
+    // Null while the verdict is unknown (answered, answer_result in flight).
+    final verdict = roundData.isCorrect;
+    final isCorrect = verdict ?? false;
 
     return PopScope(
       canPop: false,
@@ -474,8 +544,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
                             onTap: hasAnswered ? null : () => _onImageTap('top'),
                             isSelected: playerChoice == 'top',
                             isAi: aiPosition == 'top',
-                            showLabel: hasAnswered,
-                            isCorrect: isCorrect,
+                            showLabel: hasAnswered && aiPosition != null,
+                            isCorrect: verdict,
                           ),
                         ),
                         // Result indicator between images (always reserve space)
@@ -489,15 +559,19 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                       vertical: 12,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: isCorrect
-                                          ? AppTheme.correctAnswer
-                                          : AppTheme.wrongAnswer,
+                                      color: verdict == null
+                                          ? AppTheme.secondary
+                                          : verdict
+                                              ? AppTheme.correctAnswer
+                                              : AppTheme.wrongAnswer,
                                       borderRadius: BorderRadius.circular(16),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: (isCorrect
-                                                  ? AppTheme.correctAnswer
-                                                  : AppTheme.wrongAnswer)
+                                          color: (verdict == null
+                                                  ? AppTheme.secondary
+                                                  : verdict
+                                                      ? AppTheme.correctAnswer
+                                                      : AppTheme.wrongAnswer)
                                               .withValues(alpha: 0.5),
                                           blurRadius: 16,
                                           spreadRadius: 2,
@@ -505,7 +579,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                       ],
                                     ),
                                     child: Text(
-                                      _getResultText(isCorrect, playerChoice),
+                                      verdict == null
+                                          ? 'Locked in!'
+                                          : _getResultText(
+                                              isCorrect, playerChoice),
                                       style: Theme.of(context)
                                           .textTheme
                                           .titleLarge
@@ -527,8 +604,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                 hasAnswered ? null : () => _onImageTap('bottom'),
                             isSelected: playerChoice == 'bottom',
                             isAi: aiPosition == 'bottom',
-                            showLabel: hasAnswered,
-                            isCorrect: isCorrect,
+                            showLabel: hasAnswered && aiPosition != null,
+                            isCorrect: verdict,
                           ),
                         ),
                       ],
@@ -792,7 +869,16 @@ class _GameImage extends StatelessWidget {
   final bool isSelected;
   final bool isAi;
   final bool showLabel;
-  final bool isCorrect;
+
+  /// Null while the verdict is unknown — selection renders neutral until
+  /// answer_result arrives.
+  final bool? isCorrect;
+
+  Color get _selectionColor => isCorrect == null
+      ? AppTheme.secondary
+      : isCorrect!
+          ? AppTheme.correctAnswer
+          : AppTheme.wrongAnswer;
 
   @override
   Widget build(BuildContext context) {
@@ -804,15 +890,14 @@ class _GameImage extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: isSelected
               ? Border.all(
-                  color: isCorrect ? AppTheme.correctAnswer : AppTheme.wrongAnswer,
+                  color: _selectionColor,
                   width: 4,
                 )
               : Border.all(color: AppTheme.secondary, width: 2),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: (isCorrect ? AppTheme.correctAnswer : AppTheme.wrongAnswer)
-                        .withValues(alpha: 0.3),
+                    color: _selectionColor.withValues(alpha: 0.3),
                     blurRadius: 12,
                     spreadRadius: 2,
                   ),

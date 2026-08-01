@@ -9,6 +9,7 @@ enum WsMessageType {
   configUpdated,
   gameStarting,
   roundStart,
+  answerResult,
   playerAnswered,
   earlyClickWarning,
   reveal,
@@ -32,6 +33,7 @@ WsMessageType parseMessageType(String type) {
     'config_updated' => WsMessageType.configUpdated,
     'game_starting' => WsMessageType.gameStarting,
     'round_start' => WsMessageType.roundStart,
+    'answer_result' => WsMessageType.answerResult,
     'player_answered' => WsMessageType.playerAnswered,
     'early_click_warning' => WsMessageType.earlyClickWarning,
     'reveal' => WsMessageType.reveal,
@@ -62,6 +64,7 @@ sealed class WsMessage {
       WsMessageType.configUpdated => ConfigUpdatedMessage.fromJson(json),
       WsMessageType.gameStarting => GameStartingMessage.fromJson(json),
       WsMessageType.roundStart => RoundStartMessage.fromJson(json),
+      WsMessageType.answerResult => AnswerResultMessage.fromJson(json),
       WsMessageType.playerAnswered => PlayerAnsweredMessage.fromJson(json),
       WsMessageType.earlyClickWarning => EarlyClickWarningMessage.fromJson(json),
       WsMessageType.reveal => RevealMessage.fromJson(json),
@@ -89,6 +92,7 @@ class ConnectionEstablishedMessage extends WsMessage {
   const ConnectionEstablishedMessage({
     required this.playerId,
     this.gameState,
+    this.roundState,
   });
 
   factory ConnectionEstablishedMessage.fromJson(Map<String, dynamic> json) {
@@ -97,11 +101,59 @@ class ConnectionEstablishedMessage extends WsMessage {
       gameState: json['gameState'] != null
           ? WsGameState.fromJson(json['gameState'] as Map<String, dynamic>)
           : null,
+      roundState: json['roundState'] != null
+          ? WsRoundState.fromJson(json['roundState'] as Map<String, dynamic>)
+          : null,
     );
   }
 
   final String playerId;
   final WsGameState? gameState;
+
+  /// Mid-round resync state — present when (re)connecting during an active
+  /// round. Older servers never send it.
+  final WsRoundState? roundState;
+}
+
+/// Mid-round state for resyncing a (re)connecting player. Neutral: the
+/// answer is only present inside [answerResult], and only if this player
+/// has already locked in an answer.
+class WsRoundState {
+  const WsRoundState({
+    required this.round,
+    required this.totalRounds,
+    required this.topUrl,
+    required this.bottomUrl,
+    required this.timeSeconds,
+    required this.elapsedMs,
+    required this.answered,
+    this.answerResult,
+  });
+
+  factory WsRoundState.fromJson(Map<String, dynamic> json) {
+    return WsRoundState(
+      round: json['round'] as int,
+      totalRounds: json['totalRounds'] as int? ?? 0,
+      topUrl: json['topUrl'] as String,
+      bottomUrl: json['bottomUrl'] as String,
+      timeSeconds: json['timeSeconds'] as int? ?? 5,
+      elapsedMs: json['elapsedMs'] as int? ?? 0,
+      answered: json['answered'] as bool? ?? false,
+      answerResult: json['answerResult'] != null
+          ? AnswerResultMessage.fromJson(
+              json['answerResult'] as Map<String, dynamic>)
+          : null,
+    );
+  }
+
+  final int round;
+  final int totalRounds;
+  final String topUrl;
+  final String bottomUrl;
+  final int timeSeconds;
+  final int elapsedMs;
+  final bool answered;
+  final AnswerResultMessage? answerResult;
 }
 
 /// Player info in messages.
@@ -296,7 +348,7 @@ class RoundStartMessage extends WsMessage {
       round: json['round'] as int,
       topUrl: json['topUrl'] as String,
       bottomUrl: json['bottomUrl'] as String,
-      aiPosition: json['aiPosition'] as String,
+      aiPosition: json['aiPosition'] as String?,
       totalRounds: json['totalRounds'] as int,
     );
   }
@@ -304,8 +356,39 @@ class RoundStartMessage extends WsMessage {
   final int round;
   final String topUrl;
   final String bottomUrl;
-  final String aiPosition; // 'top' or 'bottom'
+
+  /// 'top' or 'bottom'. Only sent by the OLD server contract — the new
+  /// contract withholds it and delivers the answer via [AnswerResultMessage].
+  final String? aiPosition;
   final int totalRounds;
+}
+
+/// Per-player answer outcome, sent after the player's answer locks in
+/// (or at round end with [timedOut] for players who never answered).
+class AnswerResultMessage extends WsMessage {
+  const AnswerResultMessage({
+    required this.round,
+    required this.correct,
+    this.choice,
+    this.aiPosition,
+    this.timedOut = false,
+  });
+
+  factory AnswerResultMessage.fromJson(Map<String, dynamic> json) {
+    return AnswerResultMessage(
+      round: json['round'] as int,
+      choice: json['choice'] as String?,
+      correct: json['correct'] as bool? ?? false,
+      aiPosition: json['aiPosition'] as String?,
+      timedOut: json['timedOut'] as bool? ?? false,
+    );
+  }
+
+  final int round;
+  final String? choice; // null when the player timed out
+  final bool correct;
+  final String? aiPosition;
+  final bool timedOut;
 }
 
 /// Someone submitted their answer.

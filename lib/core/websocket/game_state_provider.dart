@@ -35,17 +35,49 @@ class RoundData {
     this.playerChoice,
     this.answeredCount = 0,
     this.totalPlayers = 0,
+    this.elapsedMs = 0,
+    this.resultCorrect,
+    this.resultAiPosition,
+    this.timedOut = false,
   });
 
   final int round;
   final String topUrl;
   final String bottomUrl;
-  final String aiPosition; // 'top' or 'bottom'
+
+  /// 'top' or 'bottom' — only present on the OLD server contract. The new
+  /// contract withholds it until answer_result.
+  final String? aiPosition;
   final int totalRounds;
   final bool hasAnswered;
   final String? playerChoice;
   final int answeredCount;
   final int totalPlayers;
+
+  /// Milliseconds already elapsed in this round when it reached us —
+  /// non-zero only when restored from a mid-round resync.
+  final int elapsedMs;
+
+  /// Server verdict from answer_result (new contract); null until it arrives.
+  final bool? resultCorrect;
+  final String? resultAiPosition;
+  final bool timedOut;
+
+  /// Where the AI image is, once we're allowed to know: answer_result is
+  /// authoritative; the old server told us up front in round_start.
+  String? get revealedAiPosition => resultAiPosition ?? aiPosition;
+
+  /// Whether the player's answer was correct. Null while unknown — either
+  /// unanswered, or answered on the new contract with answer_result still
+  /// in flight. Old-contract fallback derives it locally so feedback is
+  /// never blocked on a message the old server won't send.
+  bool? get isCorrect {
+    if (resultCorrect != null) return resultCorrect;
+    if (hasAnswered && aiPosition != null) {
+      return playerChoice != null && playerChoice == aiPosition;
+    }
+    return null;
+  }
 
   RoundData copyWith({
     int? round,
@@ -57,6 +89,10 @@ class RoundData {
     String? playerChoice,
     int? answeredCount,
     int? totalPlayers,
+    int? elapsedMs,
+    bool? resultCorrect,
+    String? resultAiPosition,
+    bool? timedOut,
   }) {
     return RoundData(
       round: round ?? this.round,
@@ -68,6 +104,10 @@ class RoundData {
       playerChoice: playerChoice ?? this.playerChoice,
       answeredCount: answeredCount ?? this.answeredCount,
       totalPlayers: totalPlayers ?? this.totalPlayers,
+      elapsedMs: elapsedMs ?? this.elapsedMs,
+      resultCorrect: resultCorrect ?? this.resultCorrect,
+      resultAiPosition: resultAiPosition ?? this.resultAiPosition,
+      timedOut: timedOut ?? this.timedOut,
     );
   }
 }
@@ -314,11 +354,19 @@ class GameStateNotifier extends StateNotifier<GameState> {
     _wsClient?.send(UpdateConfigMessage(config: config));
   }
 
+  /// Test hook for driving server messages through the state machine.
+  @visibleForTesting
+  void handleMessage(WsMessage message) => _handleMessage(message);
+
   void _handleMessage(WsMessage message) {
     debugPrint('WS message: ${message.runtimeType}');
 
     switch (message) {
-      case ConnectionEstablishedMessage(:final playerId, :final gameState):
+      case ConnectionEstablishedMessage(
+          :final playerId,
+          :final gameState,
+          :final roundState
+        ):
         // Update state with full game state from server
         if (gameState != null) {
           state = state.copyWith(
@@ -332,6 +380,40 @@ class GameStateNotifier extends StateNotifier<GameState> {
           );
         } else {
           state = state.copyWith(playerId: playerId);
+        }
+
+        // Mid-round resync: rebuild the round from the server's snapshot so a
+        // reconnect (backgrounded app, network blip) resumes the round in
+        // progress instead of stalling until the next round_start. The server
+        // snapshot is authoritative — including whether our answer arrived.
+        if (roundState != null) {
+          var round = RoundData(
+            round: roundState.round,
+            topUrl: roundState.topUrl,
+            bottomUrl: roundState.bottomUrl,
+            aiPosition: null,
+            totalRounds: roundState.totalRounds,
+            hasAnswered: roundState.answered,
+            elapsedMs: roundState.elapsedMs,
+            totalPlayers: state.players.length,
+          );
+          final result = roundState.answerResult;
+          if (result != null) {
+            round = round.copyWith(
+              hasAnswered: true,
+              playerChoice: result.choice,
+              resultCorrect: result.correct,
+              resultAiPosition: result.aiPosition,
+              timedOut: result.timedOut,
+            );
+          }
+          state = state.copyWith(
+            status: GameStatus.playing,
+            currentRound: roundState.round,
+            roundData: round,
+            clearCountdown: true,
+            clearRevealData: true,
+          );
         }
 
       case PlayerJoinedMessage(:final players):
@@ -386,6 +468,23 @@ class GameStateNotifier extends StateNotifier<GameState> {
           clearCountdown: true,
           clearRevealData: true,
         );
+
+      case AnswerResultMessage():
+        // Per-player verdict for the current round. Ignore stale rounds
+        // (a late result can race a round_start). Idempotent — a resync
+        // re-delivery just rewrites the same fields.
+        final round = state.roundData;
+        if (round != null && round.round == message.round) {
+          state = state.copyWith(
+            roundData: round.copyWith(
+              hasAnswered: true,
+              playerChoice: round.playerChoice ?? message.choice,
+              resultCorrect: message.correct,
+              resultAiPosition: message.aiPosition,
+              timedOut: message.timedOut,
+            ),
+          );
+        }
 
       case PlayerAnsweredMessage(:final answeredCount, :final totalPlayers):
         if (state.roundData != null) {
