@@ -119,6 +119,16 @@ class RoundData {
   }
 }
 
+/// Whether the game screen must (re)start its round timers for [next].
+/// True on a round-number change (normal round_start) and on a same-round
+/// resync — resync-built rounds carry the server's fresh [RoundData.elapsedMs]
+/// while ordinary in-round updates (answers, counts) leave it unchanged.
+bool shouldResyncRound(RoundData? previous, RoundData? next) {
+  if (next == null) return false;
+  if (previous?.round != next.round) return true;
+  return next.elapsedMs != (previous?.elapsedMs ?? 0);
+}
+
 /// Reveal data for showing round results.
 class RevealData {
   const RevealData({

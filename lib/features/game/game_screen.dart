@@ -89,6 +89,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
   }
 
   void _startGetReadyCountdown() {
+    // Kill any timers from a previous round or a pre-resync resume — a
+    // stale _roundTimer would keep ticking (and fire _onTimeExpired)
+    // against the new round.
+    _cancelRoundTimers();
+
     // A round restored from a mid-round resync arrives already in progress —
     // fast-forward instead of replaying Get Ready + a full timer.
     final elapsedMs = ref.read(gameStateProvider).roundData?.elapsedMs ?? 0;
@@ -182,7 +187,19 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
   /// Resume a round that was already in progress when we (re)joined it —
   /// mid-round resync via the connected message's roundState.
+  void _cancelRoundTimers() {
+    _roundTimer?.cancel();
+    _roundTimer = null;
+    _getReadyTimer?.cancel();
+    _getReadyTimer = null;
+    _timerController?.stop();
+  }
+
   void _resumeRoundFromElapsed(int elapsedMs) {
+    // Unconditional — the hasAnswered/expired early-returns below must not
+    // leave a previous round's timers running.
+    _cancelRoundTimers();
+
     final gameState = ref.read(gameStateProvider);
     // The resync snapshot's round-scoped time is authoritative; config is
     // the fallback for safety only.
@@ -224,7 +241,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
         ((totalSeconds - _remainingSeconds) / totalSeconds).clamp(0.0, 1.0);
     _timerController!.forward();
 
-    _roundTimer?.cancel();
     _roundTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_remainingSeconds > 0) {
         setState(() => _remainingSeconds--);
@@ -375,7 +391,13 @@ class _GameScreenState extends ConsumerState<GameScreen>
   }
 
   /// Get the result text based on correctness and whether it was a timeout.
-  String _getResultText(bool isCorrect, String? playerChoice) {
+  String _getResultText(bool isCorrect, String? playerChoice, bool timedOut) {
+    // Server's timed-out verdict wins outright: a late answer the server
+    // silently dropped leaves an optimistic local playerChoice behind, and
+    // rendering that as "Wrong!" would be misleading.
+    if (timedOut) {
+      return 'Time Up!';
+    }
     if (isCorrect) {
       return 'Correct!';
     }
@@ -440,10 +462,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
         return;
       }
 
-      // New round started
-      if (next.roundData != null &&
-          previous?.roundData?.round != next.roundData?.round) {
-        debugPrint('New round detected, starting countdown');
+      // New round started, or a same-round resync landed with the server's
+      // elapsed time — either way the local timers must be rebuilt from the
+      // fresh round data (the connection-state resume above may have already
+      // restarted them from stale local values; this is authoritative).
+      if (shouldResyncRound(previous?.roundData, next.roundData)) {
+        debugPrint('Round (re)start detected, starting countdown');
         _startGetReadyCountdown();
       }
 
@@ -586,8 +610,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                     child: Text(
                                       verdict == null
                                           ? 'Locked in!'
-                                          : _getResultText(
-                                              isCorrect, playerChoice),
+                                          : _getResultText(isCorrect,
+                                              playerChoice, roundData.timedOut),
                                       style: Theme.of(context)
                                           .textTheme
                                           .titleLarge

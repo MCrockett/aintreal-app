@@ -455,6 +455,55 @@ void main() {
     });
   });
 
+  group('shouldResyncRound', () {
+    RoundData round({int round = 1, int elapsedMs = 0}) => RoundData(
+          round: round,
+          topUrl: '/top.webp',
+          bottomUrl: '/bottom.webp',
+          aiPosition: null,
+          totalRounds: 6,
+          elapsedMs: elapsedMs,
+        );
+
+    test('false when there is no next round', () {
+      expect(shouldResyncRound(round(), null), false);
+      expect(shouldResyncRound(null, null), false);
+    });
+
+    test('true for the first round of a game', () {
+      expect(shouldResyncRound(null, round()), true);
+    });
+
+    test('true when the round number changes', () {
+      expect(shouldResyncRound(round(round: 1), round(round: 2)), true);
+    });
+
+    test('true when a same-round resync carries fresh elapsedMs', () {
+      // Reconnect mid-round: provider rebuilds the SAME round from
+      // roundState with the server's elapsed time — must re-trigger the
+      // screen's resume path even though the round number is unchanged.
+      expect(
+        shouldResyncRound(round(round: 3), round(round: 3, elapsedMs: 4200)),
+        true,
+      );
+      expect(
+        shouldResyncRound(
+          round(round: 3, elapsedMs: 4200),
+          round(round: 3, elapsedMs: 9100),
+        ),
+        true,
+      );
+    });
+
+    test('false for ordinary same-round updates (answers, counts)', () {
+      final r = round(round: 2);
+      expect(
+        shouldResyncRound(r, r.copyWith(hasAnswered: true, answeredCount: 1)),
+        false,
+      );
+    });
+  });
+
   group('GameStateNotifier answer_result handling', () {
     late GameStateNotifier notifier;
 

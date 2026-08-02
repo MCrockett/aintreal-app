@@ -231,8 +231,13 @@ class WsClient with WidgetsBindingObserver {
 
     if (_intentionalDisconnect) return;
 
-    // If backgrounded briefly, just send a ping to verify
-    if (bg == null || DateTime.now().difference(bg).inSeconds <= 2) return;
+    // If backgrounded briefly, just send a ping to verify the socket
+    // survived — a synchronous send failure surfaces the death now instead
+    // of waiting up to 15s for the periodic ping timer.
+    if (bg == null || DateTime.now().difference(bg).inSeconds <= 2) {
+      _sendVerificationPing();
+      return;
+    }
 
     debugPrint(
         'App resumed after ${DateTime.now().difference(bg).inSeconds}s in background');
@@ -244,6 +249,16 @@ class WsClient with WidgetsBindingObserver {
       _setConnectionState(WsConnectionState.reconnecting);
       _reconnectAttempts = 0;
       connect();
+    }
+  }
+
+  void _sendVerificationPing() {
+    if (_state != WsConnectionState.connected || _channel == null) return;
+    try {
+      _channel!.sink.add('{"type":"ping"}');
+    } catch (e) {
+      debugPrint('Resume ping failed, connection dead: $e');
+      _handleDone();
     }
   }
 
