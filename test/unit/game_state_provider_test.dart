@@ -582,7 +582,9 @@ void main() {
         'totalRounds': 6,
         'topUrl': '/top.webp',
         'bottomUrl': '/bottom.webp',
-        'timeSeconds': 5,
+        // Deliberately different from config.timePerRound (5) to prove the
+        // round-scoped value is plumbed through, not the config fallback.
+        'timeSeconds': 7,
         'elapsedMs': 4200,
         'answered': false,
       })));
@@ -592,6 +594,7 @@ void main() {
       expect(round.round, 3);
       expect(round.topUrl, '/top.webp');
       expect(round.elapsedMs, 4200);
+      expect(round.timeSeconds, 7);
       expect(round.hasAnswered, false);
       expect(round.totalPlayers, 2);
     });

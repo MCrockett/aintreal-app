@@ -184,7 +184,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
   /// mid-round resync via the connected message's roundState.
   void _resumeRoundFromElapsed(int elapsedMs) {
     final gameState = ref.read(gameStateProvider);
-    final totalSeconds = gameState.config?.timePerRound ?? 5;
+    // The resync snapshot's round-scoped time is authoritative; config is
+    // the fallback for safety only.
+    final totalSeconds = gameState.roundData?.timeSeconds ??
+        gameState.config?.timePerRound ??
+        5;
     final playElapsedMs = elapsedMs - _getReadyMs;
     final remaining = totalSeconds - (playElapsedMs / 1000).floor();
 
@@ -200,8 +204,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
     if (gameState.roundData?.hasAnswered == true) return;
 
     if (_remainingSeconds <= 0) {
-      // Round effectively over for us — the server sends a timed-out
-      // answer_result at round end; submitting keeps old servers consistent.
+      // Round effectively over for us. The server rejects late answers and
+      // sends a timed-out answer_result at round end; submitting here just
+      // settles the local UI into the answered state immediately.
       // Post-frame: this can run from initState, where provider writes throw.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _onTimeExpired();

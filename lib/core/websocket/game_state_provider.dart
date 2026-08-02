@@ -36,6 +36,7 @@ class RoundData {
     this.answeredCount = 0,
     this.totalPlayers = 0,
     this.elapsedMs = 0,
+    this.timeSeconds,
     this.resultCorrect,
     this.resultAiPosition,
     this.timedOut = false,
@@ -57,6 +58,10 @@ class RoundData {
   /// Milliseconds already elapsed in this round when it reached us —
   /// non-zero only when restored from a mid-round resync.
   final int elapsedMs;
+
+  /// Round-scoped play time from the server's resync snapshot; null for
+  /// rounds delivered via round_start (fall back to config.timePerRound).
+  final int? timeSeconds;
 
   /// Server verdict from answer_result (new contract); null until it arrives.
   final bool? resultCorrect;
@@ -90,6 +95,7 @@ class RoundData {
     int? answeredCount,
     int? totalPlayers,
     int? elapsedMs,
+    int? timeSeconds,
     bool? resultCorrect,
     String? resultAiPosition,
     bool? timedOut,
@@ -105,6 +111,7 @@ class RoundData {
       answeredCount: answeredCount ?? this.answeredCount,
       totalPlayers: totalPlayers ?? this.totalPlayers,
       elapsedMs: elapsedMs ?? this.elapsedMs,
+      timeSeconds: timeSeconds ?? this.timeSeconds,
       resultCorrect: resultCorrect ?? this.resultCorrect,
       resultAiPosition: resultAiPosition ?? this.resultAiPosition,
       timedOut: timedOut ?? this.timedOut,
@@ -395,6 +402,7 @@ class GameStateNotifier extends StateNotifier<GameState> {
             totalRounds: roundState.totalRounds,
             hasAnswered: roundState.answered,
             elapsedMs: roundState.elapsedMs,
+            timeSeconds: roundState.timeSeconds,
             totalPlayers: state.players.length,
           );
           final result = roundState.answerResult;

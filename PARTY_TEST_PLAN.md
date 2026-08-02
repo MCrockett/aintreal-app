@@ -1,20 +1,43 @@
-# Party Mode Test Plan — v8
+# Party Mode Test Plan — v1.0.2+15 (Channel-2 fast-follow)
 
-Manual test plan for party mode on Android. Use two physical devices (or one device + web browser at play.aint-real.com).
+Manual test plan for party mode. Use two physical devices (or one device + web browser at play.aint-real.com). This is the device pass required by `CHANNEL2-FASTFOLLOW-PLAN.md` before merging PR #17 and, later, the aintreal-game server PRs.
 
-**Devices needed:** 2 Android phones (or 1 Android + 1 web browser)
-**Build:** v1.0.0+8 release AAB
+**Devices needed:** 2 phones (or 1 phone + 1 web browser)
+**Build:** v1.0.2+15 (branch `feature/3.2-channel2-fastfollow`)
+
+**Run section 0 twice — once per server contract.** Everything else can run once against either.
+
+---
+
+## 0. Channel-2 Verification (BOTH contracts)
+
+Point the app at a local server with `flutter run --dart-define=API_BASE=http://<host>:8789`.
+
+### 0.A Old contract — `wrangler dev` off aintreal-game `main` (or prod)
+- [ ] Full party game: answer feedback (Correct!/Wrong! + AI/REAL labels) appears **immediately** on tap, every round — the `aiPosition` fallback path
+- [ ] Timer expiry shows "Time Up!" as before
+- [ ] Solo classic + marathon: rounds render and feedback works (no `answer_result` ever arrives — nothing may hang waiting for it)
+
+### 0.B New contract — `wrangler dev` with `fix/answer-leak-channel2` + `feat/ws-rejoin-resync` applied
+- [ ] Network inspector: `round_start` carries **no `aiPosition`**; verdict arrives only via per-player `answer_result`
+- [ ] Tap an image → brief neutral "Locked in!" state at most, then Correct!/Wrong! + labels
+- [ ] **Invite-flow repro (the playtest lobby-killer):** host backgrounds the app to send the invite link by text → guest joins via that link → lobby is intact when host returns
+- [ ] Host phone-lock < 60s mid-game → game survives (grace window), play continues on unlock
+- [ ] Background the app mid-round for ~10s → resume: round restores with **fast-forwarded timer** (no replayed Get Ready, no full timer reset)
+- [ ] Background after answering → resume: verdict still shown (re-delivered `answer_result`, no double-count in scores)
+- [ ] Background until the round ends → resume: timed-out "Time Up!" state, next round proceeds
+- [ ] Watch for repaint glitches on resync (`_resumeRoundFromElapsed` relies on the provider rebuild — see Known Issues)
 
 ---
 
 ## 1. Game Creation & Lobby
 
 ### 1.1 Create party game (host)
-- [x] Open app → "Host Party" → set name, config (6 rounds, 5s)
-- [x] Verify 4-character game code appears
-- [x] Verify player list shows host with star icon
-- [x] Verify "Waiting for players..." shown (can't start with 1 player)
-- [x] Verify connection indicator is hidden (connected state)
+- [ ] Open app → "Host Party" → set name, config (6 rounds, 5s)
+- [ ] Verify 4-character game code appears
+- [ ] Verify player list shows host with star icon
+- [ ] Verify "Waiting for players..." shown (can't start with 1 player)
+- [ ] Verify connection indicator is hidden (connected state)
 
 ### 1.2 Join party game (guest)
 - [ ] On second device, "Join Game" → enter code + name
@@ -260,14 +283,20 @@ Manual test plan for party mode on Android. Use two physical devices (or one dev
 | Player shows wrong score on reveal | Reconnect during round transition | GameRoom.js handleJoin() |
 | Play Again doesn't return to lobby | ReturnToLobbyMessage never received | game_state_provider.dart |
 | Timer keeps running behind overlay | _pauseTimerForReconnect not triggered | game_screen.dart listener |
+| No feedback after answering (new server) | answer_result lost / stale-round guard | game_state_provider.dart AnswerResultMessage case |
+| Feedback missing on OLD server | fallback derivation broken | RoundData.isCorrect getter |
+| Stale round view after resume | roundState not applied on connected | game_state_provider.dart ConnectionEstablished case |
+| Frozen frame on resync resume | field mutation without setState racing rebuild | game_screen.dart _resumeRoundFromElapsed |
 
 ---
 
 ## Pass Criteria
 
-**v8 is ready to ship when:**
+**v1.0.2+15 is ready to ship when:**
+- [ ] Section 0.A passes in full (old contract — this is what prod runs on day one)
+- [ ] Section 0.B passes in full (new contract — including the invite-flow repro)
 - [ ] All items in sections 1-3 pass (happy path)
-- [ ] Section 5.1-5.5 pass (new connection loss overlay)
+- [ ] Section 5.1-5.5 pass (connection loss overlay)
 - [ ] Section 7.1-7.3 pass (no stuck reveals)
 - [ ] Section 8.1-8.2 pass (play again works)
 - [ ] Section 10 passes (no regressions)
