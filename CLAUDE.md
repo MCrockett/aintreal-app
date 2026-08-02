@@ -224,14 +224,20 @@ GET  /api/images/:path       - Serve images from R2
 
 See [aintreal-game/GAMEFLOW.md](../aintreal-game/GAMEFLOW.md) for WebSocket message format.
 
-## Current State (February 2026)
+## Current State (August 2026)
 
-**Status**: Published on Google Play and App Store
+**Status**: Published on Google Play and App Store (stores at 1.0.1+14)
 
 **App Store:** https://apps.apple.com/us/app/aint-real/id6758273529
 
 **Google Play:** https://play.google.com/store/apps/details?id=com.aintreal.app
-**Version:** 1.0.0+11
+
+**Version:** 1.0.2+15 — Channel-2 answer-leak fast-follow, **in flight on PR #17**
+(`answer_result` contract + dual-server fallback + mid-round resync; plan in
+[CHANNEL2-FASTFOLLOW-PLAN.md](CHANNEL2-FASTFOLLOW-PLAN.md), device pass in
+[PARTY_TEST_PLAN.md](PARTY_TEST_PLAN.md)). **Release sequencing:** this build must
+ship and gain adoption BEFORE aintreal-game #17/#18 merge — merging those
+auto-deploys and breaks all pre-1.0.2 apps.
 
 **Completed Milestones:**
 - M1: Core game loop (Party, Classic, Marathon modes)
@@ -239,9 +245,11 @@ See [aintreal-game/GAMEFLOW.md](../aintreal-game/GAMEFLOW.md) for WebSocket mess
 - M3: Authentication (Firebase, Google Sign-In, Sign in with Apple)
 - M4: Mobile features (haptics, deep links, sharing)
 - M5: Monetization (AdMob banner + interstitial, IAP ad removal $2.99)
-- M6: Google Play published, iOS submitted
+- M6: Google Play + App Store published
 
-**Next**: Social media campaign, iOS approval, content expansion
+**Next**: Ship 1.0.2+15 → merge/deploy aintreal-game #17/#18 → retention-port
+release (weekly leaderboard, career stats, seen-pair dedup, daily streak — see
+plan). Reddit app is live at 2.5.3 on r/AIntRealGame.
 
 ## Questions?
 

@@ -384,6 +384,301 @@ void main() {
     });
   });
 
+  group('RoundData correctness (dual contract)', () {
+    RoundData oldServerRound({bool hasAnswered = false, String? playerChoice}) {
+      return RoundData(
+        round: 1,
+        topUrl: '/top.webp',
+        bottomUrl: '/bottom.webp',
+        aiPosition: 'top',
+        totalRounds: 6,
+        hasAnswered: hasAnswered,
+        playerChoice: playerChoice,
+      );
+    }
+
+    RoundData newServerRound({bool hasAnswered = false, String? playerChoice}) {
+      return RoundData(
+        round: 1,
+        topUrl: '/top.webp',
+        bottomUrl: '/bottom.webp',
+        aiPosition: null,
+        totalRounds: 6,
+        hasAnswered: hasAnswered,
+        playerChoice: playerChoice,
+      );
+    }
+
+    test('unanswered round has no verdict', () {
+      expect(oldServerRound().isCorrect, isNull);
+      expect(newServerRound().isCorrect, isNull);
+    });
+
+    test('old server: derives correctness from round_start aiPosition', () {
+      expect(
+        oldServerRound(hasAnswered: true, playerChoice: 'top').isCorrect,
+        true,
+      );
+      expect(
+        oldServerRound(hasAnswered: true, playerChoice: 'bottom').isCorrect,
+        false,
+      );
+      expect(
+        oldServerRound(hasAnswered: true, playerChoice: 'timeout').isCorrect,
+        false,
+      );
+    });
+
+    test('old server: revealedAiPosition available immediately', () {
+      expect(oldServerRound().revealedAiPosition, 'top');
+    });
+
+    test('new server: verdict unknown until answer_result arrives', () {
+      final answered = newServerRound(hasAnswered: true, playerChoice: 'top');
+      expect(answered.isCorrect, isNull);
+      expect(answered.revealedAiPosition, isNull);
+    });
+
+    test('new server: answer_result supplies verdict and aiPosition', () {
+      final resolved = newServerRound(hasAnswered: true, playerChoice: 'top')
+          .copyWith(resultCorrect: true, resultAiPosition: 'top');
+      expect(resolved.isCorrect, true);
+      expect(resolved.revealedAiPosition, 'top');
+    });
+
+    test('answer_result verdict wins over local derivation', () {
+      // Server is authoritative even if the old-server fallback would disagree
+      final resolved = oldServerRound(hasAnswered: true, playerChoice: 'top')
+          .copyWith(resultCorrect: false, resultAiPosition: 'bottom');
+      expect(resolved.isCorrect, false);
+      expect(resolved.revealedAiPosition, 'bottom');
+    });
+  });
+
+  group('shouldResyncRound', () {
+    RoundData round({int round = 1, int elapsedMs = 0}) => RoundData(
+          round: round,
+          topUrl: '/top.webp',
+          bottomUrl: '/bottom.webp',
+          aiPosition: null,
+          totalRounds: 6,
+          elapsedMs: elapsedMs,
+        );
+
+    test('false when there is no next round', () {
+      expect(shouldResyncRound(round(), null), false);
+      expect(shouldResyncRound(null, null), false);
+    });
+
+    test('true for the first round of a game', () {
+      expect(shouldResyncRound(null, round()), true);
+    });
+
+    test('true when the round number changes', () {
+      expect(shouldResyncRound(round(round: 1), round(round: 2)), true);
+    });
+
+    test('true when a same-round resync carries fresh elapsedMs', () {
+      // Reconnect mid-round: provider rebuilds the SAME round from
+      // roundState with the server's elapsed time — must re-trigger the
+      // screen's resume path even though the round number is unchanged.
+      expect(
+        shouldResyncRound(round(round: 3), round(round: 3, elapsedMs: 4200)),
+        true,
+      );
+      expect(
+        shouldResyncRound(
+          round(round: 3, elapsedMs: 4200),
+          round(round: 3, elapsedMs: 9100),
+        ),
+        true,
+      );
+    });
+
+    test('false for ordinary same-round updates (answers, counts)', () {
+      final r = round(round: 2);
+      expect(
+        shouldResyncRound(r, r.copyWith(hasAnswered: true, answeredCount: 1)),
+        false,
+      );
+    });
+  });
+
+  group('GameStateNotifier answer_result handling', () {
+    late GameStateNotifier notifier;
+
+    setUp(() {
+      notifier = GameStateNotifier();
+      notifier.handleMessage(WsMessage.fromJson({
+        'type': 'round_start',
+        'round': 1,
+        'topUrl': '/top.webp',
+        'bottomUrl': '/bottom.webp',
+        'totalRounds': 6,
+      }));
+    });
+
+    tearDown(() {
+      notifier.dispose();
+    });
+
+    test('round_start without aiPosition produces neutral round', () {
+      expect(notifier.state.roundData, isNotNull);
+      expect(notifier.state.roundData!.aiPosition, isNull);
+      expect(notifier.state.roundData!.isCorrect, isNull);
+    });
+
+    test('answer_result resolves the current round', () {
+      notifier.handleMessage(WsMessage.fromJson({
+        'type': 'answer_result',
+        'round': 1,
+        'choice': 'top',
+        'correct': true,
+        'aiPosition': 'top',
+      }));
+
+      final round = notifier.state.roundData!;
+      expect(round.hasAnswered, true);
+      expect(round.playerChoice, 'top');
+      expect(round.isCorrect, true);
+      expect(round.revealedAiPosition, 'top');
+    });
+
+    test('timed-out answer_result marks round answered with no choice', () {
+      notifier.handleMessage(WsMessage.fromJson({
+        'type': 'answer_result',
+        'round': 1,
+        'choice': null,
+        'correct': false,
+        'timedOut': true,
+        'aiPosition': 'bottom',
+      }));
+
+      final round = notifier.state.roundData!;
+      expect(round.hasAnswered, true);
+      expect(round.playerChoice, isNull);
+      expect(round.isCorrect, false);
+      expect(round.timedOut, true);
+    });
+
+    test('answer_result for a stale round is ignored', () {
+      notifier.handleMessage(WsMessage.fromJson({
+        'type': 'answer_result',
+        'round': 99,
+        'choice': 'top',
+        'correct': true,
+        'aiPosition': 'top',
+      }));
+
+      expect(notifier.state.roundData!.hasAnswered, false);
+      expect(notifier.state.roundData!.isCorrect, isNull);
+    });
+
+    test('re-delivered answer_result is idempotent', () {
+      final message = WsMessage.fromJson({
+        'type': 'answer_result',
+        'round': 1,
+        'choice': 'bottom',
+        'correct': false,
+        'aiPosition': 'top',
+      });
+      notifier.handleMessage(message);
+      notifier.handleMessage(message);
+
+      final round = notifier.state.roundData!;
+      expect(round.hasAnswered, true);
+      expect(round.playerChoice, 'bottom');
+      expect(round.isCorrect, false);
+    });
+  });
+
+  group('GameStateNotifier roundState resync', () {
+    late GameStateNotifier notifier;
+
+    setUp(() {
+      notifier = GameStateNotifier();
+    });
+
+    tearDown(() {
+      notifier.dispose();
+    });
+
+    Map<String, dynamic> connectedJson({Map<String, dynamic>? roundState}) => {
+          'type': 'connected',
+          'playerId': 'player-123',
+          'gameState': {
+            'code': 'ABCD',
+            'status': 'playing',
+            'config': {
+              'rounds': 6,
+              'timePerRound': 5,
+              'speedBonus': true,
+              'randomBonuses': true,
+              'mode': 'party',
+            },
+            'players': [
+              {'id': 'player-123', 'name': 'Alice'},
+              {'id': 'player-456', 'name': 'Bob'},
+            ],
+            'currentRound': 2,
+          },
+          'roundState': roundState,
+        };
+
+    test('connected with roundState restores mid-round state', () {
+      notifier.handleMessage(WsMessage.fromJson(connectedJson(roundState: {
+        'round': 3,
+        'totalRounds': 6,
+        'topUrl': '/top.webp',
+        'bottomUrl': '/bottom.webp',
+        // Deliberately different from config.timePerRound (5) to prove the
+        // round-scoped value is plumbed through, not the config fallback.
+        'timeSeconds': 7,
+        'elapsedMs': 4200,
+        'answered': false,
+      })));
+
+      expect(notifier.state.status, GameStatus.playing);
+      final round = notifier.state.roundData!;
+      expect(round.round, 3);
+      expect(round.topUrl, '/top.webp');
+      expect(round.elapsedMs, 4200);
+      expect(round.timeSeconds, 7);
+      expect(round.hasAnswered, false);
+      expect(round.totalPlayers, 2);
+    });
+
+    test('connected roundState re-applies delivered answer_result', () {
+      notifier.handleMessage(WsMessage.fromJson(connectedJson(roundState: {
+        'round': 3,
+        'totalRounds': 6,
+        'topUrl': '/top.webp',
+        'bottomUrl': '/bottom.webp',
+        'timeSeconds': 5,
+        'elapsedMs': 4800,
+        'answered': true,
+        'answerResult': {
+          'type': 'answer_result',
+          'round': 3,
+          'choice': 'bottom',
+          'correct': false,
+          'aiPosition': 'top',
+        },
+      })));
+
+      final round = notifier.state.roundData!;
+      expect(round.hasAnswered, true);
+      expect(round.playerChoice, 'bottom');
+      expect(round.isCorrect, false);
+      expect(round.revealedAiPosition, 'top');
+    });
+
+    test('connected without roundState leaves round data unset', () {
+      notifier.handleMessage(WsMessage.fromJson(connectedJson()));
+      expect(notifier.state.roundData, isNull);
+    });
+  });
+
   group('GameStateNotifier', () {
     late GameStateNotifier notifier;
 
@@ -456,7 +751,7 @@ void main() {
       notifier.updateConfig({'rounds': 8});
     });
 
-    test('submitAnswer updates local state optimistically', () {
+    test('submitAnswer without a connection reports failure, not answered', () {
       notifier.state = notifier.state.copyWith(
         roundData: RoundData(
           round: 1,
@@ -468,10 +763,11 @@ void main() {
         ),
       );
 
-      notifier.submitAnswer('bottom', 2500);
+      final sent = notifier.submitAnswer('bottom', 2500);
 
-      expect(notifier.state.roundData!.hasAnswered, true);
-      expect(notifier.state.roundData!.playerChoice, 'bottom');
+      expect(sent, false);
+      expect(notifier.state.roundData!.hasAnswered, false);
+      expect(notifier.state.error, isNotNull);
     });
 
     test('submitAnswer does nothing if already answered', () {
