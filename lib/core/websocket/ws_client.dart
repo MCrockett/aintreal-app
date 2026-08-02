@@ -231,9 +231,11 @@ class WsClient with WidgetsBindingObserver {
 
     if (_intentionalDisconnect) return;
 
-    // If backgrounded briefly, just send a ping to verify the socket
-    // survived — a synchronous send failure surfaces the death now instead
-    // of waiting up to 15s for the periodic ping timer.
+    // If backgrounded briefly, send a ping to verify the socket survived.
+    // sink.add on a dead socket usually buffers rather than throwing, so
+    // this rarely fails synchronously — but the write provokes the
+    // transport into firing onDone soon, instead of waiting up to 15s for
+    // the periodic ping timer to notice.
     if (bg == null || DateTime.now().difference(bg).inSeconds <= 2) {
       _sendVerificationPing();
       return;
