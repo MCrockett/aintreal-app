@@ -1,6 +1,6 @@
 # Channel-2 Flutter Fast-Follow Plan
 
-**Repo:** `aintreal-app` (Flutter) · **Status:** NOT STARTED · **Effort:** M · **Owner session:** dedicated
+**Repo:** `aintreal-app` (Flutter) · **Status:** IMPLEMENTED — PR #17 open (2026-08-01), manual device pass pending · **Effort:** M
 **Canonical fix plan:** `aint-real-reddit/ANSWER-LEAK-FIX-PLAN.md` (this is the Flutter half of Channel-2)
 
 ## Why this exists
