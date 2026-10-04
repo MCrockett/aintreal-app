@@ -18,36 +18,41 @@ class Logo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textWidget = Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
-      children: [
-        // "AI" in monospace with coral gradient
-        ShaderMask(
-          shaderCallback: (bounds) =>
-              AppTheme.aiHighlightGradient.createShader(bounds),
-          child: Text(
-            'AI',
+    // scaleDown: shrink rather than overflow on narrow screens or large
+    // accessibility text sizes; never scales up past fontSize.
+    final textWidget = FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
+        children: [
+          // "AI" in monospace with coral gradient
+          ShaderMask(
+            shaderCallback: (bounds) =>
+                AppTheme.aiHighlightGradient.createShader(bounds),
+            child: Text(
+              'AI',
+              style: TextStyle(
+                fontSize: fontSize,
+                fontWeight: FontWeight.w800,
+                fontFamily: 'monospace',
+                fontFamilyFallback: const ['Courier New', 'Courier'],
+                color: Colors.white,
+              ),
+            ),
+          ),
+          // "n't Real" in regular font
+          Text(
+            "n't Real",
             style: TextStyle(
               fontSize: fontSize,
               fontWeight: FontWeight.w800,
-              fontFamily: 'monospace',
-              fontFamilyFallback: const ['Courier New', 'Courier'],
               color: Colors.white,
             ),
           ),
-        ),
-        // "n't Real" in regular font
-        Text(
-          "n't Real",
-          style: TextStyle(
-            fontSize: fontSize,
-            fontWeight: FontWeight.w800,
-            color: Colors.white,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
 
     if (!showIcon) return textWidget;

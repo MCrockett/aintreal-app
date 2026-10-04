@@ -175,6 +175,19 @@ class AdService {
     return shouldShow;
   }
 
+  /// Whether a post-game interstitial may be shown for this game. The party
+  /// host's screen is often the shared one, so a full-screen ad there
+  /// interrupts the whole room; skip it. Solo modes and party guests are
+  /// unaffected. Unknown modes are treated as party (see results_screen
+  /// `_parseGameMode`).
+  static bool allowsPostGameInterstitial({
+    required String? mode,
+    required bool isHost,
+  }) {
+    final isSolo = mode == 'classic' || mode == 'marathon';
+    return isSolo || !isHost;
+  }
+
   /// Show an interstitial ad if frequency rules allow.
   /// Call this after game completion (e.g., when user clicks "New Game").
   /// Returns true if the ad was shown, false otherwise.

@@ -22,6 +22,7 @@ Point the app at a local server with `flutter run --dart-define=API_BASE=http://
 - [ ] Network inspector: `round_start` carries **no `aiPosition`**; verdict arrives only via per-player `answer_result`
 - [ ] Tap an image → brief neutral "Locked in!" state at most, then Correct!/Wrong! + labels
 - [ ] **Invite-flow repro (the playtest lobby-killer):** host backgrounds the app to send the invite link by text → guest joins via that link → lobby is intact when host returns
+  - Locally, the texted link points at prod (`Env.webBase` is hardcoded to aint-real.com), so the guest can't use it. Still send the text (the backgrounding is the test), then have the guest join with the 4-letter code: in a second app built with the same `API_BASE`, or in a browser on the Mac at `http://localhost:8789/join/<CODE>`. A phone browser on the LAN IP can't load images, because the image allowlist only covers localhost.
 - [ ] Host phone-lock < 60s mid-game → game survives (grace window), play continues on unlock
 - [ ] Background the app mid-round for ~10s → resume: round restores with **fast-forwarded timer** (no replayed Get Ready, no full timer reset)
 - [ ] Background after answering → resume: verdict still shown (re-delivered `answer_result`, no double-count in scores)
@@ -96,6 +97,8 @@ Point the app at a local server with `flutter run --dart-define=API_BASE=http://
 - [ ] Photo credits section visible
 - [ ] Host sees "Play Again" button
 - [ ] Guest sees "Leave" button
+- [ ] **Host, no interstitial (#19):** after 5+ completed games on this device, host finishes a party game → taps New Game, and separately Leave → **no full-screen ad** either time
+- [ ] Party guest on the app (5+ games on that device) → New Game / Leave → interstitial still eligible (frequency rules unchanged)
 
 ---
 
@@ -301,3 +304,13 @@ Point the app at a local server with `flutter run --dart-define=API_BASE=http://
 - [ ] Section 8.1-8.2 pass (play again works)
 - [ ] Section 10 passes (no regressions)
 - [ ] No crashes observed during any test
+
+---
+
+## 10. Android: first build with the +14 changes
+
+1.0.1+14 shipped to iOS only. Android goes from +13 straight to 1.0.2+15, so check these on Android:
+- [ ] Home screen has **no banner ad**; layout has no leftover gap at the bottom
+- [ ] Results screen banner still shows (non-ad-free account)
+- [ ] Google Sign-In works (the +14 fix was iOS-side, but confirm nothing regressed)
+
