@@ -167,11 +167,22 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
     }
   }
 
-  Future<void> _newGame() async {
-    // Show interstitial ad if eligible based on frequency rules (mobile only)
-    if (!kIsWeb) {
-      await AdService.instance.showInterstitialIfEligible();
+  /// Interstitial on the way out of results (mobile only, frequency-capped).
+  /// Never for the party host — see AdService.allowsPostGameInterstitial.
+  Future<void> _maybeShowPostGameAd() async {
+    if (kIsWeb) return;
+    final gameState = ref.read(gameStateProvider);
+    if (!AdService.allowsPostGameInterstitial(
+      mode: gameState.config?.mode,
+      isHost: gameState.isHost,
+    )) {
+      return;
     }
+    await AdService.instance.showInterstitialIfEligible();
+  }
+
+  Future<void> _newGame() async {
+    await _maybeShowPostGameAd();
     ref.read(gameStateProvider.notifier).leave();
     // Refresh stats so profile screen shows updated data
     ref.invalidate(userStatsProvider);
@@ -179,10 +190,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
   }
 
   Future<void> _leaveGame() async {
-    // Show interstitial ad if eligible based on frequency rules (mobile only)
-    if (!kIsWeb) {
-      await AdService.instance.showInterstitialIfEligible();
-    }
+    await _maybeShowPostGameAd();
     ref.read(gameStateProvider.notifier).leave();
     // Refresh stats so profile screen shows updated data
     ref.invalidate(userStatsProvider);
