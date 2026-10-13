@@ -182,6 +182,7 @@ class GameState {
     this.revealData,
     this.gameOverData,
     this.countdown,
+    this.hostAway = false,
   });
 
   final String? code;
@@ -198,6 +199,10 @@ class GameState {
   final RevealData? revealData;
   final GameOverData? gameOverData;
   final int? countdown;
+
+  /// The host's connection dropped and the server is holding the game open
+  /// for them to come back (newer servers only). Guests show a banner.
+  final bool hostAway;
 
   bool get isHost => playerId != null && playerId == hostId;
   bool get isConnected => connectionState == WsConnectionState.connected;
@@ -225,6 +230,7 @@ class GameState {
     RevealData? revealData,
     GameOverData? gameOverData,
     int? countdown,
+    bool? hostAway,
     bool clearError = false,
     bool clearRoundData = false,
     bool clearRevealData = false,
@@ -247,6 +253,7 @@ class GameState {
       gameOverData:
           clearGameOverData ? null : (gameOverData ?? this.gameOverData),
       countdown: clearCountdown ? null : (countdown ?? this.countdown),
+      hostAway: hostAway ?? this.hostAway,
     );
   }
 }
@@ -375,6 +382,13 @@ class GameStateNotifier extends StateNotifier<GameState> {
   @visibleForTesting
   void handleMessage(WsMessage message) => _handleMessage(message);
 
+  /// Whether the host is in [players] but not connected.
+  static bool _hostAway(List<WsPlayer> players, String? hostId) {
+    if (hostId == null) return false;
+    final host = players.where((p) => p.id == hostId).firstOrNull;
+    return host != null && !host.connected;
+  }
+
   void _handleMessage(WsMessage message) {
     debugPrint('WS message: ${message.runtimeType}');
 
@@ -394,6 +408,7 @@ class GameStateNotifier extends StateNotifier<GameState> {
             players: gameState.players,
             currentRound: gameState.currentRound,
             hostId: gameState.hostId,
+            hostAway: _hostAway(gameState.players, gameState.hostId),
           );
         } else {
           state = state.copyWith(playerId: playerId);
@@ -435,7 +450,11 @@ class GameStateNotifier extends StateNotifier<GameState> {
         }
 
       case PlayerJoinedMessage(:final players):
-        state = state.copyWith(players: players);
+        // Covers player_connected: the host coming back ends the wait.
+        state = state.copyWith(
+          players: players,
+          hostAway: state.hostAway && _hostAway(players, state.hostId),
+        );
 
       case PlayerLeftMessage(:final players, :final newHost):
         state = state.copyWith(
@@ -568,7 +587,11 @@ class GameStateNotifier extends StateNotifier<GameState> {
       case HostLeftMessage():
         state = state.copyWith(
           error: 'Host left the game',
+          hostAway: false,
         );
+
+      case HostDisconnectedMessage():
+        state = state.copyWith(hostAway: !state.isHost);
 
       case ErrorMessage(:final message):
         state = state.copyWith(error: message);

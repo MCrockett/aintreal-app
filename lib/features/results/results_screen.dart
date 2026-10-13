@@ -21,6 +21,7 @@ import '../../models/game.dart' hide GameState, GameStatus;
 import '../../widgets/banner_ad_widget.dart';
 import '../../widgets/cross_platform_image.dart';
 import '../../widgets/gradient_background.dart';
+import '../../widgets/host_away_banner.dart';
 
 /// Results screen showing final rankings and scores.
 class ResultsScreen extends ConsumerStatefulWidget {
@@ -491,6 +492,10 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                                 child: const Text('New Game'),
                               ),
                             ] else ...[
+                              if (gameState.hostAway) ...[
+                                const HostAwayBanner(),
+                                const SizedBox(height: 12),
+                              ],
                               // Guest: primary action is Back to Lobby
                               Container(
                                 decoration: BoxDecoration(

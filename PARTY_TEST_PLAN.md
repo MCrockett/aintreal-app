@@ -22,6 +22,7 @@ Point the app at a local server with `flutter run --dart-define=API_BASE=http://
 - [ ] Network inspector: `round_start` carries **no `aiPosition`**; verdict arrives only via per-player `answer_result`
 - [ ] Tap an image → brief neutral "Locked in!" state at most, then Correct!/Wrong! + labels
 - [ ] **Invite-flow repro (the playtest lobby-killer):** host backgrounds the app to send the invite link by text → guest joins via that link → lobby is intact when host returns
+- [ ] **Host reconnecting banner (guest view):** while the host is away in the lobby, the guest sees "Host reconnecting… hang tight." under the header; it disappears when the host returns. Same on the results screen (above Back to Lobby). Host never sees it. If the host stays away past 60s, the guest gets the "host left" dialog.
   - Locally, the texted link points at prod (`Env.webBase` is hardcoded to aint-real.com), so the guest can't use it. Still send the text (the backgrounding is the test), then have the guest join with the 4-letter code: in a second app built with the same `API_BASE`, or in a browser on the Mac at `http://localhost:8789/join/<CODE>`. A phone browser on the LAN IP can't load images, because the image allowlist only covers localhost.
 - [ ] Host phone-lock < 60s mid-game → game survives (grace window), play continues on unlock
 - [ ] Background the app mid-round for ~10s → resume: round restores with **fast-forwarded timer** (no replayed Get Ready, no full timer reset)

@@ -13,6 +13,7 @@ import '../../core/websocket/ws_client.dart';
 import '../../core/websocket/ws_messages.dart';
 import '../../widgets/gradient_background.dart';
 import '../../widgets/how_to_play_dialog.dart';
+import '../../widgets/host_away_banner.dart';
 
 /// Lobby screen showing players waiting for game to start.
 class LobbyScreen extends ConsumerStatefulWidget {
@@ -366,6 +367,12 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
                 ],
               ),
             ),
+
+            if (gameState.hostAway && !isHost)
+              const Padding(
+                padding: EdgeInsets.fromLTRB(24, 16, 24, 0),
+                child: HostAwayBanner(),
+              ),
 
             // Game code display
             Padding(

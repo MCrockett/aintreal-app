@@ -17,6 +17,7 @@ enum WsMessageType {
   gameOver,
   returnToLobby,
   hostLeft,
+  hostDisconnected,
   error,
   unknown,
 }
@@ -43,6 +44,7 @@ WsMessageType parseMessageType(String type) {
     'game_over' => WsMessageType.gameOver,
     'return_to_lobby' => WsMessageType.returnToLobby,
     'host_left' => WsMessageType.hostLeft,
+    'host_disconnected' => WsMessageType.hostDisconnected,
     'error' => WsMessageType.error,
     _ => WsMessageType.unknown,
   };
@@ -72,6 +74,7 @@ sealed class WsMessage {
       WsMessageType.gameOver => GameOverMessage.fromJson(json),
       WsMessageType.returnToLobby => ReturnToLobbyMessage.fromJson(json),
       WsMessageType.hostLeft => const HostLeftMessage(),
+      WsMessageType.hostDisconnected => HostDisconnectedMessage.fromJson(json),
       WsMessageType.error => ErrorMessage.fromJson(json),
       WsMessageType.unknown => UnknownMessage(json),
     };
@@ -741,6 +744,22 @@ class ReturnToLobbyMessage extends WsMessage {
 /// Host disconnected.
 class HostLeftMessage extends WsMessage {
   const HostLeftMessage();
+}
+
+/// The host's connection dropped in the lobby or on the results screen
+/// (newer servers only). The server holds the game open for [graceMs]; the
+/// host reconnecting (`player_connected`) cancels it, otherwise `host_left`
+/// follows.
+class HostDisconnectedMessage extends WsMessage {
+  const HostDisconnectedMessage({required this.graceMs});
+
+  factory HostDisconnectedMessage.fromJson(Map<String, dynamic> json) {
+    return HostDisconnectedMessage(
+      graceMs: json['graceMs'] as int? ?? 60000,
+    );
+  }
+
+  final int graceMs;
 }
 
 /// Error from server.
