@@ -1,7 +1,9 @@
 ---
 {
   "adopted": 19,
-  "authors": {},
+  "authors": {
+    "build": "claude"
+  },
   "branch": "feature/3.3-no-interstitial-party-host",
   "extra_rounds": {},
   "feature": "app-1-0-2-finishers",
@@ -28,14 +30,16 @@
     "plan": null,
     "spec": null
   },
-  "rounds": {},
+  "rounds": {
+    "build": 1
+  },
   "skipped": [
     "spec"
   ],
   "small": false,
   "stage": "build",
-  "status": "drafting",
-  "updated": "2026-10-13T19:48:02-04:00",
+  "status": "in-review",
+  "updated": "2026-10-13T19:48:51-04:00",
   "verdicts": {}
 }
 ---
