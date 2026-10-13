@@ -169,7 +169,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
   }
 
   /// Interstitial on the way out of results (mobile only, frequency-capped).
-  /// Never for the party host — see AdService.allowsPostGameInterstitial.
+  /// Never for the party host; see AdService.allowsPostGameInterstitial.
   Future<void> _maybeShowPostGameAd() async {
     if (kIsWeb) return;
     final gameState = ref.read(gameStateProvider);
