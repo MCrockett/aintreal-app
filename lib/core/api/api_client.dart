@@ -31,6 +31,10 @@ class ApiClient {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
           'X-Mobile-App': Env.mobileAppSecret,
+          // Lets the server tell app versions apart (e.g. ask pre-1.0.2
+          // apps, which send no version, to update). Native only: the
+          // server's CORS allow-list doesn't include it.
+          if (!kIsWeb) 'X-App-Version': Env.appVersion,
         },
       );
 
