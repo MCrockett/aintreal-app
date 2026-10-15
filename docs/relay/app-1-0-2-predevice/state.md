@@ -1,7 +1,9 @@
 ---
 {
   "adopted": 20,
-  "authors": {},
+  "authors": {
+    "build": "claude"
+  },
   "branch": "docs/5.2-device-pass-plan",
   "extra_rounds": {},
   "feature": "app-1-0-2-predevice",
@@ -28,14 +30,16 @@
     "plan": null,
     "spec": null
   },
-  "rounds": {},
+  "rounds": {
+    "build": 1
+  },
   "skipped": [
     "spec"
   ],
   "small": false,
   "stage": "build",
-  "status": "drafting",
-  "updated": "2026-10-15T10:49:11-04:00",
+  "status": "in-review",
+  "updated": "2026-10-15T10:49:24-04:00",
   "verdicts": {}
 }
 ---
