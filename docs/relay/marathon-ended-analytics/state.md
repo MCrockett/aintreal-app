@@ -25,8 +25,18 @@
   "refresh": false,
   "repo": "aintreal-app",
   "retried": false,
+  "review_notes": {},
   "reviewed": {
-    "build": null,
+    "build": {
+      "base_ref": "origin/main",
+      "base_sha": "afd01d3f256b7439a6de1121a4e0453c5b9c168f",
+      "head": "3f820906ec1bc76419d5a72a6f8091f6080f3319",
+      "inputs": {
+        "idea": "0c7e2cdaee6400c26934dc3f180b981d3be199d078684060e65ad66909b1e529",
+        "plan": "942a36b462dd974043b15627aee08db4e97571735c148105aa2e8dfc027c6b9e"
+      },
+      "merge": "32daa4fa11fa36672b9b0b12e93966bf1cf5087fde613dfc3c4e18883400e160"
+    },
     "plan": null,
     "spec": null
   },
@@ -38,9 +48,11 @@
   ],
   "small": false,
   "stage": "build",
-  "status": "in-review",
-  "updated": "2026-10-15T19:31:30-04:00",
-  "verdicts": {}
+  "status": "ready-to-merge",
+  "updated": "2026-10-15T19:32:49-04:00",
+  "verdicts": {
+    "build": "GO"
+  }
 }
 ---
 
