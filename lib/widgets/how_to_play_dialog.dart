@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/theme.dart';
 
@@ -8,6 +9,19 @@ void showHowToPlayDialog(BuildContext context) {
     context: context,
     builder: (context) => const HowToPlayDialog(),
   );
+}
+
+/// SharedPreferences key set once How to Play has been shown automatically.
+const howToPlaySeenKey = 'how_to_play_seen';
+
+/// Shows How to Play once, the first time the home screen opens. New players
+/// were going straight into games without it (2026-10-15 deep dive).
+Future<void> showHowToPlayOnFirstLaunch(BuildContext context) async {
+  final prefs = await SharedPreferences.getInstance();
+  if (prefs.getBool(howToPlaySeenKey) ?? false) return;
+  await prefs.setBool(howToPlaySeenKey, true);
+  if (!context.mounted) return;
+  showHowToPlayDialog(context);
 }
 
 /// How to Play dialog widget matching the web version.

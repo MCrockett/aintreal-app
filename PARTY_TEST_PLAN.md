@@ -276,6 +276,10 @@ Point the app at a local server with `flutter run --dart-define=API_BASE=http://
 - [ ] Party **host** never gets a post-game interstitial; a party guest still can
 - [ ] Verify ads don't appear during gameplay
 
+### 10.5 First launch How to Play
+- [ ] Fresh install (or cleared app data): How to Play opens by itself on the first home screen, once
+- [ ] Close it and relaunch: it does not open again; the How to Play button still works
+
 ### 10.4 Purchases (Play Billing 8, Android)
 - [ ] Profile → Remove Ads shows the store price (product query works)
 - [ ] Restore Purchases completes with a message, no error

@@ -9,7 +9,7 @@ import 'package:aintreal_app/core/auth/auth_provider.dart';
 void main() {
   setUp(() {
     // Set up mock SharedPreferences with a guest name for all tests
-    SharedPreferences.setMockInitialValues({'guest_name': 'TestPlayer'});
+    SharedPreferences.setMockInitialValues({'guest_name': 'TestPlayer', 'how_to_play_seen': true});
   });
 
   Widget createTestApp({Widget? child}) {

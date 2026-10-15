@@ -29,6 +29,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) showHowToPlayOnFirstLaunch(context);
+    });
     PackageInfo.fromPlatform().then((info) {
       if (mounted) {
         final v = info.version;
