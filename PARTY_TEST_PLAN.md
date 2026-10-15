@@ -3,7 +3,7 @@
 Manual test plan for party mode. Use two physical devices (or one device + web browser at play.aint-real.com). This is the device pass required by `CHANNEL2-FASTFOLLOW-PLAN.md` before merging PR #17 and, later, the aintreal-game server PRs.
 
 **Devices needed:** 2 phones (or 1 phone + 1 web browser)
-**Build:** v1.0.2+15 (branch `feature/3.2-channel2-fastfollow`)
+**Build:** v1.0.2+15 (`main` after PR #19)
 
 **Run section 0 twice — once per server contract.** Everything else can run once against either.
 
@@ -271,9 +271,19 @@ Point the app at a local server with `flutter run --dart-define=API_BASE=http://
 - [ ] Verify results show streak count
 
 ### 10.3 Ads not broken
-- [ ] Verify banner ad on home screen
-- [ ] Play 5+ games → verify interstitial shows after 5th
+- [ ] Home screen has **no** banner ad (removed in +14); results screen banner still shows
+- [ ] Solo: play 5+ games → interstitial shows after the 5th (then every 3rd, at most once per 5 min)
+- [ ] Party **host** never gets a post-game interstitial; a party guest still can
 - [ ] Verify ads don't appear during gameplay
+
+### 10.5 First launch How to Play
+- [ ] Fresh install (or cleared app data): How to Play opens by itself on the first home screen, once
+- [ ] Close it and relaunch: it does not open again; the How to Play button still works
+
+### 10.4 Purchases (Play Billing 8, Android)
+- [ ] Profile → Remove Ads shows the store price (product query works)
+- [ ] Restore Purchases completes with a message, no error
+- [ ] Full purchase with a license-tester account: run on the internal-testing build after upload, not a sideloaded debug build
 
 ---
 
@@ -303,7 +313,7 @@ Point the app at a local server with `flutter run --dart-define=API_BASE=http://
 - [ ] Section 5.1-5.5 pass (connection loss overlay)
 - [ ] Section 7.1-7.3 pass (no stuck reveals)
 - [ ] Section 8.1-8.2 pass (play again works)
-- [ ] Section 10 passes (no regressions)
+- [ ] Section 10 passes (no regressions, including 10.4 purchases on Android)
 - [ ] No crashes observed during any test
 
 ---

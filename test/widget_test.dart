@@ -11,7 +11,7 @@ import 'package:aintreal_app/widgets/logo.dart';
 void main() {
   setUp(() {
     // Set up mock SharedPreferences with a guest name
-    SharedPreferences.setMockInitialValues({'guest_name': 'TestPlayer'});
+    SharedPreferences.setMockInitialValues({'guest_name': 'TestPlayer', 'how_to_play_seen': true});
   });
 
   testWidgets('App renders home screen', (WidgetTester tester) async {

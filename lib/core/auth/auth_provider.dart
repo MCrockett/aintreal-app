@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../analytics/analytics_service.dart';
+import '../../utils/guest_name_generator.dart';
 import 'firebase_auth_service.dart';
 
 /// Record non-fatal error to Crashlytics (mobile only).
@@ -41,10 +42,20 @@ class AuthStateAuthenticated extends AuthState {
   AuthStateAuthenticated(this.user);
   final User user;
 
-  String get displayName => user.displayName ?? user.email ?? 'Player';
+  String get displayName =>
+      publicPlayerName(displayName: user.displayName, uid: user.uid);
   String? get email => user.email;
   String? get photoUrl => user.photoURL;
   String get uid => user.uid;
+}
+
+/// The name shown to other players and on public leaderboards. Never the
+/// email: Sign in with Apple ("Hide my email") and some Google accounts have
+/// no display name, and the email used to leak onto leaderboards.
+String publicPlayerName({String? displayName, required String uid}) {
+  final name = displayName?.trim();
+  if (name != null && name.isNotEmpty && !name.contains('@')) return name;
+  return GuestNameGenerator.forSeed(uid);
 }
 
 /// Error occurred during authentication.
