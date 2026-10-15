@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../analytics/analytics_service.dart';
 import '../api/game_api.dart';
 import 'ws_client.dart';
 import 'ws_messages.dart';
@@ -259,8 +260,19 @@ class GameState {
 }
 
 /// Notifier for managing game state and WebSocket connection.
+/// Logs the `marathon_ended` analytics event; injectable for tests.
+typedef MarathonEndedLogger = Future<void> Function({
+  required int roundsCompleted,
+  required int score,
+});
+
 class GameStateNotifier extends StateNotifier<GameState> {
-  GameStateNotifier() : super(const GameState());
+  GameStateNotifier({MarathonEndedLogger? logMarathonEnded})
+      : _logMarathonEnded =
+            logMarathonEnded ?? AnalyticsService.instance.logMarathonEnded,
+        super(const GameState());
+
+  final MarathonEndedLogger _logMarathonEnded;
 
   WsClient? _wsClient;
 
@@ -612,6 +624,11 @@ class GameStateNotifier extends StateNotifier<GameState> {
           :final credits
         ):
         // Handle marathon mode ending - create a FinalRanking for the player
+        // streak = rounds survived (0 = first answer wrong or timed out).
+        // Log once per marathon; a repeated message arrives already finished.
+        if (state.status != GameStatus.finished) {
+          _logMarathonEnded(roundsCompleted: streak, score: streak * 100);
+        }
         final playerName = state.playerName ?? 'Player';
         final playerId = state.playerId ?? '';
         final ranking = FinalRanking(
