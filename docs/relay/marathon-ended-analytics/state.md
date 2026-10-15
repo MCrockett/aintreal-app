@@ -1,7 +1,9 @@
 ---
 {
   "adopted": 21,
-  "authors": {},
+  "authors": {
+    "build": "claude"
+  },
   "branch": "fix/5.2-marathon-ended-analytics",
   "extra_rounds": {},
   "feature": "marathon-ended-analytics",
@@ -28,14 +30,16 @@
     "plan": null,
     "spec": null
   },
-  "rounds": {},
+  "rounds": {
+    "build": 1
+  },
   "skipped": [
     "spec"
   ],
   "small": false,
   "stage": "build",
-  "status": "drafting",
-  "updated": "2026-10-15T19:31:21-04:00",
+  "status": "in-review",
+  "updated": "2026-10-15T19:31:30-04:00",
   "verdicts": {}
 }
 ---
