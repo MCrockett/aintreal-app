@@ -253,7 +253,7 @@ See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.m
 - [x] SKAdNetwork identifiers (19 networks)
 
 ### iOS IAP — Complete (Ad Removal)
-- [x] Ad Removal - $2.99 (com.aintreal.remove_ads)
+- [x] Ad Removal - $2.99 (`remove_ads`, as in `purchase_service.dart`; confirm the App Store Connect and Play IDs match)
 - [ ] Theme pack IAPs (deferred to Phase 2)
 
 ### iOS-Specific Features — Complete
@@ -261,11 +261,11 @@ See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.m
 - [x] Universal links configured
 - [x] Edge-to-edge layout fixes
 
-### iOS App Store Submission — In Review
+### iOS App Store Submission — Live
 - [x] Built and uploaded IPA
 - [x] Screenshots, privacy labels, reviewer instructions
 - [x] Submitted to App Review
-- [ ] Await approval and release
+- [x] Approved and released (App Store 1.0.1+14, confirmed 2026-10-04)
 
 ---
 
