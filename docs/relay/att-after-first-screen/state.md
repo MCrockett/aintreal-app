@@ -1,7 +1,9 @@
 ---
 {
   "adopted": 24,
-  "authors": {},
+  "authors": {
+    "build": "claude"
+  },
   "branch": "fix/8.1-att-after-first-screen",
   "extra_rounds": {},
   "feature": "att-after-first-screen",
@@ -28,14 +30,16 @@
     "plan": null,
     "spec": null
   },
-  "rounds": {},
+  "rounds": {
+    "build": 1
+  },
   "skipped": [
     "spec"
   ],
   "small": false,
   "stage": "build",
-  "status": "drafting",
-  "updated": "2026-10-18T17:17:24-04:00",
+  "status": "in-review",
+  "updated": "2026-10-18T17:17:36-04:00",
   "verdicts": {}
 }
 ---
