@@ -39,7 +39,7 @@ See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.m
 
 ## Next: 1.1
 
-- [ ] **Hide the version from the home screen** (owner, 2026-10-18). Show it behind an easter egg: about 3 taps on the logo, like Chain Rules. iOS build numbers become date-based (e.g. `1.0.2 (202610181530)`) once releases go through the shared release tools, so they're long, and they're only useful for support and testing.
+- [ ] **Show the version only in test mode** (owner, 2026-10-18). Test mode is already the hidden switch (5 taps on the "Spot the AI" subtitle), so no new easter egg is needed. iOS build numbers become date-based (e.g. `1.0.2 (202610181530)`) once releases go through the shared release tools, so they're long, and they're only useful for support and testing.
 - [ ] **Home screen redesign** (owner, 2026-10-17): sample images, a look closer to the Reddit splash, the logo, and a wordmark that matches Reddit and the web.
 - [ ] **Weekly leaderboard in the app** (owner, 2026-10-17): first save the signed-in user ID and game mode with each result on the server, then per-mode weekly boards (Marathon best streak, Classic accuracy).
 
