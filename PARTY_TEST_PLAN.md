@@ -23,8 +23,9 @@ Point the app at a local server with `flutter run --dart-define=API_BASE=http://
 - [ ] Tap an image → brief neutral "Locked in!" state at most, then Correct!/Wrong! + labels
 - [ ] **Invite-flow repro (the playtest lobby-killer):** host backgrounds the app to send the invite link by text → guest joins via that link → lobby is intact when host returns
   - Locally, the texted link points at prod (`Env.webBase` is hardcoded to aint-real.com), so the guest can't use it. Still send the text (the backgrounding is the test), then have the guest join with the 4-letter code: in a second app built with the same `API_BASE`, or in a browser on the Mac at `http://localhost:8789/join/<CODE>`. A phone browser on the LAN IP can't load images, because the image allowlist only covers localhost.
-- [ ] **Host reconnecting banner (guest view):** while the host is away in the lobby, the guest sees "Host reconnecting… hang tight." under the header; it disappears when the host returns. Same on the results screen (above Back to Lobby). Host never sees it. If the host stays away past 60s, the guest gets the "host left" dialog.
-- [ ] Host phone-lock < 60s mid-game → game survives (grace window), play continues on unlock
+- [ ] **Host reconnecting banner (guest view):** while the host is away in the lobby, the guest sees "Host reconnecting… hang tight." under the header; it disappears when the host returns. Same on the results screen (above Back to Lobby). Host never sees it. If the host stays away past the grace window (5 min with game PR #18; set `--var HOST_GRACE_MS:20000` locally to test quickly), the guest gets the "host left" dialog.
+- [ ] **Host returns after the lobby closed:** after that, bring the host back. It shows "Game Ended — This game ended while you were away." and returns home, not an endless Connecting/Reconnecting screen (app PR #23).
+- [ ] Host phone-lock mid-game (a started game never waits on the host) → game survives (grace window), play continues on unlock
 - [ ] Background the app mid-round for ~10s → resume: round restores with **fast-forwarded timer** (no replayed Get Ready, no full timer reset)
 - [ ] Background after answering → resume: verdict still shown (re-delivered `answer_result`, no double-count in scores)
 - [ ] Background until the round ends → resume: timed-out "Time Up!" state, next round proceeds

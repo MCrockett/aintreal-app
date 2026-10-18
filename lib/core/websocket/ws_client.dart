@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
+import 'package:flutter/foundation.dart'
+    show debugPrint, kIsWeb, visibleForTesting;
 import 'package:flutter/widgets.dart'
     show AppLifecycleState, WidgetsBinding, WidgetsBindingObserver;
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -24,6 +25,8 @@ class WsClient with WidgetsBindingObserver {
     this.onMessage,
     this.onStateChange,
     this.onError,
+    this.gameExists,
+    this.onGameGone,
   }) {
     WidgetsBinding.instance.addObserver(this);
   }
@@ -32,6 +35,20 @@ class WsClient with WidgetsBindingObserver {
   final void Function(WsMessage message)? onMessage;
   final void Function(WsConnectionState state)? onStateChange;
   final void Function(String error)? onError;
+
+  /// Asked after a failed reconnect. Returning false (the server no longer
+  /// has the game, e.g. the lobby closed while the host was away) stops
+  /// retrying and reports [gameEndedError] instead of reconnecting forever.
+  final Future<bool> Function()? gameExists;
+
+  /// Called once, instead of [onError] and [onStateChange], when
+  /// [gameExists] says the game is gone, so the owner can publish the
+  /// terminal state and its reason together. Without it, [onError] gets
+  /// [gameEndedError] and [onStateChange] gets disconnected.
+  final void Function()? onGameGone;
+
+  /// Error reported when the game no longer exists on the server.
+  static const gameEndedError = 'This game ended while you were away.';
 
   WebSocketChannel? _channel;
   StreamSubscription? _subscription;
@@ -50,6 +67,10 @@ class WsClient with WidgetsBindingObserver {
   bool _intentionalDisconnect = false;
   DateTime? _backgroundedAt;
 
+  /// Bumped by [disconnect]; an attempt that awaited across a disconnect
+  /// must not emit anything.
+  int _generation = 0;
+
   /// Connect to the WebSocket server.
   Future<void> connect() async {
     debugPrint('WS connect() called, current state: $_state, url: $url');
@@ -61,6 +82,7 @@ class WsClient with WidgetsBindingObserver {
     }
 
     _intentionalDisconnect = false;
+    final generation = _generation;
     _setConnectionState(WsConnectionState.connecting);
 
     try {
@@ -87,6 +109,25 @@ class WsClient with WidgetsBindingObserver {
       debugPrint('WebSocket connect error: $e');
       _recordError(e, stack, 'WebSocket connection failed');
 
+      final gone = await _gameIsGone();
+      // Left, or replaced by another connection, while the check ran.
+      if (generation != _generation || _intentionalDisconnect) return;
+
+      if (gone) {
+        debugPrint('WS game no longer exists; not reconnecting');
+        _intentionalDisconnect = true;
+        _cleanup();
+        final notify = onGameGone;
+        if (notify != null) {
+          _state = WsConnectionState.disconnected;
+          notify();
+        } else {
+          onError?.call(gameEndedError);
+          _setConnectionState(WsConnectionState.disconnected);
+        }
+        return;
+      }
+
       // If we're reconnecting, stay in reconnecting state and keep trying
       // rather than transitioning to disconnected on each failed attempt.
       if (_reconnectAttempts > 0) {
@@ -100,8 +141,28 @@ class WsClient with WidgetsBindingObserver {
     }
   }
 
+  bool _checkingGame = false;
+
+  /// Whether a [gameExists] check is in flight (tests).
+  @visibleForTesting
+  bool get isCheckingGame => _checkingGame;
+
+  Future<bool> _gameIsGone() async {
+    final check = gameExists;
+    if (check == null) return false;
+    _checkingGame = true;
+    try {
+      return !await check();
+    } catch (_) {
+      return false; // Unknown (offline): keep retrying.
+    } finally {
+      _checkingGame = false;
+    }
+  }
+
   /// Disconnect from the WebSocket server.
   void disconnect() {
+    _generation++;
     _intentionalDisconnect = true;
     _cleanup();
     _setConnectionState(WsConnectionState.disconnected);
@@ -290,13 +351,17 @@ class WsClient with WidgetsBindingObserver {
 
   /// Record non-fatal error to Crashlytics (mobile only).
   void _recordError(dynamic error, StackTrace? stack, String reason) {
-    if (!kIsWeb) {
+    if (kIsWeb) return;
+    try {
       FirebaseCrashlytics.instance.recordError(
         error,
         stack ?? StackTrace.current,
         reason: reason,
         fatal: false,
       );
+    } catch (_) {
+      // Firebase not initialized (tests); reporting must never break the
+      // connection logic.
     }
   }
 }

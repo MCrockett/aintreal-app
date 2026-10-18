@@ -110,6 +110,17 @@ class GameApi {
     }
   }
 
+  /// Whether the server still has this game. False only on a definite
+  /// "game not found"; other failures (offline, server error) throw.
+  Future<bool> gameExists(String code) async {
+    try {
+      await getGameState(code);
+      return true;
+    } on GameNotFoundException {
+      return false;
+    }
+  }
+
   /// Build full image URL from relative path.
   String getImageUrl(String path) {
     final baseUrl = _client.dio.options.baseUrl;
