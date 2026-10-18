@@ -313,6 +313,7 @@ class GameStateNotifier extends StateNotifier<GameState> {
       onMessage: _handleMessage,
       onStateChange: _handleConnectionStateChange,
       onError: _handleError,
+      gameExists: () => GameApi.instance.gameExists(code),
     );
 
     await _wsClient!.connect();

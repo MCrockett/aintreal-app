@@ -225,13 +225,15 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
     );
   }
 
-  void _showConnectionLostDialog() {
+  void _showConnectionLostDialog({bool gameEnded = false}) {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('Connection Lost'),
-        content: const Text('The connection to the game was lost.'),
+        title: Text(gameEnded ? 'Game Ended' : 'Connection Lost'),
+        content: Text(gameEnded
+            ? WsClient.gameEndedError
+            : 'The connection to the game was lost.'),
         actions: [
           TextButton(
             onPressed: () {
@@ -278,7 +280,9 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
           previous?.connectionState != null &&
           previous?.connectionState != WsConnectionState.disconnected &&
           next.error != 'Host left the game') {
-        _showConnectionLostDialog();
+        _showConnectionLostDialog(
+          gameEnded: next.error == WsClient.gameEndedError,
+        );
         return;
       }
 
