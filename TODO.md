@@ -37,6 +37,12 @@ See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.m
 
 ---
 
+## Next: 1.1
+
+- [ ] **Show the version only in test mode** (owner, 2026-10-18). Test mode is already the hidden switch (5 taps on the "Spot the AI" subtitle), so no new easter egg is needed. iOS build numbers become date-based (e.g. `1.0.2 (202610181530)`) once releases go through the shared release tools, so they're long, and they're only useful for support and testing.
+- [ ] **Home screen redesign** (owner, 2026-10-17): sample images, a look closer to the Reddit splash, the logo, and a wordmark that matches Reddit and the web.
+- [ ] **Weekly leaderboard in the app** (owner, 2026-10-17): first save the signed-in user ID and game mode with each result on the server, then per-mode weekly boards (Marathon best streak, Classic accuracy).
+
 ## Immediate: Post-Launch
 
 ### iOS App Store
@@ -266,6 +272,11 @@ See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.m
 - [x] Screenshots, privacy labels, reviewer instructions
 - [x] Submitted to App Review
 - [x] Approved and released (App Store 1.0.1+14, confirmed 2026-10-04)
+
+### iOS tracking prompt on first launch — 1.0.2
+- [x] Ask for App Tracking Transparency after the home screen's first frame, before How to Play (found in the 1.0.2 device pass: asking during startup made iOS skip the prompt on first launch)
+- [x] `ITSAppUsesNonExemptEncryption = false` in Info.plist (HTTPS only; needed by the shared release tools' package check)
+- [x] Device check: fresh install on iPad shows the tracking prompt, then How to Play (2026-10-18)
 
 ---
 
