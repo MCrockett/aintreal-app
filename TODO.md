@@ -41,6 +41,7 @@ See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.m
 
 - [ ] **Show the version only in test mode** (owner, 2026-10-18). Test mode is already the hidden switch (5 taps on the "Spot the AI" subtitle), so no new easter egg is needed. iOS build numbers become date-based (e.g. `1.0.2 (202610181530)`) once releases go through the shared release tools, so they're long, and they're only useful for support and testing.
 - [ ] **Home screen redesign** (owner, 2026-10-17): sample images, a look closer to the Reddit splash, the logo, and a wordmark that matches Reddit and the web.
+- [ ] **Raise the iOS deployment target to 15.0** (Apple notice, 2026-10-18, on the 1.0.2 upload and by email): from April 2027, App Store Connect only accepts apps targeting iOS 15.0 or later; AIn't Real targets 13.0. Update `IPHONEOS_DEPLOYMENT_TARGET` in the Runner project and `platform :ios` in the Podfile, run `pod install`, and check the plugins still build.
 - [ ] **Weekly leaderboard in the app** (owner, 2026-10-17): first save the signed-in user ID and game mode with each result on the server, then per-mode weekly boards (Marathon best streak, Classic accuracy).
 
 ## Immediate: Post-Launch
