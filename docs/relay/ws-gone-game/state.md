@@ -7,7 +7,20 @@
   "branch": "fix/2.1-gone-game-stops-reconnect",
   "extra_rounds": {},
   "feature": "ws-gone-game",
-  "history": {},
+  "history": {
+    "build": [
+      {
+        "blocking_ids": [
+          "R1-1",
+          "R1-2"
+        ],
+        "head": "793963ab06acd5f6749298828906a608f352f22d",
+        "prior": {},
+        "round": 1,
+        "verdict": "NO-GO"
+      }
+    ]
+  },
   "owner": {
     "provider": "claude",
     "session": "e6bd8b14-88e6-443c-88e8-034e262cd89d",
@@ -25,6 +38,7 @@
   "refresh": false,
   "repo": "aintreal-app",
   "retried": false,
+  "review_notes": {},
   "reviewed": {
     "build": null,
     "plan": null,
@@ -38,9 +52,11 @@
   ],
   "small": false,
   "stage": "build",
-  "status": "in-review",
-  "updated": "2026-10-18T15:46:16-04:00",
-  "verdicts": {}
+  "status": "changes-requested",
+  "updated": "2026-10-18T15:48:39-04:00",
+  "verdicts": {
+    "build": "NO-GO"
+  }
 }
 ---
 
