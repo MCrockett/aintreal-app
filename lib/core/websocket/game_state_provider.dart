@@ -314,6 +314,7 @@ class GameStateNotifier extends StateNotifier<GameState> {
       onStateChange: _handleConnectionStateChange,
       onError: _handleError,
       gameExists: () => GameApi.instance.gameExists(code),
+      onGameGone: _handleGameGone,
     );
 
     await _wsClient!.connect();
@@ -662,6 +663,19 @@ class GameStateNotifier extends StateNotifier<GameState> {
   void _handleConnectionStateChange(WsConnectionState connectionState) {
     debugPrint('WS connection state: $connectionState');
     state = state.copyWith(connectionState: connectionState);
+  }
+
+  /// The server no longer has this game. One update carries both the
+  /// disconnected state and the reason, so screens can tell it apart from
+  /// an ordinary lost connection.
+  @visibleForTesting
+  void handleGameGone() => _handleGameGone();
+
+  void _handleGameGone() {
+    state = state.copyWith(
+      connectionState: WsConnectionState.disconnected,
+      error: WsClient.gameEndedError,
+    );
   }
 
   void _handleError(String error) {

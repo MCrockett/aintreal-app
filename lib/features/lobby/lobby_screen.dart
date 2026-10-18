@@ -15,6 +15,26 @@ import '../../widgets/gradient_background.dart';
 import '../../widgets/how_to_play_dialog.dart';
 import '../../widgets/host_away_banner.dart';
 
+/// Which fatal dialog the lobby shows for a connection change.
+enum LobbyDisconnectDialog { none, connectionLost, gameEnded }
+
+/// The lobby's rule: a fatal dialog only on the transition to disconnected
+/// (reconnecting shows in the header instead), except when the host left,
+/// which has its own dialog. [WsClient.gameEndedError] on that same update
+/// means the server no longer has the game.
+LobbyDisconnectDialog lobbyDisconnectDialog(GameState? previous, GameState next) {
+  final becameDisconnected =
+      next.connectionState == WsConnectionState.disconnected &&
+          previous?.connectionState != null &&
+          previous?.connectionState != WsConnectionState.disconnected;
+  if (!becameDisconnected || next.error == 'Host left the game') {
+    return LobbyDisconnectDialog.none;
+  }
+  return next.error == WsClient.gameEndedError
+      ? LobbyDisconnectDialog.gameEnded
+      : LobbyDisconnectDialog.connectionLost;
+}
+
 /// Lobby screen showing players waiting for game to start.
 class LobbyScreen extends ConsumerStatefulWidget {
   const LobbyScreen({
@@ -276,12 +296,10 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
       // when state transitions to disconnected (reconnection gave up or
       // intentional). While reconnecting, the header shows "Reconnecting..."
       // so no dialog is needed.
-      if (next.connectionState == WsConnectionState.disconnected &&
-          previous?.connectionState != null &&
-          previous?.connectionState != WsConnectionState.disconnected &&
-          next.error != 'Host left the game') {
+      final dialog = lobbyDisconnectDialog(previous, next);
+      if (dialog != LobbyDisconnectDialog.none) {
         _showConnectionLostDialog(
-          gameEnded: next.error == WsClient.gameEndedError,
+          gameEnded: dialog == LobbyDisconnectDialog.gameEnded,
         );
         return;
       }
