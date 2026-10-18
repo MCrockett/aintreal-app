@@ -7,6 +7,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../config/env.dart';
 import '../../config/routes.dart';
 import '../../config/theme.dart';
+import '../../core/ads/ad_service.dart';
 import '../../core/analytics/analytics_service.dart';
 import '../../core/auth/session_provider.dart';
 import '../../models/game.dart';
@@ -29,7 +30,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // Tracking prompt first (iOS shows it only once the app is active),
+      // then How to Play, so the two dialogs never overlap.
+      await AdService.instance.requestTrackingIfNeeded();
       if (mounted) showHowToPlayOnFirstLaunch(context);
     });
     PackageInfo.fromPlatform().then((info) {

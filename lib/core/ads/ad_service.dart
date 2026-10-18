@@ -105,12 +105,9 @@ class AdService {
     debugPrint(
         'AdService: games=$_gamesPlayed, adsEnabled=$adsEnabled, lastAd=$_lastAdShown');
 
-    // Request App Tracking Transparency authorization on iOS
-    // Skip if user already purchased ad removal — no ads means no tracking needed
-    if (Platform.isIOS && !_adRemovalPurchased) {
-      final status = await AppTrackingTransparency.requestTrackingAuthorization();
-      debugPrint('ATT status: $status');
-    }
+    // The App Tracking Transparency prompt is requested later, from the home
+    // screen (requestTrackingIfNeeded): iOS skips it while the app is still
+    // launching, so asking here left first launches undecided.
 
     await MobileAds.instance.initialize();
     debugPrint('AdMob initialized');
@@ -118,6 +115,31 @@ class AdService {
     // Pre-load interstitial ad if ads are enabled
     if (adsEnabled) {
       loadInterstitialAd();
+    }
+  }
+
+  /// Whether to show the iOS tracking prompt: only while undecided, and not
+  /// after ad removal (no ads, nothing to track).
+  static bool shouldRequestTracking({
+    required TrackingStatus status,
+    required bool adRemovalPurchased,
+  }) =>
+      status == TrackingStatus.notDetermined && !adRemovalPurchased;
+
+  /// Show the iOS App Tracking Transparency prompt if it is still undecided.
+  /// Call once the first screen is up: iOS only shows it to an active app.
+  Future<void> requestTrackingIfNeeded() async {
+    if (kIsWeb || !Platform.isIOS) return;
+    try {
+      final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+      if (!shouldRequestTracking(
+          status: status, adRemovalPurchased: _adRemovalPurchased)) {
+        return;
+      }
+      final result = await AppTrackingTransparency.requestTrackingAuthorization();
+      debugPrint('ATT status: $result');
+    } catch (e) {
+      debugPrint('ATT request failed: $e');
     }
   }
 

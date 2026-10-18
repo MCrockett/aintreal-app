@@ -267,6 +267,11 @@ See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.m
 - [x] Submitted to App Review
 - [x] Approved and released (App Store 1.0.1+14, confirmed 2026-10-04)
 
+### iOS tracking prompt on first launch — 1.0.2
+- [x] Ask for App Tracking Transparency after the home screen's first frame, before How to Play (found in the 1.0.2 device pass: asking during startup made iOS skip the prompt on first launch)
+- [x] `ITSAppUsesNonExemptEncryption = false` in Info.plist (HTTPS only; needed by the shared release tools' package check)
+- [ ] Device check: fresh install on iPad shows the tracking prompt, then How to Play
+
 ---
 
 ## Future: Additional Content & Features (Post-Launch)
