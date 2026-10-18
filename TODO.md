@@ -1,15 +1,15 @@
 # AIn't Real App - TODO
 
-**Last Updated:** February 10, 2026
+**Last Updated:** October 18, 2026
 
 ## Current Status
 
 - **Platform:** Flutter 3.38.4 (stable)
 - **Package:** `com.aintreal.app`
-- **Version:** 1.0.0+11
+- **Version:** main is 1.0.2+15 (uploaded 2026-10-18: TestFlight and Play internal); both stores are on 1.0.1
 - **Google Play:** PUBLISHED - https://play.google.com/store/apps/details?id=com.aintreal.app
 - **iOS App Store:** PUBLISHED - https://apps.apple.com/us/app/aint-real/id6758273529
-- **Next:** Social media campaign, content expansion
+- **Next:** release 1.0.2, then 1.1 (see "Next: 1.1" below)
 
 See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.md) for development workflow.
 
@@ -43,11 +43,23 @@ See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.m
 - [ ] **Home screen redesign** (owner, 2026-10-17): sample images, a look closer to the Reddit splash, the logo, and a wordmark that matches Reddit and the web.
 - [ ] **Raise the iOS deployment target to 15.0** (Apple notice, 2026-10-18, on the 1.0.2 upload and by email): from April 2027, App Store Connect only accepts apps targeting iOS 15.0 or later; AIn't Real targets 13.0. Update `IPHONEOS_DEPLOYMENT_TARGET` in the Runner project and `platform :ios` in the Podfile, run `pod install`, and check the plugins still build.
 - [ ] **Weekly leaderboard in the app** (owner, 2026-10-17): first save the signed-in user ID and game mode with each result on the server, then per-mode weekly boards (Marathon best streak, Classic accuracy).
+- [ ] **Easier first rounds for newcomers** (owner, 2026-10-18; from the organic deep dive 2026-10-15): draw Marathon rounds 1-3 and a player's first solo game from high-accuracy pairs. This is a server change in aintreal-game, so it can ship before the app.
+- [ ] **Device pass: Wi-Fi drop mid-game** (Round A check 8 in `PARTY_TEST_PLAN.md`, not run in the 1.0.2 pass).
+
+## Later: 1.2
+
+Owner, 2026-10-18: these wait until after 1.1.
+- Firebase token signature verification
+- Leaderboard integrity (authenticated user IDs; builds on the 1.1 weekly leaderboard data)
+- Host leaves mid-round: promote another player or end the game cleanly
+- Timeout UX normalization (`choice='timeout'` vs null)
+- Replace the static mobile Turnstile secret with Play Integrity / DeviceCheck attestation
+- Theme packs, Daily Challenge, Ultimate Bundle and web limiting (phases below)
 
 ## Immediate: Post-Launch
 
 ### iOS App Store
-- [ ] Await App Store review approval
+- [x] Await App Store review approval
 - [ ] Update website (index.html, download.html) with App Store link
 - [ ] Test iOS build from App Store on real device
 
@@ -424,7 +436,7 @@ See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.m
 - [x] iOS build configuration (submitted to App Store)
 - [ ] Consider haptic feedback patterns for different events
 - [ ] Evaluate animation performance on older devices
-- [ ] Skip ATT prompt if ad removal already purchased (currently fires for all iOS users on every launch)
+- [x] Skip ATT prompt if ad removal already purchased (1.0.2, PR #24)
 
 ---
 
@@ -496,6 +508,6 @@ See [DONE.md](DONE.md) for completed milestones (M1-M6) and [CLAUDE.md](CLAUDE.m
 ---
 
 **Priority Summary:**
-1. **Now:** iOS approval, social media campaign, web limiting
-2. **Week 2-4:** Theme packs (Animals, Travel, Space)
-3. **Week 5-6:** Ultimate Bundle + Daily Challenge
+1. **Now:** release 1.0.2 (App Store review, Play production), then merge aintreal-game #17/#18
+2. **1.1:** see "Next: 1.1"
+3. **1.2:** see "Later: 1.2"
