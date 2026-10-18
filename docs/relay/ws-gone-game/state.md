@@ -1,7 +1,9 @@
 ---
 {
   "adopted": 23,
-  "authors": {},
+  "authors": {
+    "build": "claude"
+  },
   "branch": "fix/2.1-gone-game-stops-reconnect",
   "extra_rounds": {},
   "feature": "ws-gone-game",
@@ -28,14 +30,16 @@
     "plan": null,
     "spec": null
   },
-  "rounds": {},
+  "rounds": {
+    "build": 1
+  },
   "skipped": [
     "spec"
   ],
   "small": false,
   "stage": "build",
-  "status": "drafting",
-  "updated": "2026-10-18T15:46:04-04:00",
+  "status": "in-review",
+  "updated": "2026-10-18T15:46:16-04:00",
   "verdicts": {}
 }
 ---
