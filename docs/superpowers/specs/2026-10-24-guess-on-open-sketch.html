@@ -1,0 +1,150 @@
+<h2>Sketch v3: new hint copy</h2>
+<p class="subtitle">Tap an image to guess. Both mockups are live: real pairs from the demo feed, and the reveal shows what happens after one tap.</p>
+
+<style>
+  .ar-wrap { display:flex; gap:32px; flex-wrap:wrap; align-items:flex-start; justify-content:center; }
+  .ar-col { display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .ar-col .label { margin:0; }
+  .ar-phone { width:320px; height:660px; border-radius:36px; border:10px solid #111; background:#1A1A2E; color:#EEE;
+    font-family:-apple-system,system-ui,sans-serif; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 10px 40px rgba(0,0,0,.35); }
+  .ar-desk { width:640px; max-width:100%; border-radius:12px; border:1px solid #333; background:#1A1A2E; color:#EEE;
+    font-family:-apple-system,system-ui,sans-serif; overflow:hidden; box-shadow:0 10px 40px rgba(0,0,0,.35); }
+  .ar-bar { background:#2a2a3a; padding:6px 10px; font-size:11px; color:#999; display:flex; gap:6px; align-items:center; }
+  .ar-bar i { width:9px; height:9px; border-radius:50%; background:#555; display:inline-block; }
+  .wm { font-weight:800; letter-spacing:-.5px; }
+  .wm .ai { color:#b02e45; }
+  .wm .rest { background:linear-gradient(135deg,#ff6b6b,#ff8a8a); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .q { font-weight:700; text-align:center; }
+  .pair { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .pair .img { position:relative; aspect-ratio:1/1; border-radius:10px; overflow:hidden; cursor:pointer; border:3px solid transparent; background:#222; }
+  .pair .img img { width:100%; height:100%; object-fit:cover; display:block; }
+  .pair .img:hover { border-color:#ff6b6b; }
+  .pair .tag { position:absolute; left:6px; bottom:6px; font-size:11px; font-weight:700; padding:2px 7px; border-radius:6px; background:rgba(0,0,0,.65); display:none; }
+  .revealed .img { cursor:default; }
+  .revealed .img:hover { border-color:transparent; }
+  .revealed .tag { display:block; }
+  .revealed .img.is-ai { border-color:#E74C3C; }
+  .revealed .img.is-real { border-color:#27AE60; }
+  .result { text-align:center; font-weight:700; min-height:22px; }
+  .result.ok { color:#27AE60; } .result.bad { color:#E74C3C; }
+  .btn-p { display:block; text-align:center; padding:12px; border-radius:999px; font-weight:700; color:#fff; background:linear-gradient(135deg,#e63e5c,#ff6b6b); border:0; cursor:pointer; }
+  .btn-s { display:block; text-align:center; padding:10px; border-radius:999px; font-weight:600; color:#eee; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); cursor:pointer; }
+  .modes { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; }
+  .mode { background:#16213E; border-radius:10px; padding:8px 4px; text-align:center; font-size:12px; }
+  .mode b { display:block; font-size:13px; } .mode span { color:#888; font-size:11px; }
+  .muted { color:#888; font-size:11px; text-align:center; }
+  .after { display:none; } .revealed-root .after { display:block; } .revealed-root .before { display:none; }
+  .stores { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  .store { background:#000; border:1px solid #444; border-radius:8px; padding:6px 12px; font-size:12px; color:#fff; line-height:1.1; }
+  .store small { display:block; font-size:9px; color:#bbb; }
+  [data-next] { display:none; }
+  .revealed-root [data-next] { display:block; }
+  .hint { display:flex; align-items:center; justify-content:center; height:44px; border-radius:999px; border:1px dashed rgba(255,255,255,.2); color:#aaa; font-size:13px; }
+  .revealed-root .hint { display:none; }
+  .note { max-width:980px; margin:24px auto 0; font-size:14px; line-height:1.5; }
+  .note li { margin-bottom:4px; }
+</style>
+
+<div class="ar-wrap">
+  <!-- APP -->
+  <div class="ar-col">
+    <p class="label">App home (iOS / Android)</p>
+    <div class="ar-phone" id="app">
+      <div style="padding:18px 14px 8px; display:flex; justify-content:space-between; align-items:center;">
+        <span class="wm" style="font-size:22px"><span class="ai">AI</span><span class="rest">n't Real</span></span>
+        <span style="font-size:18px; color:#888">☰</span>
+      </div>
+      <div style="padding:4px 12px; display:flex; flex-direction:column; gap:10px; flex:1;">
+        <div class="q" style="font-size:20px">Which one is AI?</div>
+        <div class="pair" data-pair="0"></div>
+        <div class="result"></div>
+        <div style="margin-top:auto; display:flex; flex-direction:column; gap:8px; padding-bottom:14px;">
+          <div class="hint">👆 Tap the image that AIn't Real</div>
+          <button class="btn-p" data-next>▶ Next pair</button>
+          <div class="muted" style="margin:2px 0">or pick a mode</div>
+          <div class="modes">
+            <div class="mode"><b>Party</b><span>2–8 players</span></div>
+            <div class="mode"><b>Classic</b><span>10 rounds</span></div>
+            <div class="mode"><b>Marathon</b><span>26, one miss</span></div>
+          </div>
+          <div class="btn-s" style="font-size:13px">Join a party · enter code</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEB -->
+  <div class="ar-col">
+    <p class="label">aint-real.com (top of page, desktop)</p>
+    <div class="ar-desk" id="web">
+      <div class="ar-bar"><i></i><i></i><i></i><span style="margin-left:8px">aint-real.com</span></div>
+      <div style="padding:10px 18px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #26263a;">
+        <span class="wm" style="font-size:18px"><span class="ai">AI</span><span class="rest">n't Real</span></span>
+        <span style="font-size:12px; color:#aaa">Get the App · Reddit</span>
+      </div>
+      <div style="padding:18px 22px 22px; display:flex; flex-direction:column; gap:12px; align-items:center;">
+        <div class="q" style="font-size:26px">Which one is AI? <span style="color:#888; font-weight:500; font-size:15px">Tap to guess.</span></div>
+        <div class="pair" data-pair="1" style="width:100%; max-width:520px"></div>
+        <div class="result"></div>
+        <div style="display:flex; gap:8px; width:100%; max-width:520px;">
+          <div class="hint" style="flex:1">👆 Tap the image that AIn't Real</div>
+          <button class="btn-p" data-next style="flex:1">▶ Next pair</button>
+          <button class="btn-s" style="flex:1">Play 5 rounds</button>
+        </div>
+        <div class="stores">
+          <div class="store"><small>GET IT ON</small>Google Play</div>
+          <div class="store"><small>Download on the</small>App Store</div>
+        </div>
+        <div class="muted">Party with 2–8 friends, Marathon, and the full image library in the app.</div>
+      </div>
+    </div>
+    <p class="label" style="margin-top:6px">Below the fold, unchanged: modes, how it works, download</p>
+  </div>
+</div>
+
+<div class="note">
+  <b>What's the same everywhere:</b> wordmark (dark "AI" + coral gradient, matches Reddit/web), "Which one is AI?" pair as the first thing you see, one tap to guess, instant reveal, then one more tap for the next pair.
+  <ul>
+    <li><b>App:</b> the pair replaces the big mode buttons at the top; modes move to a compact row underneath. The hamburger holds profile, How to Play and settings.</li>
+    <li><b>Web:</b> the pair replaces the phone screenshots as the hero; the store badges sit right under it so they show after the first guess.</li>
+    <li>On a phone browser, the web version looks like the app column (pair, then buttons, then badges).</li>
+  </ul>
+</div>
+
+<script>
+(function(){
+  const API = 'https://api.aint-real.com';
+  const pools = [
+    [{l:'/api/images/pairs/d0cbc319-62e4-4f9a-af22-70233134fdc3/ai.png', r:'/api/images/pairs/d0cbc319-62e4-4f9a-af22-70233134fdc3/real.jpg', ai:'left'},
+     {l:'/api/images/pairs/332e6253-4b1f-41d5-901f-81b205b2e978/ai.webp', r:'/api/images/pairs/332e6253-4b1f-41d5-901f-81b205b2e978/real.webp', ai:'left'}],
+  ];
+  let extra = [];
+  fetch(API + '/api/game/demo-pairs?count=8').then(r=>r.json()).then(d=>{
+    extra = (d.pairs||[]).map(p=>({l:p.leftUrl, r:p.rightUrl, ai:p.aiPosition}));
+  }).catch(()=>{});
+  const all = () => pools[0].concat(extra);
+  function render(root, pair, idx){
+    pair.dataset.idx = idx;
+    const p = all()[idx % all().length];
+    root.classList.remove('revealed-root'); pair.classList.remove('revealed');
+    const res = root.querySelector('.result'); res.textContent=''; res.className='result';
+    pair.innerHTML = ['left','right'].map(side => {
+      const src = API + (side==='left'?p.l:p.r);
+      const isAi = p.ai===side;
+      return `<div class="img ${isAi?'is-ai':'is-real'}" data-side="${side}"><img src="${src}"><span class="tag">${isAi?'AI':'Real'}</span></div>`;
+    }).join('');
+    pair.querySelectorAll('.img').forEach(el => el.onclick = () => {
+      if (pair.classList.contains('revealed')) return;
+      pair.classList.add('revealed'); root.classList.add('revealed-root');
+      const ok = el.classList.contains('is-ai');
+      res.textContent = ok ? '✓ Nailed it. That one is AI.' : '✗ Fooled you. The other one is AI.';
+      res.className = 'result ' + (ok?'ok':'bad');
+    });
+  }
+  document.querySelectorAll('#app, #web').forEach((root, i) => {
+    const pair = root.querySelector('.pair');
+    render(root, pair, i);
+    root.querySelector('[data-next]').onclick = () => render(root, pair, (+pair.dataset.idx) + 2);
+  });
+})();
+</script>
