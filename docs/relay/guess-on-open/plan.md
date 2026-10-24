@@ -63,6 +63,7 @@ Each game PR is its own relay feature in aintreal-game (`relay new <slug> --base
 
 **Files:**
 - Create: `src/utils/tokens.js`
+- Modify: `.github/workflows/deploy.yml` (run `node --test test/` in the ci job if it doesn't already)
 - Test: `test/tokens.test.mjs`
 
 **Interfaces:**
@@ -115,8 +116,8 @@ test('tampered, wrong key and garbage are bad_token', async () => {
 
 **Interfaces:**
 - Produces:
-  - `imageIdFor(secret: string, r2Path: string) -> Promise<string>`: deterministic. The IV is the first 12 bytes of HMAC-SHA256(secret, r2Path), and the ciphertext is AES-GCM of `r2Path`, base64url `iv || ct`. The same path always gives the same id, so CDN, browser and `cached_network_image` caching keep working.
-  - `r2PathFor(secret: string, id: string) -> Promise<string | null>`.
+  - `imageIdFor(secret: string, r2Path: string) -> Promise<string>`: deterministic and fixed length. The path is UTF-8 encoded and zero-padded to exactly `IMAGE_PATH_PAD = 96` bytes (it throws if longer; today's paths are about 50). The IV is the first 12 bytes of HMAC-SHA256(secret, r2Path), and the ciphertext is AES-GCM of the padded bytes, base64url `iv || ct`. So every id has the same length (12 + 96 + 16 bytes = 166 base64url chars), and the AI and real ids can't be told apart by length. The same path always gives the same id, so CDN, browser and `cached_network_image` caching keep working.
+  - `r2PathFor(secret: string, id: string) -> Promise<string | null>`: strips the zero padding after decrypting.
   - `neutralUrl(secret, r2Path) -> Promise<string>`: returns `/api/images/p/<id>`.
   - Key derivation uses a distinct label (`'img:' + secret`), so token and image keys differ.
 
@@ -127,6 +128,8 @@ Covers: R16
   - `id hides the path`: the id does not contain `ai`, `real`, `.png` or `.jpg` as substrings of its decoded latin1 bytes. Also, `neutralUrl` has no `.` after `/p/`.
   - `round-trip`: `r2PathFor(imageIdFor(p)) === p` for `pairs/x/ai.png` and `pairs/x/real.jpg`.
   - `bad id`: `r2PathFor(secret, 'nope')` returns `null`.
+  - `ids have one length`: the ids for `pairs/<uuid>/ai.png`, `pairs/<uuid>/real.jpg`, `pairs/<uuid>/ai.webp` and `pairs/<uuid>/real.webp` all have length 166.
+  - `too long throws`: a 97-byte path throws.
 - [ ] **Step 2: Run** `node --test test/image-ids.test.mjs`. Expected: FAIL.
 - [ ] **Step 3: Implement** `imageIdFor`, `r2PathFor` and `neutralUrl` as above.
 - [ ] **Step 4: Route `p/<id>` in `handleImages`.** When `path.startsWith('p/')`, resolve it with `r2PathFor(env.HOME_TOKEN_SECRET, path.slice(2))`. Return a 404 for `null`, and otherwise serve exactly as today: same origin check (`isAllowedImageRequest`), same headers, same `Cache-Control`.
@@ -168,7 +171,7 @@ Covers: R12, R13, F7
 
 **Files:**
 - Modify: `src/routes/game.js` (`getDemoPairs` formatter, around lines 270-285)
-- Modify: `.dev.vars.example` (create it if missing) and `wrangler.toml` comments
+- Modify: `.dev.vars.example` (create it if missing; `.dev.vars` stays gitignored)
 - Test: `test/home-endpoints.test.mjs` (add a case)
 
 **Interfaces:**
@@ -179,7 +182,14 @@ Covers: R17, R18, R19
 - [ ] **Step 1: Write the failing test** `demo-pairs keeps old fields and adds neutral ones`. It checks that `leftUrl` still matches `^/api/images/pairs/`, that `aiPosition` is present, and that `leftNeutralUrl` starts with `/api/images/p/`.
 - [ ] **Step 2: Implement it.** The formatter becomes async per pair (`Promise.all`).
 - [ ] **Step 3: Run** `node --test test/`. Expected: PASS.
-- [ ] **Step 4: Secret.** Ask the owner for an explicit go. Then run `npx wrangler secret put HOME_TOKEN_SECRET` (prod), add `HOME_TOKEN_SECRET=` to `.dev.vars.example`, and add an entry to `~/StudioProjects/UpstreamPartners/portfolio/credentials/inventory.md` with the name, purpose and consumer only. Never print the value. The PR must not merge before the secret exists.
+- [ ] **Step 4: Secret, prod and local.** Ask the owner for an explicit go covering both. Then:
+  - prod: generate a value with `openssl rand -base64 32` piped straight into `npx wrangler secret put HOME_TOKEN_SECRET`, so it is never printed or saved;
+  - local: write a separately generated value into `.dev.vars` (gitignored) as `HOME_TOKEN_SECRET=...`, without printing it;
+  - add `HOME_TOKEN_SECRET=` with a comment to `.dev.vars.example`;
+  - add one inventory entry to `~/StudioProjects/UpstreamPartners/portfolio/credentials/inventory.md` (name, purpose, consumers: aintreal-game Worker prod and local dev; no value).
+
+  The PR must not merge before the prod secret exists.
+- [ ] **Step 4b: Local check.** Run `npx wrangler dev --port 8789`, then `curl -s localhost:8789/api/game/home-pair`, which returns a `pairToken`. POST that token to `/api/game/home-guess` with `choice:"left"`, which returns `correct` and a `resultToken`. Fetching the returned `leftUrl` with an allowed `Origin` returns an image.
 - [ ] **Step 5: Verify after deploy:**
   - `curl -s https://api.aint-real.com/api/game/home-pair` returns JSON with `pairToken` and no `aiPosition`;
   - the `leftUrl` image loads with the aint-real.com `Origin`/`Referer` (the same rule as today);
@@ -209,6 +219,8 @@ Covers: R20, R21, R22, R23, R24, R25, F5, F6
   - `rotation skips shown`: a fake batch returns `[a,b]`, then `[]`, then `[a,b]`. `next()` gives a, b, a, and the third call has cleared the exclusions.
   - `rotation restarts after exhaustion`: with a pool of 1, ten `next()` calls all return that pair, and none return `null`.
   - `rotation gives null when the pool is empty`: two empty fetches give `null`.
+  - `rejected fetch`: a fetch that throws makes `next()` resolve `null` (the caller shows the F5 fallback), not reject.
+  - `image failures stop after two`: with a fake image loader that always errors, `mountHeroGame`'s `onImageError` path tries exactly one other pair, then reports `fallback`, and makes no third attempt. Export the retry policy as `nextActionAfterImageError(failuresInARow: number) -> 'retry' | 'fallback'` and test `[1, 2].map(...)` deep-equals `['retry', 'fallback']`.
 - [ ] **Step 2: Run** `node --test test/home-pair-web.test.mjs`. Expected: FAIL.
 - [ ] **Step 3: Implement the pure functions**, then `mountHeroGame`. It renders the question, pair, result line, the hint or Next pair (D2), and the reminder card under the result line when `shouldRemind(count)`. The reminder copy is "Like it? The app has Party, Marathon and hundreds more pairs" with both store badges, and it clears on the next pair. A pair becomes clickable only after both `img` load events (F6). On an image error it tries one other pair. A second failure, or `null` from the rotation, shows the old `.phone-mockup` screenshots with a "Try again" button and stops automatic attempts (F5, F6).
 - [ ] **Step 4: Edit `index.html`.**
@@ -239,22 +251,28 @@ Base this on main after #17/#18 have merged. That changes `round_start` (no `aiP
 **Interfaces:**
 - Consumes: `openToken` (Task 1), the result payload (Task 3).
 - Produces:
-  - `POST /api/game/create` body accepts an optional `firstRoundToken`. The Worker opens it. A valid `t:'result'` payload is passed to the DO as `config.firstRound = {pairId, aiSide, choice, correct}`, and the response adds `firstRound: 'applied'`. A missing token adds nothing. An invalid or expired one adds `firstRound: 'ignored'`, and a normal game is created.
-  - It is only honoured when `config.mode === 'classic'` and `config.soloMode`.
+  - `POST /api/game/create` body accepts an optional `firstRoundToken`. The Worker opens it. A valid `t:'result'` payload is passed to the DO as `firstRound = {pairId, aiSide, choice, correct}` beside `config`.
+  - The DO decides whether to apply it, after normalising the config in `handleCreate` (`mode = config.mode || (config.soloMode ? 'classic' : 'party')`). It is applied only when the normalised `mode === 'classic'`. The Flutter `GameConfig` JSON sends `mode: 'classic'` and no `soloMode`, which must count.
+  - The create response always carries `firstRound: 'applied' | 'ignored'`. It is `'ignored'` when the token is missing, bad, tampered, expired or of the wrong type, when the mode isn't classic, or when the pair row is gone; a normal game is created in those cases (R14). Old apps ignore the extra field.
   - `fetchImagePairs(count, excludeIds = [])`.
   - In `handleStartGame` with `config.firstRound`:
     - fetch that pair by id, plus `rounds - 1` random pairs excluding it;
     - round 0 maps `aiSide` `left`/`right` to `top`/`bottom` for the stored `aiPosition`;
     - set `answers[0][hostId] = {choice: <mapped>, responseTime: null, earlyClick: false, carried: true}`, `currentRound = 1` and `roundEnded = 0`;
     - the first `round_start` then says `round: 2`.
-  - If the pair row is gone, it starts a normal game.
+  - If the pair row is gone at start, it starts a normal game at round 1.
 
 Covers: R14, F3
 
 - [ ] **Step 1: Write the failing tests** (harness room, solo classic, `rounds: 6`):
   - `applied`: the first `round_start` has `round === 2` and `totalRounds === 6`; `answers[0][host].carried === true`; no later round reuses `pairId`.
   - `ignored`: an expired token makes create respond with `firstRound: 'ignored'`, and the first `round_start` has `round === 1`.
-  - `party ignores it`: with `mode: 'party'`, `config.firstRound` is dropped and the game starts at round 1.
+  - `party ignores it`: with `mode: 'party'`, the response says `ignored` and the game starts at round 1.
+  - `flutter-shaped request`: the body `{hostName, config: {rounds: 6, timePerRound: 5, speedBonus: false, randomBonuses: false, mode: 'classic'}, firstRoundToken}`, with no `soloMode`, gets `applied`.
+  - `tampered and malformed`: a flipped-byte token and the string `'x'` both get `ignored`, and the game starts at round 1.
+  - `replay accepted`: the same valid result token used for two creates within 15 minutes gets `applied` both times (D9).
+  - `missing token`: a normal create gets `firstRound: 'ignored'` and is otherwise unchanged.
+  - `party join unchanged`: a party create plus join through the harness behaves exactly as before (existing join test still passes, plus one join after a home-started create in another room).
   - `left maps to top`: `aiSide:'left', choice:'left'` stores `aiPosition:'top'` and the choice `'top'`.
 - [ ] **Step 2: Run** `node --test test/first-round.test.mjs`. Expected: FAIL.
 - [ ] **Step 3: Implement** to the interface.
@@ -271,7 +289,9 @@ Covers: R14, F3
 - Consumes: the `carried: true` answers from Task 6.
 - Produces: carried answers count for correctness everywhere (score, `solo_answered`, `solo_correct`, `times_shown`, `times_correct`, difficulty inputs). They are skipped in the speed-bonus ranking and in every response-time average, and they never earn a speed bonus.
 
-Covers: R15
+Covers: R15, R9
+
+Scoring stays where it is today: Classic points are worked out in the reveal sequence after the last round, and the game screen shows no running score in Classic (it shows "Round X / N" only). So R9's "score already includes round 1" is met at the reveal and results, which this task tests. Nothing needs crediting earlier.
 
 - [ ] **Step 1: Write the failing tests** by playing a 3-round home-started game through the harness to the end:
   - `carried correct scores`: the final score includes round 1's correct points, and the saved history row has `solo_answered = 3`, with `solo_correct` matching.
@@ -289,7 +309,7 @@ Covers: R15
 
 **Files:**
 - Create: `lib/models/home_pair.dart`, `lib/core/api/home_pair_api.dart`
-- Modify: `lib/core/api/endpoints.dart`, `lib/core/api/game_api.dart` (`createGame` gets an optional `String? firstRoundToken`, added to the body)
+- Modify: `lib/core/api/endpoints.dart`, `lib/core/api/game_api.dart` (`createGame` gets an optional `String? firstRoundToken`, added to the body), `lib/models/game.dart` (`CreateGameResponse` around line 188 gains `firstRound`)
 - Test: `test/unit/home_pair_api_test.dart`
 
 **Interfaces:**
@@ -321,10 +341,11 @@ Covers: R12, R13 (client side)
   - `HomePairPhase { loading, ready, revealed, failed }`
   - Methods:
     - `load()`: increments `loadId`, then fetches; failure goes to `failed`.
-    - `imagesLoaded()`: sets `imagesReady`.
-    - `imageFailed()`: goes to `failed`.
     - `guess(String side)`: ignored unless `ready && imagesReady && !guessPending`. Drops the response if `loadId` changed. `TokenExpired` calls `load()` with no error. `NetworkFailure` stays `ready`, sets `error: true` and allows another tap.
     - `onResume(DateTime now)`: calls `load()` if the pair was fetched more than 15 minutes ago and is not revealed.
+    - `leave()`: called when the home route stops being visible. It increments `loadId` and clears `guessPending`, so any in-flight guess response, success or failure, is dropped.
+    - `imagesLoaded(int loadId)` and `imageFailed(int loadId)` take the load id of the pair the image belonged to, and ignore stale ones.
+    - `bool isCurrent(int loadId)`: used by Task 12 to guard create responses.
 
 Covers: R3, R4, R4a, F1, F2, F6
 
@@ -338,6 +359,8 @@ Covers: R3, R4, R4a, F1, F2, F6
   - `network error allows retry`;
   - `resume after expiry refreshes`: `onResume(fetchedAt + 16min)` reloads, and `+10min` doesn't;
   - `fetch failure is failed`.
+  - `leave drops pending guess`: start a guess, call `leave()`, then resolve the guess with success and, in a second case, with `NetworkFailure`. The state is unchanged by either.
+  - `stale image callback`: `imagesLoaded(oldLoadId)` after a reload doesn't set `imagesReady`.
 - [ ] **Step 2: Run** `flutter test test/unit/home_pair_controller_test.dart`. Expected: FAIL.
 - [ ] **Step 3: Implement** to the interface. `fetchedAt` comes from an injectable clock.
 - [ ] **Step 4: Run.** Expected: PASS. Commit `feat(2.1): home pair controller`.
@@ -366,13 +389,17 @@ Covers: R7
 
 **Files:**
 - Create: `lib/features/home/widgets/home_pair_view.dart`, `lib/features/home/widgets/mode_row.dart`
-- Modify: `lib/features/home/home_screen.dart` (replace the mode-card column, around lines 95-160; move profile, How to Play and the version line into a menu), `lib/widgets/logo.dart` (wordmark colours per D7)
+- Modify:
+  - `lib/features/home/home_screen.dart`: replace the mode-card column (around lines 95-160); move profile, How to Play and the version line into a menu; remove the automatic `showHowToPlayOnFirstLaunch` call in `initState` (around line 37), because the pair now is the first-launch instruction and the spec wants a guess without reading anything first.
+  - `lib/widgets/logo.dart`: wordmark colours per D7.
+  - `lib/widgets/how_to_play_dialog.dart`: keep `showHowToPlayDialog`; leave `showHowToPlayOnFirstLaunch` unused, or delete it with its test.
+  - `test/widget/how_to_play_first_launch_test.dart`: update it to assert the dialog does not open on first launch.
 - Test: `test/widget/home_screen_test.dart` (update)
 
 **Interfaces:**
 - Consumes: `homePairProvider` (Task 9).
 - Produces:
-  - `HomePairView`: the pair, result line, and hint or "▶ Next pair". It takes `onNextPair: VoidCallback` and `nextPending: bool`.
+  - `HomePairView`: the pair, result line, and hint or "▶ Next pair". It takes `onNextPair: VoidCallback` and `nextPending: bool`. Until Task 12 lands, `HomeScreen` passes `onNextPair: () {}` and `nextPending: false`, so this task builds and tests on its own.
   - `ModeRow`: Party, Classic and Marathon cards with the existing `onTap` actions, then "Join a party · enter code" with the existing route.
 
 Covers: R1, R2, R8, R11, F1
@@ -384,16 +411,17 @@ Covers: R1, R2, R8, R11, F1
   - each mode card pushes the same route and extras as today;
   - the menu holds Profile/Sign in, How to Play and Settings, and the version line only in test mode;
   - five taps on the subtitle still toggle test mode;
+  - `first launch shows no dialog`: with empty SharedPreferences, no How to Play dialog appears and the pair is visible; the menu's How to Play still opens it;
   - at the R11 sizes (`tester.view.physicalSize`), there's no overflow, the pair and mode row are within the viewport, and each image is at least 150 px wide.
 - [ ] **Step 2: Run** `flutter test test/widget/home_screen_test.dart`. Expected: FAIL.
-- [ ] **Step 3: Implement.** Images use `cached_network_image` with load/error callbacks, wired to `imagesLoaded` and `imageFailed`. Call `load()` on first build and when the route becomes visible again (a `RouteAware` / GoRouter listener). Call `onResume` from `AppLifecycleState.resumed`.
+- [ ] **Step 3: Implement.** Images use `cached_network_image` with load/error callbacks, wired to `imagesLoaded` and `imageFailed`. Call `load()` on first build and when the route becomes visible again (a `RouteAware` / GoRouter listener), and `leave()` when it stops being visible. Call `onResume` from `AppLifecycleState.resumed`. Pass the pair's `loadId` into the image callbacks.
 - [ ] **Step 4: Run** `flutter test`. Expected: PASS.
 - [ ] **Step 5: Commit** `feat(2.1): guess-on-open home layout`.
 
 ### Task 12: Next pair starts the game; analytics
 
 **Files:**
-- Modify: `lib/features/home/home_screen.dart` (the `onNextPair` handler), `lib/core/analytics/analytics_service.dart`
+- Modify: `lib/features/home/home_screen.dart` (the `onNextPair` handler), `lib/core/analytics/analytics_service.dart`, `lib/core/storage/classic_settings_store.dart` (used, not changed)
 - Test: `test/widget/home_screen_test.dart`, `test/unit/home_next_pair_test.dart`
 
 **Interfaces:**
@@ -402,7 +430,7 @@ Covers: R1, R2, R8, R11, F1
   - `AnalyticsService.logHomePairShown()`
   - `logHomeGuess({required bool correct})`
   - `logHomeGameStarted({required bool carried})`
-  - Next pair builds `GameConfig(mode: classic, rounds, timePerRound from the store, speedBonus/randomBonuses: the create screen defaults)` and calls `createGame` with the session player name (the same source as `create_game_screen.dart` around lines 115-118), the id token if signed in, and `firstRoundToken: state.result.resultToken`. It then runs `context.go('/lobby/<code>', extra: {... 'isSoloMode': true})`, so the existing lobby auto-start runs.
+  - Next pair builds `GameConfig(mode: classic, rounds, timePerRound from the store, speedBonus/randomBonuses: the create screen defaults)` and calls `createGame` with the session player name (the same source as `create_game_screen.dart` around lines 115-118), the id token if signed in, and `firstRoundToken: state.result.resultToken`. It records `loadId` before the call. On success it saves the settings with `ClassicSettingsStore.save` (R7), and then navigates only if `isCurrent(loadId)` and the widget is mounted: `context.go('/lobby/<code>', extra: {... 'isSoloMode': true})`, so the existing lobby auto-start runs. On failure it shows the SnackBar only if `isCurrent(loadId)`. A game created after the player left home is abandoned in its lobby state, never started, so it records nothing.
 
 Covers: R5, R6, R9, R10, F3, F4
 
@@ -412,6 +440,8 @@ Covers: R5, R6, R9, R10, F3, F4
   - `create failure stays home`: `ApiException('Please update…')` shows a SnackBar, the reveal stays, and Next pair works again;
   - `ignored token still starts`: a response with `firstRound: 'ignored'` still navigates with no error shown (F3);
   - `no game without next`: leaving home after a guess makes zero `createGame` calls (R6);
+  - `leave during create`: tap Next pair, navigate away before `createGame` resolves, then resolve it with success and, in a second case, with failure. There is no navigation to the lobby and no SnackBar;
+  - `home create saves settings`: after a successful home create, `ClassicSettingsStore.save` was called with the values used;
   - analytics: shown fires once per load, guess fires with `correct`, and started fires with `carried: firstRound == 'applied'`.
 - [ ] **Step 2: Run.** Expected: FAIL.
 - [ ] **Step 3: Implement** to the interface.
