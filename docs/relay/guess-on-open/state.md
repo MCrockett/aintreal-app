@@ -2,6 +2,7 @@
 {
   "authors": {
     "idea": "claude",
+    "plan": "claude",
     "spec": "claude"
   },
   "branch": "feat/guess-on-open",
@@ -37,6 +38,10 @@
     {
       "action": "owner joined spec",
       "at": "2026-10-24T17:25:51-04:00"
+    },
+    {
+      "action": "owner joined plan",
+      "at": "2026-10-24T17:32:58-04:00"
     }
   ],
   "pr": null,
@@ -54,13 +59,14 @@
     }
   },
   "rounds": {
+    "plan": 1,
     "spec": 2
   },
   "skipped": [],
   "small": false,
   "stage": "plan",
-  "status": "drafting",
-  "updated": "2026-10-24T17:27:47-04:00",
+  "status": "in-review",
+  "updated": "2026-10-24T17:32:58-04:00",
   "verdicts": {
     "spec": "GO"
   }
