@@ -1,6 +1,8 @@
 ---
 {
-  "authors": {},
+  "authors": {
+    "idea": "claude"
+  },
   "branch": "feat/guess-on-open",
   "extra_rounds": {},
   "feature": "guess-on-open",
@@ -29,9 +31,9 @@
   "rounds": {},
   "skipped": [],
   "small": false,
-  "stage": "idea",
+  "stage": "spec",
   "status": "drafting",
-  "updated": "2026-10-24T17:24:40-04:00",
+  "updated": "2026-10-24T17:24:55-04:00",
   "verdicts": {}
 }
 ---

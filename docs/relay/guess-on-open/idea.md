@@ -11,4 +11,4 @@
 
 **Success.** A newcomer makes a guess within seconds of opening the app or the site without choosing anything. On the web, that first guess leads to the store badges.
 
-Full design, written with the owner and builder-checked: `docs/superpowers/specs/2026-10-24-guess-on-open-design.md` (aintreal-app PR #26), with a clickable sketch next to it.
+Full design, written with the owner and builder-checked: `docs/superpowers/specs/2026-10-24-guess-on-open-design.md` (on this branch), with a clickable sketch next to it.
