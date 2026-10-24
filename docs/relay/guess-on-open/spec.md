@@ -42,12 +42,15 @@ Agent decisions, with reasons:
   `aiPosition`, sends the guess to the server, and gets the result back. Reason: the
   answer-leak work (aintreal-game #17/#18) and the Reddit splash rule both say the client
   must not know the answer before the tap.
-- D9. Stateless signed tokens with a 15-minute expiry carry the pair and then the guess
-  result. A replay can flip one round of one solo game, and that is accepted. Reason: it
+- D9. Stateless tokens with a 15-minute expiry carry the pair and then the guess
+  result. They are encrypted and authenticated (AES-GCM through WebCrypto, keyed from
+  the R18 secret), not just signed, so the client cannot read the AI side from them. A replay can flip one round of one solo game, and that is accepted. Reason: it
   avoids a new storage binding, and solo leaderboard integrity is a separate 1.2 item.
 - D10. Neutral image URLs for the new home-pair endpoint and the web demo. Today's
   URLs end in `/ai.png` and `/real.jpg`, which gives the answer away on the page that
   now puts the guess front and centre.
+- D12. Settings memory uses SharedPreferences, as `sound_service.dart` does. The carried
+  round is applied in the Durable Object when it builds rounds at game start.
 - D11. The server work is additive. The home-pair and guess endpoints and the neutral
   URLs can deploy before the app ships. Create-with-first-round is built after
   aintreal-game #17/#18 merge, because those change the round protocol and are held
@@ -74,12 +77,19 @@ Agent decisions, with reasons:
 - R2. The menu holds profile and sign-in, How to Play, settings, and the version line,
   which shows only in test mode. The existing 5-tap test-mode toggle keeps working,
   wherever its subtitle ends up.
-- R3. When the home screen appears, the app fetches one home pair (R12). Each time the
-  home screen appears, it shows a fresh pair, including after a game and on app reopen.
+- R3. When the home screen appears (first launch, cold reopen, or returning from
+  another screen), the app fetches one new random home pair (R12). It may repeat a pair
+  by chance; no dedup. Resuming the app from the background does not refresh the pair,
+  unless the pair token has expired (F2).
 - R4. Tapping an image sends the guess (R13). On the response the app shows the reveal:
   green border and "Real" tag on the real image, red border and "AI" tag on the AI image,
   and "✓ Nailed it. That one is AI." or "✗ Fooled you. The other one is AI." The hint
   becomes Next pair. Further taps on the pair do nothing.
+- R4a. Pending guards. Each home-pair load has a load id. While a guess is pending, taps
+  on the pair are ignored. While create is pending, Next pair shows a spinner and
+  ignores taps, so one tap creates at most one game. A guess or create response whose
+  load id no longer matches the pair on screen (home refreshed or left meanwhile) is
+  dropped without effect.
 - R5. Tapping Next pair creates a Classic solo game with the result token (R14) and the
   settings from R7, then opens the game at round 2.
 - R6. Leaving the home screen without tapping Next pair creates nothing on the server.
@@ -93,18 +103,24 @@ Agent decisions, with reasons:
   already includes round 1, and round 1 shows in the end-of-game results like any round.
 - R10. Analytics events: home pair shown, home guess (correct or not), and game started
   from home. They follow the existing `AnalyticsService` style.
-- R11. The home layout works on phones and iPads, in the app's current orientations.
+- R11. The home layout works on phones and iPads in the app's current orientations.
+  Check it at 375x667 (iPhone SE), 393x852 (iPhone 15), 412x915 (Galaxy S24) and
+  1024x1366 (iPad Pro). On each, the wordmark, question, pair, result line, hint or
+  Next pair, and the mode row are visible without scrolling, with nothing clipped or
+  overflowing, and each image is at least 150 logical px wide. On the smallest size,
+  Join may sit below the fold.
 
 ### Server (aintreal-game)
 
 - R12. Home pair endpoint (GET, public). It returns one random demo-pool pair with
   neutral image URLs (R16), left and right positions chosen at random, and a signed pair
-  token holding the pair id, the AI side and the issue time. The response has no
+  token (D9) holding the pair id, the AI side and the issue time. The response has no
   `aiPosition` and no other field that reveals the answer.
-- R13. Guess endpoint (POST, public). It takes the pair token and a choice. It rejects
-  bad or expired tokens with 400. Otherwise it returns whether the guess was correct, the
+- R13. Guess endpoint (POST, public). It takes the pair token and a choice of `left` or
+  `right`. A malformed body or any other choice gets 400 `bad_request`. A bad or
+  tampered token gets 400 `bad_token`; an expired one gets 400 `expired_token`. Otherwise it returns whether the guess was correct, the
   AI side, and a signed result token holding the pair id, AI side, choice, correctness
-  and issue time.
+  and issue time, encrypted like the pair token.
 - R14. `POST /api/game/create` accepts an optional result token for Classic solo games,
   behind the same mobile gates as today. When the token is valid and unexpired, the game
   is built with that pair as round 1 and the recorded answer. Rounds 2 to N come from the
@@ -133,11 +149,15 @@ Agent decisions, with reasons:
   store badges, and a "Play 5 rounds" button linking to `/try`. Right: "Which one is AI?",
   the pair, the result line, and the hint or Next pair.
 - R21. At 900px or narrower the game is first and the left column stacks beneath it.
-- R22. Pairs come from the demo pool through `demo-pairs`, using the neutral URLs. No
-  score, streak or totals are shown or stored.
+- R22. Pairs come from the demo pool through `demo-pairs`, using the neutral URLs, in
+  batches. The page skips pairs already shown this page load; when a batch has none
+  left it fetches another, and when the pool is exhausted it starts over. No score,
+  streak or totals are shown or saved; an in-memory guess counter for R23 is the only
+  state, and it resets on reload.
 - R23. After the 3rd, 6th, 9th and later guesses, a reminder card shows under the
   result line, with copy along the lines of "Like it? The app has Party, Marathon and
-  hundreds more pairs" and the store badges. It never blocks Next pair.
+  hundreds more pairs" and the store badges. It never blocks Next pair and needs no
+  dismissal: it goes away when the next pair loads.
 - R24. Web analytics through the page's existing `trackEvent`: `home_pair_guess`,
   `home_next_pair`, `home_reminder_shown`, and store clicks with location `hero_pair` or
   `reminder`.
@@ -156,16 +176,20 @@ Agent decisions, with reasons:
 
 - F1. The home pair fails to load (offline, API error, empty pool). The pair area shows
   a retry tile ("Couldn't load a pair · Tap to retry"). The mode row and Join stay usable.
-- F2. The guess request fails. The app keeps the pair unrevealed, shows a short error,
-  and lets the player tap again. The pair token is still valid within its 15 minutes.
+- F2. The guess request fails on the network. The app keeps the pair unrevealed, shows
+  a short error, and lets the player tap again. If the guess comes back `expired_token`
+  or `bad_token`, the app fetches a fresh pair and resets to the unguessed state, with no
+  error shown. Resuming from the background after the token has expired does the same.
 - F3. The player waits more than 15 minutes before tapping Next pair. Create ignores the
   expired token (R14), and the app starts a normal game at round 1 with no error shown.
 - F4. Create fails for another reason (network, 426 version gate). The app shows the
   same error handling as the existing create flow and stays on home with the reveal.
 - F5. Web: `demo-pairs` fails or returns nothing. The hero falls back to the current
   phone screenshots, and the store badges stay.
-- F6. An image fails to load. The pair shows its retry state (app) or the next pair is
-  fetched (web). It never shows a half-loaded pair that can be guessed.
+- F6. An image fails to load. A pair is guessable only once both images have loaded.
+  App: the pair area shows the F1 retry tile. Web: the page tries one other pair
+  automatically. If that also fails, it shows the F5 fallback with a "Try again"
+  button, and makes no more automatic attempts.
 - F7. A bad, tampered or replayed token. Bad or tampered tokens get 400 from guess and
   are ignored by create. Replays within 15 minutes are accepted (D9).
 
