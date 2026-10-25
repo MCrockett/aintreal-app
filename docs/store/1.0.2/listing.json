@@ -1,0 +1,12 @@
+{
+  "version": "1.0.2",
+  "locales": {
+    "en-US": {
+      "description": "Can you spot the fake? In AIn't Real, you'll see two images side-by-side. One is a real photograph, the other is AI-generated. Your mission: figure out which one AIn't Real!\n\nTHREE GAME MODES\n\n• Party Mode (2-8 players) — Play with friends! Everyone guesses at once. Earn bonus points for speed, streaks, and lucky guesses. Perfect for game nights!\n\n• Classic Solo — Practice at your own pace. Sharpen your AI detection skills with no pressure.\n\n• Marathon — The ultimate challenge. 26 rounds, but one wrong answer ends your run. How far can you go?\n\nFAST-PACED FUN\n\nEach round gives you just seconds to decide. Trust your instincts. Is that sunset a bit too perfect? Does that smile look slightly off? The clock is ticking!\n\nCOMPETE & CLIMB\n\n• Speed bonuses reward quick thinking\n• Streak bonuses for consecutive correct answers\n• Random bonuses keep every game exciting\n• See how you stack up against friends\n\nPOWERED BY REAL AI\n\nOur image pairs feature genuine stock photos alongside AI-generated recreations. As AI gets better, can you keep up?\n\nFEATURES\n\n• Instant multiplayer with 4-letter game codes\n• QR code sharing for quick party setup\n• Beautiful dark theme\n• Sound effects and haptic feedback\n• Works offline for solo play\n\nWhether you're testing your eye for detail, hosting a party game night, or just curious about AI image generation, AIn't Real is your new favorite challenge.",
+      "keywords": "AI, party game, multiplayer, trivia, image game, spot the difference, artificial intelligence",
+      "whatsNew": "• How to Play shows the first time you open the app\n• Party games show a banner while the host reconnects, and a clear message when a game has ended\n• Your email is never used as your player name\n• Smoother launch on iPhone and iPad\n• Stability fixes",
+      "supportUrl": "https://aint-real.com",
+      "marketingUrl": "https://aint-real.com"
+    }
+  }
+}
