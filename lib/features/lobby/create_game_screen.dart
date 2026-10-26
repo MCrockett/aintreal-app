@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/theme.dart';
+import '../../core/storage/classic_settings_store.dart';
 import '../../core/analytics/analytics_service.dart';
 import '../../core/api/api_exceptions.dart';
 import '../../core/api/game_api.dart';
@@ -47,8 +48,8 @@ class _CreateGameScreenState extends ConsumerState<CreateGameScreen> {
   bool _isCreating = false;
   bool _isGuest = false;
 
-  static const List<int> roundOptions = [4, 5, 6, 8, 10];
-  static const List<int> timeOptions = [3, 5, 7, 10];
+  static const List<int> roundOptions = ClassicSettingsStore.roundOptions;
+  static const List<int> timeOptions = ClassicSettingsStore.timeOptions;
 
   /// Whether this is a solo mode (no multiplayer lobby)
   bool get _isSoloMode =>
@@ -89,6 +90,18 @@ class _CreateGameScreenState extends ConsumerState<CreateGameScreen> {
         _populateNameFromSession();
       }
     });
+
+    // Classic starts from the player's last settings unless the route
+    // supplies them (e.g. Play Again)
+    if (widget.mode == GameMode.classic && widget.initialRounds == null && widget.initialTimePerRound == null) {
+      ClassicSettingsStore.load().then((saved) {
+        if (!mounted) return;
+        setState(() {
+          _rounds = saved.rounds;
+          _timePerRound = saved.timePerRound;
+        });
+      });
+    }
 
     // Override with initial values if provided (e.g., from Play Again)
     if (widget.initialName != null) {
@@ -161,6 +174,10 @@ class _CreateGameScreenState extends ConsumerState<CreateGameScreen> {
         config: config,
         idToken: idToken,
       );
+
+      if (widget.mode == GameMode.classic) {
+        await ClassicSettingsStore.save(effectiveRounds, _timePerRound);
+      }
 
       if (!mounted) return;
 
