@@ -23,6 +23,24 @@ class AnalyticsService {
     await _analytics!.logEvent(name: name, parameters: parameters);
   }
 
+  // ============ Guess on open ============
+
+  /// A home pair was shown (once per pair).
+  Future<void> logHomePairShown() async {
+    await _logEvent('home_pair_shown', null);
+  }
+
+  /// The player guessed the home pair.
+  Future<void> logHomeGuess({required bool correct}) async {
+    await _logEvent('home_guess', {'correct': correct ? 1 : 0});
+  }
+
+  /// Next pair started a Classic game; [carried] when the home guess became
+  /// round 1.
+  Future<void> logHomeGameStarted({required bool carried}) async {
+    await _logEvent('home_game_started', {'carried': carried ? 1 : 0});
+  }
+
   // ============ Game Events ============
 
   /// User selected a game mode from home screen.

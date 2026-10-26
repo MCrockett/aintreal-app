@@ -43,12 +43,18 @@ class AppRoutes {
   static String resultsPath(String code) => '/results/$code';
 }
 
+/// Lets the home screen know when another screen covers it or it comes back
+/// (guess on open loads a fresh pair each time home reappears). Page routes
+/// only, so the menu sheet and dialogs don't count.
+final homeRouteObserver = RouteObserver<PageRoute<dynamic>>();
+
 /// Provider for the app router with auth gating.
 final routerProvider = Provider<GoRouter>((ref) {
   final sessionState = ref.watch(sessionProvider);
 
   return GoRouter(
     initialLocation: AppRoutes.signIn,
+    observers: [homeRouteObserver],
     debugLogDiagnostics: kDebugMode,
     redirect: (context, state) {
       final isLoading = sessionState is SessionLoading;

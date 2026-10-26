@@ -13,22 +13,12 @@ void main() {
         child: MaterialApp(theme: AppTheme.darkTheme, home: const HomeScreen()),
       );
 
-  testWidgets('first launch opens How to Play and remembers it', (tester) async {
+  // Guess on open (1.1): the pair is the first-launch instruction, so How to
+  // Play no longer opens by itself. It stays in the home menu.
+  testWidgets('first launch does not open How to Play', (tester) async {
     SharedPreferences.setMockInitialValues({'guest_name': 'TestPlayer'});
     await tester.pumpWidget(app());
     await tester.pumpAndSettle();
-
-    expect(find.byType(HowToPlayDialog), findsOneWidget);
-    final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getBool(howToPlaySeenKey), isTrue);
-  });
-
-  testWidgets('later launches do not open it', (tester) async {
-    SharedPreferences.setMockInitialValues(
-        {'guest_name': 'TestPlayer', howToPlaySeenKey: true});
-    await tester.pumpWidget(app());
-    await tester.pumpAndSettle();
-
     expect(find.byType(HowToPlayDialog), findsNothing);
   });
 }

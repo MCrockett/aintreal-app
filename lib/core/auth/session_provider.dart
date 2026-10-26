@@ -33,6 +33,11 @@ class SessionAuthenticated extends SessionState {
 }
 
 const _guestNameKey = 'guest_name';
+
+/// Set when a fresh install was started as a guest automatically, so new
+/// players land on the home pair instead of the sign-in screen (guess on
+/// open, owner 2026-10-26). Later, no session means the sign-in screen.
+const autoGuestStartedKey = 'auto_guest_started';
 const _testModeKey = 'test_mode';
 
 /// Test mode provider - when enabled, player name is prefixed with ~ to exclude from stats.
@@ -110,6 +115,9 @@ class SessionNotifier extends StateNotifier<SessionState> {
     final storedGuestName = prefs.getString(_guestNameKey);
     if (storedGuestName != null) {
       state = SessionGuest(storedGuestName);
+    } else if (!(prefs.getBool(autoGuestStartedKey) ?? false)) {
+      await prefs.setBool(autoGuestStartedKey, true);
+      await startGuestSession();
     } else {
       state = const SessionNone();
     }

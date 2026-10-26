@@ -190,6 +190,7 @@ class CreateGameResponse {
     required this.code,
     required this.playerId,
     required this.gameState,
+    this.firstRound,
   });
 
   factory CreateGameResponse.fromJson(Map<String, dynamic> json) {
@@ -197,12 +198,17 @@ class CreateGameResponse {
       code: json['code'] as String,
       playerId: json['playerId'] as String,
       gameState: GameState.fromJson(json['gameState'] as Map<String, dynamic>),
+      firstRound: json['firstRound'] as String?,
     );
   }
 
   final String code;
   final String playerId;
   final GameState gameState;
+
+  /// 'applied' when the home guess became round 1, 'ignored' otherwise;
+  /// null from servers without guess on open.
+  final String? firstRound;
 }
 
 /// Response from joining a game.

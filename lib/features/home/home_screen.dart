@@ -8,14 +8,20 @@ import '../../config/env.dart';
 import '../../config/routes.dart';
 import '../../config/theme.dart';
 import '../../core/ads/ad_service.dart';
-import '../../core/analytics/analytics_service.dart';
+import '../../core/api/api_exceptions.dart';
 import '../../core/auth/session_provider.dart';
+import '../../core/storage/classic_settings_store.dart';
 import '../../models/game.dart';
 import '../../widgets/gradient_background.dart';
 import '../../widgets/how_to_play_dialog.dart';
 import '../../widgets/logo.dart';
+import 'home_game_starter.dart';
+import 'home_pair_controller.dart';
+import 'widgets/home_pair_view.dart';
+import 'widgets/mode_row.dart';
 
-/// Home screen with game mode selection.
+/// Home screen: opens on a pair to guess (guess on open), with the game modes
+/// underneath and profile, How to Play and settings in the menu.
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -23,18 +29,22 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObserver, RouteAware {
   int _tapCount = 0;
   String _version = '';
+  bool _nextPending = false;
+  late final HomePairController _pair;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // Tracking prompt first (iOS shows it only once the app is active),
-      // then How to Play, so the two dialogs never overlap.
-      await AdService.instance.requestTrackingIfNeeded();
-      if (mounted) showHowToPlayOnFirstLaunch(context);
+    _pair = ref.read(homePairProvider.notifier);
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!kIsWeb) _pair.load();
+      // The pair is the first-launch instruction now; How to Play lives in
+      // the menu.
+      AdService.instance.requestTrackingIfNeeded();
     });
     PackageInfo.fromPlatform().then((info) {
       if (mounted) {
@@ -54,6 +64,77 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) homeRouteObserver.subscribe(this, route);
+  }
+
+  @override
+  void dispose() {
+    homeRouteObserver.unsubscribe(this);
+    WidgetsBinding.instance.removeObserver(this);
+    // Route and dispose callbacks run while the navigator builds, when
+    // providers can't change; the controller acts a moment later.
+    Future.microtask(_pair.leave);
+    super.dispose();
+  }
+
+  // Another screen covered home: drop anything in flight.
+  @override
+  void didPushNext() => Future.microtask(_pair.leave);
+
+  // Home is visible again: a fresh pair (spec R3).
+  @override
+  void didPopNext() {
+    if (!kIsWeb) Future.microtask(_pair.load);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _pair.onResume(DateTime.now());
+  }
+
+  /// Next pair: a Classic game whose round 1 is the home guess (spec R5).
+  Future<void> _startFromHome() async {
+    final s = ref.read(homePairProvider);
+    final token = s.result?.resultToken;
+    if (_nextPending || token == null) return;
+    setState(() => _nextPending = true);
+    // The player may leave home before create answers; then nothing happens.
+    final loadId = s.loadId;
+    final starter = ref.read(homeGameStarterProvider);
+    final analytics = ref.read(homeAnalyticsProvider);
+    final playerName = ref.read(playerNameProvider) ?? 'Player';
+    final messenger = ScaffoldMessenger.of(context);
+    String? failure;
+    try {
+      final saved = await ClassicSettingsStore.load();
+      final config = GameConfig(rounds: saved.rounds, timePerRound: saved.timePerRound, mode: GameMode.classic);
+      final res = await starter.start(playerName: playerName, config: config, firstRoundToken: token);
+      await ClassicSettingsStore.save(saved.rounds, saved.timePerRound);
+      analytics.gameStarted(carried: res.firstRound == 'applied');
+      if (!mounted || !_pair.isCurrent(loadId)) return;
+      context.go('/lobby/${res.code}', extra: {
+        'playerName': playerName,
+        'playerId': res.playerId,
+        'isHost': true,
+        'config': config.toJson(),
+        'isSoloMode': true,
+      });
+    } on ApiException catch (e) {
+      failure = e.message;
+    } catch (_) {
+      failure = 'Failed to create game. Please try again.';
+    } finally {
+      if (mounted) setState(() => _nextPending = false);
+    }
+    if (failure != null && mounted && _pair.isCurrent(loadId)) {
+      messenger.showSnackBar(SnackBar(content: Text(failure)));
+    }
+  }
+
   void _handleSubtitleTap() {
     _tapCount++;
     if (_tapCount >= 5) {
@@ -69,306 +150,130 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final session = ref.watch(sessionProvider);
-    final testMode = ref.watch(testModeProvider);
-    return GradientBackground(
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Spacer(flex: 2),
-              const Logo(),
-              const SizedBox(height: 8),
-              GestureDetector(
-                onTap: _handleSubtitleTap,
-                child: Text(
-                  testMode ? 'Test Mode' : 'Spot the AI',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: testMode ? Colors.orange : AppTheme.textSecondary,
-                      ),
-                ),
-              ),
-              const Spacer(flex: 2),
-
-              // Mode selection cards
-              _ModeCard(
-                mode: GameMode.party,
-                title: 'Party Mode',
-                subtitle: '2-8 players',
-                description: 'Play with friends! Everyone guesses at once.',
-                icon: Icons.groups,
-                onTap: () {
-                  AnalyticsService.instance.logGameModeSelected('party');
-                  context.push(
-                    AppRoutes.createGame,
-                    extra: {'mode': GameMode.party},
-                  );
-                },
-              ),
-              // Solo modes - app only (not available on web)
-              if (!kIsWeb) ...[
-                const SizedBox(height: 12),
-                _ModeCard(
-                  mode: GameMode.classic,
-                  title: 'Classic Solo',
-                  subtitle: 'Single player',
-                  description: 'Practice at your own pace.',
-                  icon: Icons.person,
-                  onTap: () {
-                    AnalyticsService.instance.logGameModeSelected('classic');
-                    context.push(
-                      AppRoutes.createGame,
-                      extra: {'mode': GameMode.classic},
-                    );
-                  },
-                ),
-                const SizedBox(height: 12),
-                _ModeCard(
-                  mode: GameMode.marathon,
-                  title: 'Marathon',
-                  subtitle: '26 rounds',
-                  description: 'How far can you go? One miss and it\'s over!',
-                  icon: Icons.emoji_events,
-                  onTap: () {
-                    AnalyticsService.instance.logGameModeSelected('marathon');
-                    context.push(
-                      AppRoutes.createGame,
-                      extra: {'mode': GameMode.marathon},
-                    );
-                  },
-                ),
-              ],
-
-              const SizedBox(height: 24),
-
-              // Join game button
-              _HomeButton(
-                label: 'Join Game',
-                subtitle: 'Enter code',
-                onPressed: () => context.push(AppRoutes.joinGame),
-              ),
-              const SizedBox(height: 24),
-              TextButton(
-                onPressed: () => showHowToPlayDialog(context),
-                child: const Text('How to Play'),
-              ),
-              const SizedBox(height: 8),
-              // Player info and profile
-              if (session is SessionGuest || session is SessionAuthenticated)
-                TextButton(
-                  onPressed: () => context.push(AppRoutes.profile),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppTheme.textMuted,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.person, size: 18),
-                      const SizedBox(width: 8),
-                      Text(
-                        session is SessionGuest
-                            ? session.guestName
-                            : (session as SessionAuthenticated).displayName,
-                        style: TextStyle(color: AppTheme.textMuted),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.settings, size: 16),
-                    ],
-                  ),
-                ),
-              const Spacer(),
-
-              // Version number
-              if (_version.isNotEmpty)
-                Text(
-                  _version,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textMuted,
-                      ),
-                ),
-              const SizedBox(height: 4),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Mode selection card widget.
-class _ModeCard extends StatelessWidget {
-  const _ModeCard({
-    required this.mode,
-    required this.title,
-    required this.subtitle,
-    required this.description,
-    required this.icon,
-    required this.onTap,
-  });
-
-  final GameMode mode;
-  final String title;
-  final String subtitle;
-  final String description;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final isParty = mode == GameMode.party;
-
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: isParty ? AppTheme.primaryGradient : null,
-        color: isParty ? null : AppTheme.backgroundLight,
-        borderRadius: BorderRadius.circular(12),
-        border: isParty
-            ? null
-            : Border.all(color: AppTheme.secondary, width: 1),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                // Icon
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: isParty
-                        ? Colors.white.withValues(alpha: 0.2)
-                        : AppTheme.secondary,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: isParty ? Colors.white : AppTheme.primary,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                // Text content
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              title,
-                              style: TextStyle(
-                                color: isParty ? Colors.white : AppTheme.textPrimary,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isParty
-                                  ? Colors.white.withValues(alpha: 0.2)
-                                  : AppTheme.secondary,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              subtitle,
-                              style: TextStyle(
-                                color: isParty
-                                    ? Colors.white.withValues(alpha: 0.9)
-                                    : AppTheme.textSecondary,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        description,
-                        style: TextStyle(
-                          color: isParty
-                              ? Colors.white.withValues(alpha: 0.8)
-                              : AppTheme.textSecondary,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Arrow
-                Icon(
-                  Icons.chevron_right,
-                  color: isParty
-                      ? Colors.white.withValues(alpha: 0.7)
-                      : AppTheme.textSecondary,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _HomeButton extends StatelessWidget {
-  const _HomeButton({
-    required this.label,
-    required this.subtitle,
-    required this.onPressed,
-  });
-
-  final String label;
-  final String subtitle;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 64,
-      child: OutlinedButton(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          backgroundColor: AppTheme.secondary,
-          side: BorderSide.none,
-        ),
+  void _openMenu() {
+    final session = ref.read(sessionProvider);
+    final testMode = ref.read(testModeProvider);
+    final hasProfile = session is SessionGuest || session is SessionAuthenticated;
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppTheme.backgroundLight,
+      builder: (sheet) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+            ListTile(
+              leading: Icon(hasProfile ? Icons.person : Icons.login),
+              title: Text(hasProfile ? 'Profile & settings' : 'Sign in'),
+              subtitle: switch (session) {
+                SessionGuest(:final guestName) => Text(guestName),
+                SessionAuthenticated(:final displayName) => Text(displayName),
+                _ => null,
+              },
+              onTap: () {
+                Navigator.pop(sheet);
+                context.push(hasProfile ? AppRoutes.profile : AppRoutes.signIn);
+              },
             ),
-            Text(
-              subtitle,
-              style: TextStyle(
-                color: AppTheme.textSecondary.withValues(alpha: 0.8),
-                fontSize: 12,
+            if (session is SessionGuest)
+              ListTile(
+                leading: const Icon(Icons.login),
+                title: const Text('Sign in to save your stats'),
+                subtitle: const Text('Google or Apple'),
+                onTap: () {
+                  Navigator.pop(sheet);
+                  // Ending the guest session opens the sign-in screen
+                  ref.read(sessionProvider.notifier).endSession();
+                },
               ),
+            ListTile(
+              leading: const Icon(Icons.help_outline),
+              title: const Text('How to Play'),
+              onTap: () {
+                Navigator.pop(sheet);
+                showHowToPlayDialog(context);
+              },
             ),
+            if (testMode && _version.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text(_version, style: const TextStyle(color: AppTheme.textMuted)),
+              ),
           ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final testMode = ref.watch(testModeProvider);
+    ref.watch(sessionProvider); // keeps the menu's profile entry current
+    ref.listen<HomePairState>(homePairProvider, (prev, next) {
+      final analytics = ref.read(homeAnalyticsProvider);
+      if (next.phase == HomePairPhase.ready && next.pair != null && prev?.pair != next.pair) analytics.pairShown();
+      if (next.phase == HomePairPhase.revealed && prev?.phase != HomePairPhase.revealed) {
+        analytics.guess(correct: next.result!.correct);
+      }
+    });
+    return GradientBackground(
+      child: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, box) {
+            // Size the pair so everything else still fits below it: about
+            // 460 px of the height goes to the wordmark, question, result
+            // line, button and mode row. Phones use the full width; tablets
+            // cap the content at 660.
+            final pairSide = (box.maxHeight - 460).clamp(120.0, 300.0);
+            final width = [box.maxWidth, 660.0, pairSide * 2 + 48].reduce((a, b) => a < b ? a : b);
+            return Center(
+              child: SizedBox(
+                width: width,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const SizedBox(width: 48),
+                          const Expanded(child: Center(child: Logo(fontSize: 34))),
+                          IconButton(
+                            key: const ValueKey('home-menu'),
+                            icon: const Icon(Icons.menu),
+                            tooltip: 'Menu',
+                            onPressed: _openMenu,
+                          ),
+                        ],
+                      ),
+                      GestureDetector(
+                        onTap: _handleSubtitleTap,
+                        child: Text(
+                          testMode ? 'Test Mode' : 'Spot the AI',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: testMode ? Colors.orange : AppTheme.textSecondary,
+                              ),
+                        ),
+                      ),
+                      const Spacer(),
+                      if (!kIsWeb) ...[
+                        Text(
+                          'Which one is AI?',
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+                        ),
+                        const SizedBox(height: 12),
+                        HomePairView(onNextPair: _startFromHome, nextPending: _nextPending),
+                        const Spacer(),
+                        Text('or pick a mode', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary)),
+                        const SizedBox(height: 8),
+                      ],
+                      const ModeRow(),
+                      const SizedBox(height: 12),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
