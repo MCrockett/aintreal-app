@@ -1,139 +1,231 @@
+import 'package:aintreal_app/config/routes.dart';
+import 'package:aintreal_app/config/theme.dart';
+import 'package:aintreal_app/core/api/home_pair_api.dart';
+import 'package:aintreal_app/core/auth/auth_provider.dart';
+import 'package:aintreal_app/features/home/home_screen.dart';
+import 'package:aintreal_app/features/home/widgets/home_pair_view.dart';
+import 'package:aintreal_app/models/game.dart';
+import 'package:aintreal_app/models/home_pair.dart';
+import 'package:aintreal_app/widgets/how_to_play_dialog.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:aintreal_app/features/home/home_screen.dart';
-import 'package:aintreal_app/config/theme.dart';
-import 'package:aintreal_app/core/auth/auth_provider.dart';
+
+class FakeHomePairApi extends HomePairApi {
+  FakeHomePairApi({this.failFetch = false}) : super(Dio());
+
+  bool failFetch;
+  int fetches = 0;
+
+  @override
+  Future<HomePair> fetch({bool fullPool = false}) async {
+    fetches++;
+    if (failFetch) throw const NetworkFailure();
+    return HomePair(leftUrl: 'https://img/l$fetches', rightUrl: 'https://img/r$fetches', pairToken: 'tok$fetches');
+  }
+
+  @override
+  Future<GuessResult> guess(String pairToken, String choice) async =>
+      const GuessResult(correct: true, aiSide: 'left', resultToken: 'res');
+}
+
+/// Images "load" on the next frame, as cached_network_image would.
+Widget _instantImage(String url, VoidCallback onLoaded, VoidCallback onFailed) {
+  WidgetsBinding.instance.addPostFrameCallback((_) => onLoaded());
+  return const ColoredBox(color: Colors.teal);
+}
+
+/// Pushed routes record where they were opened from.
+final pushed = <String>[];
+
+Widget app(FakeHomePairApi api) {
+  final router = GoRouter(
+    observers: [homeRouteObserver],
+    routes: [
+      GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
+      GoRoute(
+        path: AppRoutes.createGame,
+        builder: (_, state) {
+          final mode = (state.extra as Map)['mode'] as GameMode;
+          pushed.add('create:${mode.name}');
+          return const Scaffold(body: Text('create'));
+        },
+      ),
+      GoRoute(path: AppRoutes.joinGame, builder: (_, __) {
+        pushed.add('join');
+        return const Scaffold(body: Text('join'));
+      }),
+      GoRoute(path: AppRoutes.profile, builder: (_, __) {
+        pushed.add('profile');
+        return const Scaffold(body: Text('profile'));
+      }),
+    ],
+  );
+  return ProviderScope(
+    overrides: [
+      authServiceProvider.overrideWithValue(null),
+      homePairApiProvider.overrideWithValue(api),
+      pairImageBuilderProvider.overrideWithValue(_instantImage),
+    ],
+    child: MaterialApp.router(theme: AppTheme.darkTheme, routerConfig: router),
+  );
+}
+
+double top(WidgetTester tester, Finder f) => tester.getTopLeft(f).dy;
 
 void main() {
   setUp(() {
-    // Set up mock SharedPreferences with a guest name for all tests
-    SharedPreferences.setMockInitialValues({'guest_name': 'TestPlayer', 'how_to_play_seen': true});
+    SharedPreferences.setMockInitialValues({'guest_name': 'TestPlayer'});
+    PackageInfo.setMockInitialValues(
+        appName: 'AIn\'t Real', packageName: 'com.aintreal.app', version: '1.1.0', buildNumber: '16', buildSignature: '');
+    pushed.clear();
   });
 
-  Widget createTestApp({Widget? child}) {
-    return ProviderScope(
-      overrides: [
-        // Override auth service to null to prevent Firebase access
-        // This makes AuthNotifier return AuthStateUnauthenticated
-        // and SessionNotifier will load the guest name from SharedPreferences
-        authServiceProvider.overrideWithValue(null),
-      ],
-      child: MaterialApp(
-        theme: AppTheme.darkTheme,
-        home: child ?? const HomeScreen(),
-      ),
-    );
+  // An iPhone 15 screen unless a test sets its own
+  Future<void> pumpHome(WidgetTester tester, FakeHomePairApi api) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(app(api));
+    await tester.pumpAndSettle();
   }
 
-  group('HomeScreen', () {
-    testWidgets('displays logo and tagline', (tester) async {
-      await tester.pumpWidget(createTestApp());
-      await tester.pumpAndSettle();
-
-      // Should display the tagline
-      expect(find.text('Spot the AI'), findsOneWidget);
-    });
-
-    testWidgets('displays all game mode cards', (tester) async {
-      await tester.pumpWidget(createTestApp());
-      await tester.pumpAndSettle();
-
-      // Should have Party Mode, Classic Solo, and Marathon cards
-      expect(find.text('Party Mode'), findsOneWidget);
-      expect(find.text('Classic Solo'), findsOneWidget);
-      expect(find.text('Marathon'), findsOneWidget);
-    });
-
-    testWidgets('displays player count badges', (tester) async {
-      await tester.pumpWidget(createTestApp());
-      await tester.pumpAndSettle();
-
-      expect(find.text('2-8 players'), findsOneWidget);
-      expect(find.text('Single player'), findsOneWidget);
-      expect(find.text('26 rounds'), findsOneWidget);
-    });
-
-    testWidgets('displays mode descriptions', (tester) async {
-      await tester.pumpWidget(createTestApp());
-      await tester.pumpAndSettle();
-
-      expect(
-        find.text('Play with friends! Everyone guesses at once.'),
-        findsOneWidget,
-      );
-      expect(
-        find.text('Practice at your own pace.'),
-        findsOneWidget,
-      );
-      expect(
-        find.text("How far can you go? One miss and it's over!"),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('displays Join Game button', (tester) async {
-      await tester.pumpWidget(createTestApp());
-      await tester.pumpAndSettle();
-
-      expect(find.text('Join Game'), findsOneWidget);
-      expect(find.text('Enter code'), findsOneWidget);
-    });
-
-    testWidgets('displays How to Play button', (tester) async {
-      await tester.pumpWidget(createTestApp());
-      await tester.pumpAndSettle();
-
-      expect(find.text('How to Play'), findsOneWidget);
-    });
-
-    testWidgets('mode cards have correct icons', (tester) async {
-      await tester.pumpWidget(createTestApp());
-      await tester.pumpAndSettle();
-
-      // Party Mode should have groups icon
-      expect(find.byIcon(Icons.groups), findsOneWidget);
-
-      // Classic Solo should have person icon (note: profile also uses person icon)
-      expect(find.byIcon(Icons.person), findsWidgets);
-
-      // Marathon should have trophy icon
-      expect(find.byIcon(Icons.emoji_events), findsOneWidget);
-    });
-
-    testWidgets('Party Mode card has gradient style', (tester) async {
-      await tester.pumpWidget(createTestApp());
-      await tester.pumpAndSettle();
-
-      // Party Mode card should exist
-      final partyFinder = find.text('Party Mode');
-      expect(partyFinder, findsOneWidget);
-
-      // Find the parent container that should have the gradient
-      final container = find.ancestor(
-        of: partyFinder,
-        matching: find.byType(Container),
-      );
-      expect(container, findsWidgets);
-    });
-
-    testWidgets('Join Game button exists', (tester) async {
-      await tester.pumpWidget(createTestApp());
-      await tester.pumpAndSettle();
-
-      // Find the Join Game text
-      expect(find.text('Join Game'), findsOneWidget);
-    });
-
-    testWidgets('mode cards are rendered', (tester) async {
-      await tester.pumpWidget(createTestApp());
-      await tester.pumpAndSettle();
-
-      // Verify all three mode cards are rendered by checking for their titles
-      expect(find.text('Party Mode'), findsOneWidget);
-      expect(find.text('Classic Solo'), findsOneWidget);
-      expect(find.text('Marathon'), findsOneWidget);
-    });
+  testWidgets('order: wordmark, question, pair, hint, mode row', (tester) async {
+    await pumpHome(tester, FakeHomePairApi());
+    final positions = [
+      top(tester, find.text('Spot the AI')),
+      top(tester, find.text('Which one is AI?')),
+      top(tester, find.byKey(const ValueKey('home-pair-left'))),
+      top(tester, find.text("👆 Tap the image that AIn't Real")),
+      top(tester, find.text('Party')),
+      top(tester, find.text('Join a party · enter code')),
+    ];
+    expect([...positions]..sort(), positions);
+    expect(find.text('▶ Next pair'), findsNothing);
   });
+
+  testWidgets('a guess reveals the result and Next pair', (tester) async {
+    await pumpHome(tester, FakeHomePairApi());
+    await tester.tap(find.byKey(const ValueKey('home-pair-left')));
+    await tester.pumpAndSettle();
+    expect(find.text('✓ Nailed it. That one is AI.'), findsOneWidget);
+    expect(find.text('▶ Next pair'), findsOneWidget);
+    expect(find.text("👆 Tap the image that AIn't Real"), findsNothing);
+    expect(find.text('AI'), findsWidgets);
+    expect(find.text('Real'), findsOneWidget);
+  });
+
+  testWidgets('a failed load shows the retry tile and the modes still work', (tester) async {
+    final api = FakeHomePairApi(failFetch: true);
+    await pumpHome(tester, api);
+    expect(find.text("Couldn't load a pair · Tap to retry"), findsOneWidget);
+    await tester.tap(find.text('Classic'));
+    await tester.pumpAndSettle();
+    expect(pushed, ['create:classic']);
+  });
+
+  testWidgets('retry tile loads again', (tester) async {
+    final api = FakeHomePairApi(failFetch: true);
+    await pumpHome(tester, api);
+    api.failFetch = false;
+    await tester.tap(find.text("Couldn't load a pair · Tap to retry"));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('home-pair-left')), findsOneWidget);
+  });
+
+  testWidgets('mode cards and Join open the same routes as before', (tester) async {
+    await pumpHome(tester, FakeHomePairApi());
+    for (final label in ['Party', 'Classic', 'Marathon', 'Join a party · enter code']) {
+      await tester.tap(find.text(label));
+      await tester.pumpAndSettle();
+      Navigator.of(tester.element(find.byType(Scaffold).last)).pop();
+      await tester.pumpAndSettle();
+    }
+    expect(pushed, ['create:party', 'create:classic', 'create:marathon', 'join']);
+  });
+
+  testWidgets('coming back to home loads a fresh pair', (tester) async {
+    final api = FakeHomePairApi();
+    await pumpHome(tester, api);
+    expect(api.fetches, 1);
+    await tester.tap(find.text('Party'));
+    await tester.pumpAndSettle();
+    Navigator.of(tester.element(find.text('create'))).pop();
+    await tester.pumpAndSettle();
+    expect(api.fetches, 2);
+  });
+
+  testWidgets('menu holds profile and How to Play; version only in test mode', (tester) async {
+    await pumpHome(tester, FakeHomePairApi());
+    await tester.tap(find.byKey(const ValueKey('home-menu')));
+    await tester.pumpAndSettle();
+    expect(find.text('Profile & settings'), findsOneWidget);
+    expect(find.text('How to Play'), findsOneWidget);
+    expect(find.textContaining(RegExp(r'^v\d')), findsNothing);
+    await tester.tap(find.text('Profile & settings'));
+    await tester.pumpAndSettle();
+    expect(pushed, ['profile']);
+  });
+
+  testWidgets('five taps on the subtitle toggle test mode and show the version', (tester) async {
+    await pumpHome(tester, FakeHomePairApi());
+    for (var i = 0; i < 5; i++) {
+      await tester.tap(find.text('Spot the AI'));
+    }
+    await tester.pumpAndSettle();
+    expect(find.text('Test Mode'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('home-menu')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining(RegExp(r'^v\d')), findsOneWidget);
+  });
+
+  testWidgets('the menu and dialogs keep the current pair', (tester) async {
+    final api = FakeHomePairApi();
+    await pumpHome(tester, api);
+    await tester.tap(find.byKey(const ValueKey('home-menu')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('How to Play'));
+    await tester.pumpAndSettle();
+    Navigator.of(tester.element(find.byType(HowToPlayDialog))).pop();
+    await tester.pumpAndSettle();
+    expect(api.fetches, 1);
+    await tester.tap(find.byKey(const ValueKey('home-pair-left')));
+    await tester.pumpAndSettle();
+    expect(find.text('▶ Next pair'), findsOneWidget);
+  });
+
+  testWidgets('first launch shows no dialog; the menu still opens How to Play', (tester) async {
+    await pumpHome(tester, FakeHomePairApi());
+    expect(find.byType(HowToPlayDialog), findsNothing);
+    expect(find.byKey(const ValueKey('home-pair-left')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('home-menu')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('How to Play'));
+    await tester.pumpAndSettle();
+    expect(find.byType(HowToPlayDialog), findsOneWidget);
+  });
+
+  for (final size in const [Size(375, 667), Size(393, 852), Size(412, 915), Size(1024, 1366)]) {
+    testWidgets('fits ${size.width.toInt()}x${size.height.toInt()}', (tester) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(app(FakeHomePairApi()));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      for (final f in [
+        find.text('Which one is AI?'),
+        find.byKey(const ValueKey('home-pair-right')),
+        find.text("👆 Tap the image that AIn't Real"),
+        find.text('Marathon'),
+      ]) {
+        expect(tester.getBottomRight(f).dy, lessThanOrEqualTo(size.height), reason: '$f within the screen');
+      }
+      expect(tester.getSize(find.byKey(const ValueKey('home-pair-left'))).width, greaterThanOrEqualTo(150));
+    });
+  }
 }

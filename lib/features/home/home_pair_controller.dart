@@ -78,6 +78,7 @@ class HomePairController extends StateNotifier<HomePairState> {
 
   /// Fetches a new pair; the old one, and any guess in flight, are dropped.
   Future<void> load() async {
+    if (!mounted) return;
     final id = state.loadId + 1;
     state = HomePairState(loadId: id);
     final prefs = await SharedPreferences.getInstance();
@@ -119,17 +120,21 @@ class HomePairController extends StateNotifier<HomePairState> {
 
   /// The home route stopped being visible: drop anything in flight.
   void leave() {
+    if (!mounted) return;
     state = state.copyWith(loadId: state.loadId + 1).withoutPending();
   }
 
+  // Image builders report on every rebuild; only the first report changes state.
   void imagesLoaded(int loadId) {
-    if (isCurrent(loadId) && state.phase == HomePairPhase.ready) {
+    if (isCurrent(loadId) && state.phase == HomePairPhase.ready && !state.imagesReady) {
       state = state.copyWith(imagesReady: true);
     }
   }
 
   void imageFailed(int loadId) {
-    if (isCurrent(loadId)) state = HomePairState(loadId: loadId, phase: HomePairPhase.failed);
+    if (isCurrent(loadId) && state.phase != HomePairPhase.failed) {
+      state = HomePairState(loadId: loadId, phase: HomePairPhase.failed);
+    }
   }
 }
 

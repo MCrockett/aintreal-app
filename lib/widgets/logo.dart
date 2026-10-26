@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../config/theme.dart';
 
 /// The AIn't Real logo widget with optional icon and styled text.
-/// "AI" is rendered in a monospace/console font with gradient.
+/// Dark "AI" and a coral gradient on "n't Real" (spec D7).
 class Logo extends StatelessWidget {
   const Logo({
     super.key,
@@ -27,28 +26,29 @@ class Logo extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.baseline,
         textBaseline: TextBaseline.alphabetic,
         children: [
-          // "AI" in monospace with coral gradient
-          ShaderMask(
-            shaderCallback: (bounds) =>
-                AppTheme.aiHighlightGradient.createShader(bounds),
-            child: Text(
-              'AI',
-              style: TextStyle(
-                fontSize: fontSize,
-                fontWeight: FontWeight.w800,
-                fontFamily: 'monospace',
-                fontFamilyFallback: const ['Courier New', 'Courier'],
-                color: Colors.white,
-              ),
-            ),
-          ),
-          // "n't Real" in regular font
+          // Matches the Reddit splash and the website: dark "AI", coral
+          // gradient on "n't Real"
           Text(
-            "n't Real",
+            'AI',
             style: TextStyle(
               fontSize: fontSize,
               fontWeight: FontWeight.w800,
-              color: Colors.white,
+              color: const Color(0xFFB02E45),
+            ),
+          ),
+          ShaderMask(
+            shaderCallback: (bounds) => const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFFFF6B6B), Color(0xFFFF8A8A)],
+            ).createShader(bounds),
+            child: Text(
+              "n't Real",
+              style: TextStyle(
+                fontSize: fontSize,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
             ),
           ),
         ],
