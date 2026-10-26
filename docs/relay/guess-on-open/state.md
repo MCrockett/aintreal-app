@@ -73,27 +73,13 @@
     }
   ],
   "pr": 28,
-  "refresh": false,
+  "refresh": true,
   "repo": "aintreal-app",
   "retried": false,
   "review_notes": {},
   "reviewed": {
-    "build": {
-      "base_ref": "origin/main",
-      "base_sha": "0f927f9d7b1b54730a522b8f2307ce51f6e7b7f5",
-      "head": "09f3cd1b3c7108c5e5dfcca1898707e510137943",
-      "inputs": {
-        "plan": "5a925e87b8db8e3e7461aba88ca4befe10c6011ce70e15b89130dde4fcdd4889",
-        "spec": "ec078339066fc58c9eb20d5e2c7c603966404dcc22786e2a93bf745430ed4f88"
-      },
-      "merge": "cdda126e5b4b8211086772149f3d106796ad3a2a595fcf87bf023834a40a54a4"
-    },
-    "plan": {
-      "inputs": {
-        "plan": "5a925e87b8db8e3e7461aba88ca4befe10c6011ce70e15b89130dde4fcdd4889",
-        "spec": "ec078339066fc58c9eb20d5e2c7c603966404dcc22786e2a93bf745430ed4f88"
-      }
-    },
+    "build": null,
+    "plan": null,
     "spec": {
       "inputs": {
         "spec": "ec078339066fc58c9eb20d5e2c7c603966404dcc22786e2a93bf745430ed4f88"
@@ -107,12 +93,10 @@
   },
   "skipped": [],
   "small": false,
-  "stage": "build",
-  "status": "ready-to-merge",
-  "updated": "2026-10-26T02:26:14-04:00",
+  "stage": "spec",
+  "status": "in-review",
+  "updated": "2026-10-26T06:46:58-04:00",
   "verdicts": {
-    "build": "GO",
-    "plan": "GO",
     "spec": "GO"
   }
 }
