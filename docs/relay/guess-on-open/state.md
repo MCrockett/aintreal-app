@@ -73,7 +73,7 @@
     }
   ],
   "pr": 28,
-  "refresh": true,
+  "refresh": false,
   "repo": "aintreal-app",
   "retried": false,
   "review_notes": {},
@@ -82,7 +82,7 @@
     "plan": null,
     "spec": {
       "inputs": {
-        "spec": "ec078339066fc58c9eb20d5e2c7c603966404dcc22786e2a93bf745430ed4f88"
+        "spec": "8c8117fb29db9d73d735f7faec275c0172191553939f10fd3b6b39a8f3bd20bc"
       }
     }
   },
@@ -93,9 +93,9 @@
   },
   "skipped": [],
   "small": false,
-  "stage": "spec",
-  "status": "in-review",
-  "updated": "2026-10-26T06:46:58-04:00",
+  "stage": "plan",
+  "status": "drafting",
+  "updated": "2026-10-26T06:47:51-04:00",
   "verdicts": {
     "spec": "GO"
   }
