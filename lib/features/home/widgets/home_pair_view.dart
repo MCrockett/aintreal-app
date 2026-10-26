@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../config/env.dart';
 import '../../../config/theme.dart';
 import '../home_pair_controller.dart';
 
@@ -11,6 +12,8 @@ typedef PairImageBuilder = Widget Function(String url, VoidCallback onLoaded, Vo
 Widget _networkImage(String url, VoidCallback onLoaded, VoidCallback onFailed) => CachedNetworkImage(
       imageUrl: url,
       fit: BoxFit.cover,
+      // The image route refuses requests without it (403), as for game images
+      httpHeaders: const {'X-Mobile-App': Env.mobileAppSecret},
       imageBuilder: (context, image) {
         WidgetsBinding.instance.addPostFrameCallback((_) => onLoaded());
         return Image(image: image, fit: BoxFit.cover);
