@@ -8,6 +8,10 @@ abstract class Endpoints {
   static String gameJoin(String code) => '/api/game/join/$code';
   static String gameState(String code) => '/api/game/$code';
 
+  /// Guess on open: home pair and server-checked guess.
+  static const String homePair = '/api/game/home-pair';
+  static const String homeGuess = '/api/game/home-guess';
+
   /// WebSocket endpoint for real-time game communication.
   static String gameWebSocket(String code, String playerId) =>
       '/api/game/$code/ws?playerId=$playerId';

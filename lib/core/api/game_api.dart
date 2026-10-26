@@ -19,18 +19,19 @@ class GameApi {
   /// Returns the game code, player ID, and WebSocket URL.
   /// If [idToken] is provided, the player will be linked to their Firebase account
   /// and stats will be tracked.
+  ///
+  /// [firstRoundToken] (from the home guess) makes the home pair round 1 of
+  /// a Classic game; the response's `firstRound` says whether it was used.
   Future<CreateGameResponse> createGame({
     required String playerName,
     required GameConfig config,
     String? idToken,
+    String? firstRoundToken,
   }) async {
     try {
       final response = await _client.post<Map<String, dynamic>>(
         Endpoints.gameCreate,
-        data: {
-          'hostName': playerName,
-          'config': config.toJson(),
-        },
+        data: createBody(playerName: playerName, config: config, firstRoundToken: firstRoundToken),
         // Send token via Authorization header (more reliable than body)
         options: idToken != null
             ? Options(headers: {'Authorization': 'Bearer $idToken'})
@@ -50,6 +51,18 @@ class GameApi {
       rethrow;
     }
   }
+
+  /// The create request body.
+  static Map<String, dynamic> createBody({
+    required String playerName,
+    required GameConfig config,
+    String? firstRoundToken,
+  }) =>
+      {
+        'hostName': playerName,
+        'config': config.toJson(),
+        if (firstRoundToken != null) 'firstRoundToken': firstRoundToken,
+      };
 
   /// Join an existing game with a code.
   ///
