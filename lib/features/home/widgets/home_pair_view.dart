@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../config/env.dart';
 import '../../../config/theme.dart';
 import '../home_pair_controller.dart';
 
@@ -11,6 +12,8 @@ typedef PairImageBuilder = Widget Function(String url, VoidCallback onLoaded, Vo
 Widget _networkImage(String url, VoidCallback onLoaded, VoidCallback onFailed) => CachedNetworkImage(
       imageUrl: url,
       fit: BoxFit.cover,
+      // The image route refuses requests without it (403), as for game images
+      httpHeaders: const {'X-Mobile-App': Env.mobileAppSecret},
       imageBuilder: (context, image) {
         WidgetsBinding.instance.addPostFrameCallback((_) => onLoaded());
         return Image(image: image, fit: BoxFit.cover);
@@ -75,8 +78,12 @@ class _HomePairViewState extends ConsumerState<HomePairView> {
                   () => _onLoaded(s.loadId, side),
                   () => controller.imageFailed(s.loadId),
                 ),
-                tag: revealed ? (s.result!.aiSide == side ? 'AI' : 'Real') : null,
-                isAi: revealed && s.result!.aiSide == side,
+                tag: revealed ? (s.result!.aiSide == side ? 'AI' : 'REAL') : null,
+                // As in the Reddit game: the AI image gets the border, green
+                // when found and red when missed
+                border: revealed && s.result!.aiSide == side
+                    ? (s.result!.correct ? AppTheme.correctAnswer : AppTheme.error)
+                    : null,
                 onTap: () => controller.guess(side),
               ),
             ),
@@ -98,7 +105,7 @@ class _HomePairViewState extends ConsumerState<HomePairView> {
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 16,
-                    color: s.result!.correct ? AppTheme.correctAnswer : AppTheme.wrongAnswer,
+                    color: s.result!.correct ? AppTheme.correctAnswer : AppTheme.error,
                   ),
                 )
               : s.error
@@ -133,16 +140,16 @@ class _HomePairViewState extends ConsumerState<HomePairView> {
 }
 
 class _PairCard extends StatelessWidget {
-  const _PairCard({super.key, required this.image, required this.tag, required this.isAi, required this.onTap});
+  const _PairCard({super.key, required this.image, required this.tag, required this.border, required this.onTap});
 
   final Widget image;
   final String? tag;
-  final bool isAi;
+  final Color? border;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = tag == null ? Colors.transparent : (isAi ? AppTheme.wrongAnswer : AppTheme.correctAnswer);
+    final borderColor = border ?? Colors.transparent;
     return AspectRatio(
       aspectRatio: 1,
       child: GestureDetector(
@@ -158,14 +165,31 @@ class _PairCard extends StatelessWidget {
             fit: StackFit.expand,
             children: [
               image,
+              // As in the Reddit game: REAL in white, AI in light gray, over
+              // a dark fade
               if (tag != null)
                 Positioned(
-                  left: 8,
-                  bottom: 8,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(6)),
-                    child: Text(tag!, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [Colors.black.withValues(alpha: 0.8), Colors.transparent],
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      tag!,
+                      style: TextStyle(
+                        color: tag == 'AI' ? const Color(0xFFCCCCCC) : Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
                   ),
                 ),
             ],

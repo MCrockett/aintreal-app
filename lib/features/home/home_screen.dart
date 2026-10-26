@@ -17,6 +17,7 @@ import '../../widgets/how_to_play_dialog.dart';
 import '../../widgets/logo.dart';
 import 'home_game_starter.dart';
 import 'home_pair_controller.dart';
+import 'widgets/home_account.dart';
 import 'widgets/home_pair_view.dart';
 import 'widgets/mode_row.dart';
 
@@ -219,12 +220,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
       child: SafeArea(
         child: LayoutBuilder(
           builder: (context, box) {
-            // Size the pair so everything else still fits below it: about
-            // 460 px of the height goes to the wordmark, question, result
-            // line, button and mode row. Phones use the full width; tablets
-            // cap the content at 660.
-            final pairSide = (box.maxHeight - 460).clamp(120.0, 300.0);
-            final width = [box.maxWidth, 660.0, pairSide * 2 + 48].reduce((a, b) => a < b ? a : b);
+            // Size the pair so everything else still fits: about 480 px of
+            // the height goes to the wordmark, question, result line, button,
+            // mode row and the sign-in card. Content is at most 660 wide;
+            // the pair is at most two squares of pairSide.
+            // Short screens (an iPhone SE) get a one-row sign-in card and no
+            // "or pick a mode", and the pair gives up the rest so nothing
+            // overflows down to 600 px.
+            final short = box.maxHeight < 720;
+            final pairSide = short ? (box.maxHeight - 510).clamp(90.0, 300.0) : (box.maxHeight - 480).clamp(120.0, 300.0);
+            final width = box.maxWidth < 660.0 ? box.maxWidth : 660.0;
             return Center(
               child: SizedBox(
                 width: width,
@@ -260,14 +265,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                           'Which one is AI?',
                           style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
                         ),
-                        const SizedBox(height: 12),
-                        HomePairView(onNextPair: _startFromHome, nextPending: _nextPending),
+                        const SizedBox(height: 14),
+                        ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: pairSide * 2 + 8),
+                          child: HomePairView(onNextPair: _startFromHome, nextPending: _nextPending),
+                        ),
                         const Spacer(),
-                        Text('or pick a mode', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary)),
-                        const SizedBox(height: 8),
+                        if (!short) ...[
+                          Text('or pick a mode', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary)),
+                          const SizedBox(height: 10),
+                        ],
                       ],
                       const ModeRow(),
-                      const SizedBox(height: 12),
+                      const Spacer(),
+                      HomeAccount(compact: short),
+                      const SizedBox(height: 16),
                     ],
                   ),
                 ),

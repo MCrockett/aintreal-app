@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:aintreal_app/config/routes.dart';
 import 'package:aintreal_app/config/theme.dart';
 import 'package:aintreal_app/core/api/home_pair_api.dart';
+import 'package:aintreal_app/core/api/auth_api.dart';
 import 'package:aintreal_app/core/auth/auth_provider.dart';
 import 'package:aintreal_app/features/home/home_game_starter.dart';
 import 'package:aintreal_app/features/home/home_screen.dart';
+import 'package:aintreal_app/features/home/widgets/home_account.dart';
 import 'package:aintreal_app/features/home/widgets/home_pair_view.dart';
 import 'package:aintreal_app/models/game.dart';
 import 'package:aintreal_app/models/home_pair.dart';
@@ -34,7 +36,7 @@ class FakeHomePairApi extends HomePairApi {
 
   @override
   Future<GuessResult> guess(String pairToken, String choice) async =>
-      const GuessResult(correct: true, aiSide: 'left', resultToken: 'res');
+      GuessResult(correct: choice == 'left', aiSide: 'left', resultToken: 'res');
 }
 
 /// Images "load" on the next frame, as cached_network_image would.
@@ -66,6 +68,28 @@ class FakeStarter extends HomeGameStarter {
       });
 }
 
+class FakeSignIn implements HomeSignIn {
+  FakeSignIn({this.offerApple = false});
+
+  final bool offerApple;
+  final calls = <String>[];
+  Completer<void>? next;
+
+  @override
+  bool get appleAvailable => offerApple;
+  @override
+  Future<void> google() {
+    calls.add('google');
+    return next?.future ?? Future.value();
+  }
+
+  @override
+  Future<void> apple() {
+    calls.add('apple');
+    return next?.future ?? Future.value();
+  }
+}
+
 class RecordingAnalytics extends HomeAnalytics {
   final events = <String>[];
   @override
@@ -77,6 +101,7 @@ class RecordingAnalytics extends HomeAnalytics {
 }
 
 FakeStarter starter = FakeStarter();
+FakeSignIn signIn = FakeSignIn();
 RecordingAnalytics analytics = RecordingAnalytics();
 
 Widget app(FakeHomePairApi api) {
@@ -114,6 +139,7 @@ Widget app(FakeHomePairApi api) {
       pairImageBuilderProvider.overrideWithValue(_instantImage),
       homeGameStarterProvider.overrideWithValue(starter),
       homeAnalyticsProvider.overrideWithValue(analytics),
+      homeSignInProvider.overrideWithValue(signIn),
     ],
     child: MaterialApp.router(theme: AppTheme.darkTheme, routerConfig: router),
   );
@@ -129,6 +155,7 @@ void main() {
     pushed.clear();
     starter = FakeStarter();
     analytics = RecordingAnalytics();
+    signIn = FakeSignIn();
   });
 
   Future<void> guessLeft(WidgetTester tester) async {
@@ -153,7 +180,8 @@ void main() {
       top(tester, find.byKey(const ValueKey('home-pair-left'))),
       top(tester, find.text("👆 Tap the image that AIn't Real")),
       top(tester, find.text('Party')),
-      top(tester, find.text('Join a party · enter code')),
+      top(tester, find.text('Join a party with a code')),
+      top(tester, find.text('Save your stats and streaks')),
     ];
     expect([...positions]..sort(), positions);
     expect(find.text('▶ Next pair'), findsNothing);
@@ -167,7 +195,42 @@ void main() {
     expect(find.text('▶ Next pair'), findsOneWidget);
     expect(find.text("👆 Tap the image that AIn't Real"), findsNothing);
     expect(find.text('AI'), findsWidgets);
-    expect(find.text('Real'), findsOneWidget);
+    expect(find.text('REAL'), findsOneWidget);
+  });
+
+  Color? borderOf(WidgetTester tester, String side) {
+    final box = tester.widget<Container>(
+      find.descendant(of: find.byKey(ValueKey('home-pair-$side')), matching: find.byType(Container)).first,
+    );
+    final border = (box.decoration! as BoxDecoration).border! as Border;
+    return border.top.color == Colors.transparent ? null : border.top.color;
+  }
+
+  testWidgets('a right guess: green border on the AI image only, green result', (tester) async {
+    await pumpHome(tester, FakeHomePairApi());
+    await tester.tap(find.byKey(const ValueKey('home-pair-left')));
+    await tester.pumpAndSettle();
+    expect(borderOf(tester, 'left'), AppTheme.correctAnswer);
+    expect(borderOf(tester, 'right'), isNull);
+    expect(tester.widget<Text>(find.text('✓ Nailed it. That one is AI.')).style!.color, AppTheme.correctAnswer);
+  });
+
+  testWidgets('a wrong guess: red border on the AI image, not the pick; red result', (tester) async {
+    await pumpHome(tester, FakeHomePairApi());
+    await tester.tap(find.byKey(const ValueKey('home-pair-right')));
+    await tester.pumpAndSettle();
+    expect(borderOf(tester, 'left'), AppTheme.error);
+    expect(borderOf(tester, 'right'), isNull);
+    expect(tester.widget<Text>(find.text('✗ Fooled you. The other one is AI.')).style!.color, AppTheme.error);
+  });
+
+  testWidgets('labels: REAL in white, AI in light gray', (tester) async {
+    await pumpHome(tester, FakeHomePairApi());
+    await tester.tap(find.byKey(const ValueKey('home-pair-left')));
+    await tester.pumpAndSettle();
+    expect(tester.widget<Text>(find.text('REAL')).style!.color, Colors.white);
+    final ai = find.descendant(of: find.byKey(const ValueKey('home-pair-left')), matching: find.text('AI'));
+    expect(tester.widget<Text>(ai).style!.color, const Color(0xFFCCCCCC));
   });
 
   testWidgets('a failed load shows the retry tile and the modes still work', (tester) async {
@@ -190,7 +253,7 @@ void main() {
 
   testWidgets('mode cards and Join open the same routes as before', (tester) async {
     await pumpHome(tester, FakeHomePairApi());
-    for (final label in ['Party', 'Classic', 'Marathon', 'Join a party · enter code']) {
+    for (final label in ['Party', 'Classic', 'Marathon', 'Join a party with a code']) {
       await tester.tap(find.text(label));
       await tester.pumpAndSettle();
       Navigator.of(tester.element(find.byType(Scaffold).last)).pop();
@@ -347,7 +410,7 @@ void main() {
         starter.next = Completer();
         await tester.tap(find.text('▶ Next pair'));
         await tester.pump();
-        await tester.tap(find.text('Join a party · enter code'));
+        await tester.tap(find.text('Join a party with a code'));
         await tester.pumpAndSettle();
         fails
             ? starter.next!.completeError(const ServerException('boom'))
@@ -367,6 +430,95 @@ void main() {
     });
   });
 
+  testWidgets('mode cards share one style; none looks selected', (tester) async {
+    await pumpHome(tester, FakeHomePairApi());
+    BoxDecoration card(String title) => tester
+        .widget<Container>(find.ancestor(of: find.text(title), matching: find.byType(Container)).first)
+        .decoration! as BoxDecoration;
+    for (final title in ['Party', 'Classic', 'Marathon']) {
+      expect(card(title).gradient, isNull, reason: title);
+      expect(card(title).color, card('Classic').color, reason: title);
+    }
+  });
+
+  group('sign-in card', () {
+    testWidgets('a guest sees their name and Google; Apple only where offered', (tester) async {
+      await pumpHome(tester, FakeHomePairApi());
+      expect(find.text("You're playing as TestPlayer"), findsOneWidget);
+      expect(find.text('Continue with Google'), findsOneWidget);
+      expect(find.byKey(const ValueKey('home-sign-in-apple')), findsNothing);
+    });
+
+    testWidgets('with Apple offered, both buttons show and each signs in', (tester) async {
+      signIn = FakeSignIn(offerApple: true);
+      await pumpHome(tester, FakeHomePairApi());
+      await tester.tap(find.byKey(const ValueKey('home-sign-in-google')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('home-sign-in-apple')));
+      await tester.pumpAndSettle();
+      expect(signIn.calls, ['google', 'apple']);
+    });
+
+    testWidgets('buttons are disabled while signing in; a failure says so and allows a retry', (tester) async {
+      await pumpHome(tester, FakeHomePairApi());
+      signIn.next = Completer<void>();
+      await tester.tap(find.byKey(const ValueKey('home-sign-in-google')));
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('home-sign-in-google')));
+      await tester.pump();
+      expect(signIn.calls, ['google']);
+      signIn.next!.completeError(Exception('cancelled by the platform'));
+      await tester.pumpAndSettle();
+      expect(find.text("Sign-in didn't finish. Try again."), findsOneWidget);
+      signIn.next = null;
+      await tester.tap(find.byKey(const ValueKey('home-sign-in-google')));
+      await tester.pumpAndSettle();
+      expect(signIn.calls, ['google', 'google']);
+    });
+  });
+
+  group('player strip', () {
+    Future<void> pumpStrip(WidgetTester tester, UserStats? stats, VoidCallback onTap) => tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.darkTheme,
+            home: Scaffold(body: HomePlayerStrip(name: 'Matt', stats: stats, onTap: onTap)),
+          ),
+        );
+
+    testWidgets('shows games, accuracy and best Marathon, and opens Profile on tap', (tester) async {
+      var taps = 0;
+      await pumpStrip(
+        tester,
+        UserStats.fromJson({
+          'party': {'games': 2, 'correct': 10, 'answered': 12},
+          'solo': {'games': 3, 'correct': 14, 'answered': 18},
+          'marathon': {'attempts': 4, 'correct': 40, 'bestStreak': 19},
+        }),
+        () => taps++,
+      );
+      expect(find.text('Matt'), findsOneWidget);
+      expect(find.text('9 games'), findsOneWidget);
+      expect(find.text('80%'), findsOneWidget);
+      expect(find.text('19'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('home-player')));
+      expect(taps, 1);
+    });
+
+    testWidgets('without stats shows the name alone', (tester) async {
+      await pumpStrip(tester, null, () {});
+      expect(find.text('Matt'), findsOneWidget);
+      expect(find.text('Your stats'), findsOneWidget);
+      expect(find.text('correct'), findsNothing);
+      expect(find.text('marathon'), findsNothing);
+    });
+
+    testWidgets('a new player shows no percentages', (tester) async {
+      await pumpStrip(tester, UserStats.fromJson({}), () {});
+      expect(find.text('0 games'), findsOneWidget);
+      expect(find.text('correct'), findsNothing);
+    });
+  });
+
   for (final size in const [Size(375, 667), Size(393, 852), Size(412, 915), Size(1024, 1366)]) {
     testWidgets('fits ${size.width.toInt()}x${size.height.toInt()}', (tester) async {
       tester.view.physicalSize = size;
@@ -380,6 +532,7 @@ void main() {
         find.byKey(const ValueKey('home-pair-right')),
         find.text("👆 Tap the image that AIn't Real"),
         find.text('Marathon'),
+        find.byKey(const ValueKey('home-sign-in-google')),
       ]) {
         expect(tester.getBottomRight(f).dy, lessThanOrEqualTo(size.height), reason: '$f within the screen');
       }

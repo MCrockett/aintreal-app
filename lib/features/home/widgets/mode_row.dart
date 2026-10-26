@@ -7,7 +7,7 @@ import '../../../config/theme.dart';
 import '../../../core/analytics/analytics_service.dart';
 import '../../../models/game.dart';
 
-/// Compact Party / Classic / Marathon cards and Join, under the home pair.
+/// Party / Classic / Marathon cards, all one style, and a Join link.
 class ModeRow extends StatelessWidget {
   const ModeRow({super.key});
 
@@ -24,7 +24,7 @@ class ModeRow extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: _ModeCard(title: 'Party', subtitle: '2-8 players', highlight: true, onTap: () => _open(context, GameMode.party)),
+              child: _ModeCard(title: 'Party', subtitle: '2-8 players', onTap: () => _open(context, GameMode.party)),
             ),
             // Solo modes - app only (not available on web)
             if (!kIsWeb) ...[
@@ -35,14 +35,18 @@ class ModeRow extends StatelessWidget {
             ],
           ],
         ),
-        const SizedBox(height: 10),
-        SizedBox(
-          width: double.infinity,
-          height: 44,
-          child: OutlinedButton(
-            onPressed: () => context.push(AppRoutes.joinGame),
-            style: OutlinedButton.styleFrom(backgroundColor: AppTheme.secondary, side: BorderSide.none),
-            child: const Text('Join a party · enter code', style: TextStyle(fontWeight: FontWeight.w600)),
+        const SizedBox(height: 6),
+        TextButton(
+          key: const ValueKey('home-join'),
+          onPressed: () => context.push(AppRoutes.joinGame),
+          style: TextButton.styleFrom(
+            foregroundColor: AppTheme.textSecondary,
+            minimumSize: const Size(0, 36),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: const Text(
+            'Join a party with a code',
+            style: TextStyle(decoration: TextDecoration.underline, decorationColor: AppTheme.textSecondary),
           ),
         ),
       ],
@@ -51,21 +55,19 @@ class ModeRow extends StatelessWidget {
 }
 
 class _ModeCard extends StatelessWidget {
-  const _ModeCard({required this.title, required this.subtitle, required this.onTap, this.highlight = false});
+  const _ModeCard({required this.title, required this.subtitle, required this.onTap});
 
   final String title;
   final String subtitle;
   final VoidCallback onTap;
-  final bool highlight;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        gradient: highlight ? AppTheme.primaryGradient : null,
-        color: highlight ? null : AppTheme.backgroundLight,
+        color: AppTheme.backgroundLight,
         borderRadius: BorderRadius.circular(12),
-        border: highlight ? null : Border.all(color: AppTheme.secondary),
+        border: Border.all(color: AppTheme.secondary),
       ),
       child: Material(
         color: Colors.transparent,
@@ -73,7 +75,7 @@ class _ModeCard extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(12),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
             child: Column(
               children: [
                 Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
@@ -82,7 +84,7 @@ class _ModeCard extends StatelessWidget {
                   subtitle,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 11, color: highlight ? Colors.white70 : AppTheme.textSecondary),
+                  style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
                 ),
               ],
             ),
