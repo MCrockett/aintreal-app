@@ -1,6 +1,7 @@
 ---
 {
   "authors": {
+    "build": "claude",
     "idea": "claude",
     "plan": "claude",
     "spec": "claude"
@@ -59,7 +60,7 @@
       "at": "2026-10-24T17:32:58-04:00"
     }
   ],
-  "pr": null,
+  "pr": 28,
   "refresh": false,
   "repo": "aintreal-app",
   "retried": false,
@@ -79,14 +80,15 @@
     }
   },
   "rounds": {
+    "build": 1,
     "plan": 3,
     "spec": 2
   },
   "skipped": [],
   "small": false,
   "stage": "build",
-  "status": "drafting",
-  "updated": "2026-10-26T02:17:39-04:00",
+  "status": "in-review",
+  "updated": "2026-10-26T02:18:04-04:00",
   "verdicts": {
     "plan": "GO",
     "spec": "GO"
