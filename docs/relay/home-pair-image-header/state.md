@@ -1,6 +1,8 @@
 ---
 {
-  "authors": {},
+  "authors": {
+    "build": "claude"
+  },
   "branch": "fix/home-pair-image-header",
   "extra_rounds": {},
   "feature": "home-pair-image-header",
@@ -17,7 +19,7 @@
       "at": "2026-10-26T16:51:06-04:00"
     }
   ],
-  "pr": null,
+  "pr": 29,
   "refresh": false,
   "repo": "aintreal-app",
   "retried": false,
@@ -26,15 +28,17 @@
     "plan": null,
     "spec": null
   },
-  "rounds": {},
+  "rounds": {
+    "build": 1
+  },
   "skipped": [
     "spec",
     "plan"
   ],
   "small": true,
   "stage": "build",
-  "status": "drafting",
-  "updated": "2026-10-26T16:51:06-04:00",
+  "status": "in-review",
+  "updated": "2026-10-26T16:53:16-04:00",
   "verdicts": {}
 }
 ---
