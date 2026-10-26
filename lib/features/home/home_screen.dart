@@ -8,10 +8,14 @@ import '../../config/env.dart';
 import '../../config/routes.dart';
 import '../../config/theme.dart';
 import '../../core/ads/ad_service.dart';
+import '../../core/api/api_exceptions.dart';
 import '../../core/auth/session_provider.dart';
+import '../../core/storage/classic_settings_store.dart';
+import '../../models/game.dart';
 import '../../widgets/gradient_background.dart';
 import '../../widgets/how_to_play_dialog.dart';
 import '../../widgets/logo.dart';
+import 'home_game_starter.dart';
 import 'home_pair_controller.dart';
 import 'widgets/home_pair_view.dart';
 import 'widgets/mode_row.dart';
@@ -28,6 +32,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObserver, RouteAware {
   int _tapCount = 0;
   String _version = '';
+  bool _nextPending = false;
   late final HomePairController _pair;
 
   @override
@@ -89,6 +94,45 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) _pair.onResume(DateTime.now());
+  }
+
+  /// Next pair: a Classic game whose round 1 is the home guess (spec R5).
+  Future<void> _startFromHome() async {
+    final s = ref.read(homePairProvider);
+    final token = s.result?.resultToken;
+    if (_nextPending || token == null) return;
+    setState(() => _nextPending = true);
+    // The player may leave home before create answers; then nothing happens.
+    final loadId = s.loadId;
+    final starter = ref.read(homeGameStarterProvider);
+    final analytics = ref.read(homeAnalyticsProvider);
+    final playerName = ref.read(playerNameProvider) ?? 'Player';
+    final messenger = ScaffoldMessenger.of(context);
+    String? failure;
+    try {
+      final saved = await ClassicSettingsStore.load();
+      final config = GameConfig(rounds: saved.rounds, timePerRound: saved.timePerRound, mode: GameMode.classic);
+      final res = await starter.start(playerName: playerName, config: config, firstRoundToken: token);
+      await ClassicSettingsStore.save(saved.rounds, saved.timePerRound);
+      analytics.gameStarted(carried: res.firstRound == 'applied');
+      if (!mounted || !_pair.isCurrent(loadId)) return;
+      context.go('/lobby/${res.code}', extra: {
+        'playerName': playerName,
+        'playerId': res.playerId,
+        'isHost': true,
+        'config': config.toJson(),
+        'isSoloMode': true,
+      });
+    } on ApiException catch (e) {
+      failure = e.message;
+    } catch (_) {
+      failure = 'Failed to create game. Please try again.';
+    } finally {
+      if (mounted) setState(() => _nextPending = false);
+    }
+    if (failure != null && mounted && _pair.isCurrent(loadId)) {
+      messenger.showSnackBar(SnackBar(content: Text(failure)));
+    }
   }
 
   void _handleSubtitleTap() {
@@ -153,6 +197,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
   Widget build(BuildContext context) {
     final testMode = ref.watch(testModeProvider);
     ref.watch(sessionProvider); // keeps the menu's profile entry current
+    ref.listen<HomePairState>(homePairProvider, (prev, next) {
+      final analytics = ref.read(homeAnalyticsProvider);
+      if (next.phase == HomePairPhase.ready && next.pair != null && prev?.pair != next.pair) analytics.pairShown();
+      if (next.phase == HomePairPhase.revealed && prev?.phase != HomePairPhase.revealed) {
+        analytics.guess(correct: next.result!.correct);
+      }
+    });
     return GradientBackground(
       child: SafeArea(
         child: LayoutBuilder(
@@ -199,7 +250,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                           style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
                         ),
                         const SizedBox(height: 12),
-                        HomePairView(onNextPair: () {}, nextPending: false),
+                        HomePairView(onNextPair: _startFromHome, nextPending: _nextPending),
                         const Spacer(),
                         Text('or pick a mode', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary)),
                         const SizedBox(height: 8),
