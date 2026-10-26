@@ -36,7 +36,7 @@ class FakeHomePairApi extends HomePairApi {
 
   @override
   Future<GuessResult> guess(String pairToken, String choice) async =>
-      const GuessResult(correct: true, aiSide: 'left', resultToken: 'res');
+      GuessResult(correct: choice == 'left', aiSide: 'left', resultToken: 'res');
 }
 
 /// Images "load" on the next frame, as cached_network_image would.
@@ -195,7 +195,34 @@ void main() {
     expect(find.text('▶ Next pair'), findsOneWidget);
     expect(find.text("👆 Tap the image that AIn't Real"), findsNothing);
     expect(find.text('AI'), findsWidgets);
-    expect(find.text('Real'), findsOneWidget);
+    expect(find.text('REAL'), findsOneWidget);
+  });
+
+  Color? borderOf(WidgetTester tester, String side) {
+    final box = tester.widget<Container>(
+      find.descendant(of: find.byKey(ValueKey('home-pair-$side')), matching: find.byType(Container)).first,
+    );
+    final border = (box.decoration! as BoxDecoration).border! as Border;
+    return border.top.color == Colors.transparent ? null : border.top.color;
+  }
+
+  testWidgets('a right guess: green border on the pick only, green result', (tester) async {
+    await pumpHome(tester, FakeHomePairApi());
+    await tester.tap(find.byKey(const ValueKey('home-pair-left')));
+    await tester.pumpAndSettle();
+    expect(borderOf(tester, 'left'), AppTheme.correctAnswer);
+    expect(borderOf(tester, 'right'), isNull);
+    expect(tester.widget<Text>(find.text('✓ Nailed it. That one is AI.')).style!.color, AppTheme.correctAnswer);
+  });
+
+  testWidgets('a wrong guess: gray border on the pick only, gray result, no red', (tester) async {
+    await pumpHome(tester, FakeHomePairApi());
+    await tester.tap(find.byKey(const ValueKey('home-pair-right')));
+    await tester.pumpAndSettle();
+    expect(borderOf(tester, 'right'), AppTheme.imageLabel);
+    expect(borderOf(tester, 'left'), isNull);
+    final result = tester.widget<Text>(find.text('✗ Fooled you. The other one is AI.'));
+    expect(result.style!.color, AppTheme.textSecondary);
   });
 
   testWidgets('a failed load shows the retry tile and the modes still work', (tester) async {

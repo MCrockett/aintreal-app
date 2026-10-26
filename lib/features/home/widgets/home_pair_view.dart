@@ -78,8 +78,12 @@ class _HomePairViewState extends ConsumerState<HomePairView> {
                   () => _onLoaded(s.loadId, side),
                   () => controller.imageFailed(s.loadId),
                 ),
-                tag: revealed ? (s.result!.aiSide == side ? 'AI' : 'Real') : null,
-                isAi: revealed && s.result!.aiSide == side,
+                tag: revealed ? (s.result!.aiSide == side ? 'AI' : 'REAL') : null,
+                // As in the game: only the picked image gets a border,
+                // green when right and gray when wrong
+                border: revealed && s.choice == side
+                    ? (s.result!.correct ? AppTheme.correctAnswer : AppTheme.imageLabel)
+                    : null,
                 onTap: () => controller.guess(side),
               ),
             ),
@@ -101,7 +105,7 @@ class _HomePairViewState extends ConsumerState<HomePairView> {
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 16,
-                    color: s.result!.correct ? AppTheme.correctAnswer : AppTheme.wrongAnswer,
+                    color: s.result!.correct ? AppTheme.correctAnswer : AppTheme.textSecondary,
                   ),
                 )
               : s.error
@@ -136,16 +140,16 @@ class _HomePairViewState extends ConsumerState<HomePairView> {
 }
 
 class _PairCard extends StatelessWidget {
-  const _PairCard({super.key, required this.image, required this.tag, required this.isAi, required this.onTap});
+  const _PairCard({super.key, required this.image, required this.tag, required this.border, required this.onTap});
 
   final Widget image;
   final String? tag;
-  final bool isAi;
+  final Color? border;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = tag == null ? Colors.transparent : (isAi ? AppTheme.wrongAnswer : AppTheme.correctAnswer);
+    final borderColor = border ?? Colors.transparent;
     return AspectRatio(
       aspectRatio: 1,
       child: GestureDetector(
@@ -161,14 +165,27 @@ class _PairCard extends StatelessWidget {
             fit: StackFit.expand,
             children: [
               image,
+              // The game's label: a gray pill over a dark fade
               if (tag != null)
                 Positioned(
-                  left: 8,
-                  bottom: 8,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(6)),
-                    child: Text(tag!, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [Colors.black.withValues(alpha: 0.8), Colors.transparent],
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(color: AppTheme.imageLabel, borderRadius: BorderRadius.circular(20)),
+                      child: Text(tag!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
+                    ),
                   ),
                 ),
             ],
