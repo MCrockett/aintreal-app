@@ -16,3 +16,6 @@ Home pair images are refused (403) on device: send the X-Mobile-App header like 
    - Join a party becomes a text link.
    - Screens under 720 px tall get a one-row card and a smaller pair; nothing overflows down
      to 600 px.
+3. Reveal colors (owner): "Correct is green, wrong is gray." Only the picked image gets a border,
+   green when right and gray when wrong; result line green or gray; AI / REAL labels are the
+   game screen's gray pills. No red on the home reveal.
