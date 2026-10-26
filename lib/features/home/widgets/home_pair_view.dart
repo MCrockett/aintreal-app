@@ -79,10 +79,10 @@ class _HomePairViewState extends ConsumerState<HomePairView> {
                   () => controller.imageFailed(s.loadId),
                 ),
                 tag: revealed ? (s.result!.aiSide == side ? 'AI' : 'REAL') : null,
-                // As in the game: only the picked image gets a border,
-                // green when right and gray when wrong
-                border: revealed && s.choice == side
-                    ? (s.result!.correct ? AppTheme.correctAnswer : AppTheme.imageLabel)
+                // As in the Reddit game: the AI image gets the border, green
+                // when found and red when missed
+                border: revealed && s.result!.aiSide == side
+                    ? (s.result!.correct ? AppTheme.correctAnswer : AppTheme.error)
                     : null,
                 onTap: () => controller.guess(side),
               ),
@@ -105,7 +105,7 @@ class _HomePairViewState extends ConsumerState<HomePairView> {
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 16,
-                    color: s.result!.correct ? AppTheme.correctAnswer : AppTheme.textSecondary,
+                    color: s.result!.correct ? AppTheme.correctAnswer : AppTheme.error,
                   ),
                 )
               : s.error
@@ -165,7 +165,8 @@ class _PairCard extends StatelessWidget {
             fit: StackFit.expand,
             children: [
               image,
-              // The game's label: a gray pill over a dark fade
+              // As in the Reddit game: REAL in white, AI in light gray, over
+              // a dark fade
               if (tag != null)
                 Positioned(
                   left: 0,
@@ -181,10 +182,13 @@ class _PairCard extends StatelessWidget {
                       ),
                     ),
                     alignment: Alignment.center,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      decoration: BoxDecoration(color: AppTheme.imageLabel, borderRadius: BorderRadius.circular(20)),
-                      child: Text(tag!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
+                    child: Text(
+                      tag!,
+                      style: TextStyle(
+                        color: tag == 'AI' ? const Color(0xFFCCCCCC) : Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
                 ),
