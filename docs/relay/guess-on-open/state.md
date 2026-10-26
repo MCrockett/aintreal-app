@@ -10,6 +10,18 @@
   "extra_rounds": {},
   "feature": "guess-on-open",
   "history": {
+    "build": [
+      {
+        "blocking_ids": [
+          "R1-1",
+          "R1-2"
+        ],
+        "head": "10dabcfa0185e4048d378e25345b42948733cbd5",
+        "prior": {},
+        "round": 1,
+        "verdict": "NO-GO"
+      }
+    ],
     "plan": [
       {
         "blocking_ids": [
@@ -87,9 +99,10 @@
   "skipped": [],
   "small": false,
   "stage": "build",
-  "status": "in-review",
-  "updated": "2026-10-26T02:18:04-04:00",
+  "status": "changes-requested",
+  "updated": "2026-10-26T02:21:50-04:00",
   "verdicts": {
+    "build": "NO-GO",
     "plan": "GO",
     "spec": "GO"
   }
