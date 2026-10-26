@@ -39,6 +39,10 @@ Owner decisions (2026-10-24):
   left column keeps the brand and gets the store badges. At 900px or narrower the game
   moves to the top, as the hero image does today.
 - D7. Wordmark matches Reddit and the web: dark "AI", coral gradient on "n't Real".
+- D13. A fresh install starts as a guest automatically and lands on the home pair,
+  instead of the sign-in screen (owner, 2026-10-26). Sign-in moves to the menu.
+- D14. 1.1 also raises the iOS deployment target to 15.0 (Apple requires it from April
+  2027; owner, 2026-10-26).
 
 Agent decisions, with reasons:
 
@@ -81,6 +85,13 @@ Agent decisions, with reasons:
 - R2. The menu holds profile and sign-in, How to Play, settings, and the version line,
   which shows only in test mode. The existing 5-tap test-mode toggle keeps working,
   wherever its subtitle ends up.
+- R2a. First launch (D13): with no session, and no automatic guest started before on
+  this device, the app creates a guest with a generated name and opens home. It does
+  this once per install (SharedPreferences flag); later, no session means the sign-in
+  screen, so a player who signs out still gets it. A guest's menu has "Sign in to save
+  your stats", which ends the guest session and opens the sign-in screen, as the
+  profile's sign-in action does today. Signed-in and existing guest players are
+  unchanged.
 - R3. When the home screen appears (first launch, cold reopen, or returning from
   another screen), the app fetches one new random home pair (R12): from the demo pool
   until the player has seen one home pair, from the full pool after that (a device flag

@@ -462,6 +462,16 @@ Covers: R5, R6, R9, R10, F3, F4
   - backgrounding for over 15 minutes and resuming shows a new pair.
 - [ ] **Step 6: Commit** `feat(2.1): next pair starts classic at round 2`.
 
+### Task 13: First launch as a guest; iOS 15 (D13, D14)
+
+**Files:** `lib/core/auth/session_provider.dart` (`_checkGuestSession`, `autoGuestStartedKey = 'auto_guest_started'`), `lib/features/home/home_screen.dart` (menu entry for guests), `ios/Runner.xcodeproj/project.pbxproj`, `ios/Podfile`, `ios/Flutter/AppFrameworkInfo.plist`. Test: `test/unit/auto_guest_test.dart`, `test/widget/home_screen_test.dart`.
+
+Covers: R2a, D13, D14
+
+- [ ] Tests: a fresh install becomes `SessionGuest` with the name stored and the flag set; an existing guest keeps their name; with the flag set and no name the session is `SessionNone`; `endSession()` from a guest gives `SessionNone`; a guest's menu shows "Sign in to save your stats".
+- [ ] Implement, then set every iOS deployment target to 15.0, run `pod install` and `flutter build ios --release --no-codesign`.
+- [ ] Commit `feat(2.1): first launch as a guest; iOS 15 target`.
+
 ## Coverage
 
 | Req | Task |
