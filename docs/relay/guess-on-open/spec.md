@@ -27,8 +27,12 @@ Owner decisions (2026-10-24):
 - D3. App: a Classic game starts only when the player guesses and then taps Next pair.
   Round 1 carries the home guess (right or wrong, no time score). Play starts at
   round 2, using the player's last Classic settings, or the defaults the first time.
-- D4. App: the home pair comes from the demo pool (`demo_eligible = 1`). Rounds 2 and
-  later come from the full pool, as Classic does today.
+- D4. App: home always opens on a pair. The first home pair after install comes from the
+  demo pool (`demo_eligible = 1`); every later home pair comes from the full pool, so
+  returning players are not stuck on 32 demo pairs. Rounds 2 and later come from the
+  full pool, as Classic does today. (Owner, revised 2026-10-25. The first pair is
+  served by the server, not hard-coded in the app, so the answer never ships in the
+  app binary.)
 - D5. Web: no score, demo pool only, rotating pairs, and an app reminder every 3 pairs.
   Nothing annoying: no waits, lockouts or walls.
 - D6. Web: the game replaces the phone screenshots in the current two-column hero. The
@@ -78,8 +82,10 @@ Agent decisions, with reasons:
   which shows only in test mode. The existing 5-tap test-mode toggle keeps working,
   wherever its subtitle ends up.
 - R3. When the home screen appears (first launch, cold reopen, or returning from
-  another screen), the app fetches one new random home pair (R12). It may repeat a pair
-  by chance; no dedup. Resuming the app from the background does not refresh the pair,
+  another screen), the app fetches one new random home pair (R12): from the demo pool
+  until the player has seen one home pair, from the full pool after that (a device flag
+  in SharedPreferences, set when the first pair is shown). It may repeat a pair by
+  chance; no dedup. Resuming the app from the background does not refresh the pair,
   unless the pair token has expired (F2).
 - R4. Tapping an image sends the guess (R13). On the response the app shows the reveal:
   green border and "Real" tag on the real image, red border and "AI" tag on the AI image,
@@ -112,7 +118,8 @@ Agent decisions, with reasons:
 
 ### Server (aintreal-game)
 
-- R12. Home pair endpoint (GET, public). It returns one random demo-pool pair with
+- R12. Home pair endpoint (GET, public). It returns one random demo-pool pair, or with
+  `?pool=all` one random pair from the full pool, with
   neutral image URLs (R16), left and right positions chosen at random, and a signed pair
   token (D9) holding the pair id, the AI side and the issue time. The response has no
   `aiPosition` and no other field that reveals the answer.

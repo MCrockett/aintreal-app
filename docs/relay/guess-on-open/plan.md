@@ -242,6 +242,14 @@ Covers: R20, R21, R22, R23, R24, R25, R25a, F5, F6
 
 Base this on main after #17/#18 have merged. That changes `round_start` (no `aiPosition`) and adds `answer_result`, plus `test/harness.mjs`.
 
+### Task 5a: `home-pair?pool=all` (D4 revised 2026-10-25)
+
+**Files:** Modify `src/routes/home.js`; test in `test/home-endpoints.test.mjs`.
+
+Covers: R12, D4
+
+- [ ] `GET /api/game/home-pair?pool=all` drops the `demo_eligible = 1` filter; no parameter, or any other value, keeps the demo pool. Test: the SQL the fake `DB.prepare` receives has the filter without the parameter and lacks it with `pool=all`. Commit `feat(home): full-pool home pair`.
+
 ### Task 6: Create accepts a result token; game starts at round 2
 
 **Files:**
@@ -318,7 +326,7 @@ Scoring stays where it is today: Classic points are worked out in the reveal seq
   - `class HomePair { String leftUrl, rightUrl, pairToken; String? category; }`. The URLs are made absolute with `Env.apiBase`.
   - `class GuessResult { bool correct; String aiSide; String resultToken; }`.
   - `sealed class GuessFailure` with variants `TokenExpired`, `NetworkFailure`.
-  - `HomePairApi.instance.fetch() -> Future<HomePair>`.
+  - `HomePairApi.instance.fetch({bool fullPool = false}) -> Future<HomePair>`; `fullPool` adds `?pool=all`.
   - `HomePairApi.instance.guess(String pairToken, String choice) -> Future<GuessResult>`, which throws `TokenExpired` on 400 `expired_token` or `bad_token`, and `NetworkFailure` otherwise.
   - `CreateGameResponse` gains `String? firstRound`.
 
@@ -341,7 +349,7 @@ Covers: R12, R13 (client side)
   - `HomePairState { int loadId; HomePairPhase phase; HomePair? pair; GuessResult? result; String? choice; bool imagesReady; bool guessPending; bool error; }`
   - `HomePairPhase { loading, ready, revealed, failed }`
   - Methods:
-    - `load()`: increments `loadId`, then fetches; failure goes to `failed`.
+    - `load()`: increments `loadId`, then fetches with `fullPool` true once the SharedPreferences flag `home_first_pair_seen` is set (D4, R3); it sets the flag when a pair first reaches `ready`. Failure goes to `failed`.
     - `guess(String side)`: ignored unless `ready && imagesReady && !guessPending`. Drops the response if `loadId` changed. `TokenExpired` calls `load()` with no error. `NetworkFailure` stays `ready`, sets `error: true` and allows another tap.
     - `onResume(DateTime now)`: calls `load()` if the pair was fetched more than 15 minutes ago and is not revealed.
     - `leave()`: called when the home route stops being visible. It increments `loadId` and clears `guessPending`, so any in-flight guess response, success or failure, is dropped.
