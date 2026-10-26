@@ -174,6 +174,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                 context.push(hasProfile ? AppRoutes.profile : AppRoutes.signIn);
               },
             ),
+            if (session is SessionGuest)
+              ListTile(
+                leading: const Icon(Icons.login),
+                title: const Text('Sign in to save your stats'),
+                subtitle: const Text('Google or Apple'),
+                onTap: () {
+                  Navigator.pop(sheet);
+                  // Ending the guest session opens the sign-in screen
+                  ref.read(sessionProvider.notifier).endSession();
+                },
+              ),
             ListTile(
               leading: const Icon(Icons.help_outline),
               title: const Text('How to Play'),

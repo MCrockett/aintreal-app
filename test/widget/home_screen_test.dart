@@ -222,6 +222,13 @@ void main() {
     expect(pushed, ['profile']);
   });
 
+  testWidgets('a guest can sign in from the menu', (tester) async {
+    await pumpHome(tester, FakeHomePairApi());
+    await tester.tap(find.byKey(const ValueKey('home-menu')));
+    await tester.pumpAndSettle();
+    expect(find.text('Sign in to save your stats'), findsOneWidget);
+  });
+
   testWidgets('five taps on the subtitle toggle test mode and show the version', (tester) async {
     await pumpHome(tester, FakeHomePairApi());
     for (var i = 0; i < 5; i++) {
