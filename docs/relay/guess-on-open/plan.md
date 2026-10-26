@@ -42,7 +42,7 @@ The website hero (`ui/index.html`) becomes a no-score demo-pool game. The Flutte
 |----|------|-------|------|
 | A | aintreal-game | 1-4 | now (needs the owner's go to create the secret) |
 | B | aintreal-game | 5 | after A merges |
-| C | aintreal-game | 6-7 | after #17/#18 merge (they need a rebase onto #19 first) |
+| C | aintreal-game | 6-7 | after #17/#18 merge (merged 2026-10-26) |
 | D | aintreal-app | 8-12 | after A and C are deployed; ships as 1.1 |
 
 Each game PR is its own relay feature in aintreal-game (`relay new <slug> --base main`), citing this plan. This app feature carries PR D.
@@ -212,7 +212,7 @@ Covers: R17, R18, R19
   - `shouldRemind(guessCount: number) -> boolean`: true for 3, 6, 9 and so on.
   - `createRotation(fetchBatch: (excludeIds) => Promise<Pair[]>) -> { next(): Promise<Pair | null> }`. It skips ids shown this page load. When a batch comes back empty after some ids have been shown, it clears the shown set and fetches again. Two empty fetches in a row give `null`.
 
-Covers: R20, R21, R22, R23, R24, R25, F5, F6
+Covers: R20, R21, R22, R23, R24, R25, R25a, F5, F6
 
 - [ ] **Step 1: Write the failing tests**
   - `shouldRemind`: `[1,2,3,4,6,9,10].map(shouldRemind)` deep-equals `[false,false,true,false,true,true,false]`.
@@ -229,8 +229,9 @@ Covers: R20, R21, R22, R23, R24, R25, F5, F6
   - The `@media (max-width: 900px)` rule keeps `.hero-image { order: -1 }`.
   - Add `trackEvent('home_pair_guess', {correct})`, `home_next_pair`, `home_reminder_shown`, and store clicks with `location: 'hero_pair'` and `location: 'reminder'`.
   - Leave the sections below the hero untouched.
-- [ ] **Step 5: Run** `node --test test/`. Expected: PASS.
-- [ ] **Step 6: Browser check.** Serve `ui/` locally against prod or `wrangler dev`, at 1280x800, 900x800 and 390x844:
+- [ ] **Step 4a: `/download` (R25a).** Mount the same game in `ui/download.html` between the subtitle and the store buttons, with analytics location `download`. On `null` from the rotation or a second image failure, hide the pair area (no phone-mockup fallback on this page).
+- [ ] **Step 5: Run** the unit tests (CI runs an explicit list in `deploy.yml`; add `test/home-pair-web.test.mjs` to it). Expected: PASS.
+- [ ] **Step 6: Browser check.** Include `/download` at 390x844: pair above the store buttons, guess works. Serve `ui/` locally against prod or `wrangler dev`, at 1280x800, 900x800 and 390x844:
   - the pair shows before the badges at 390 and 900;
   - three guesses show the reminder;
   - Next pair stays clickable;
@@ -467,7 +468,7 @@ Covers: R5, R6, R9, R10, F3, F4
 | R16 | 2 |
 | R17, R19 | 4 |
 | R18 | 1, 4 |
-| R20-R25 | 5 |
+| R20-R25a | 5 |
 | R26 | Delivery table |
 | F1 | 9, 11 |
 | F2 | 9 |

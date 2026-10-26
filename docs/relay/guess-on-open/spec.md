@@ -162,12 +162,18 @@ Agent decisions, with reasons:
   `home_next_pair`, `home_reminder_shown`, and store clicks with location `hero_pair` or
   `reminder`.
 - R25. Everything below the hero stays. Party guests joining by code are unaffected.
+- R25a. `/download` (`ui/download.html`), which gets 68 of 69 Google search clicks, mostly
+  on phones, shows the same guessable pair (R22, R23, R24 with location `download`) under
+  the headline "Two pictures. One is AI. Can you tell?" and above the store buttons. If
+  the pair cannot load, the pair area is hidden and the rest of the page is unchanged.
+  Owner decision 2026-10-25, from the KPI/marketing session. The page copy fixes shipped
+  separately in aintreal-game #20.
 
 ### Delivery
 
 - R26. Delivery is split into separate PRs, one open per repo at a time:
   (a) aintreal-game: R12, R13, R16, R17 and R18, deployable now;
-  (b) aintreal-game: R20 to R25, website;
+  (b) aintreal-game: R20 to R25a, website;
   (c) aintreal-game: R14 and R15, after #17/#18 merge;
   (d) aintreal-app: R1 to R11, against a server with (a) and (c).
   The plan sets the order and may merge (a) with (b).
